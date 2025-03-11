@@ -5,6 +5,13 @@ subtitle: Powerful and flexible audio synthesis engine collection for use with t
 header_type: splash
 header_img : "./assets/img/gallery/synth_main.jpg"
 show_sociallinks  : true
+project_links:
+    - url: https://github.com/EclipsingLines/GodotSynth
+      icon: https://github.com/godotengine/godot-website/blob/master/favicon.ico
+      label: Synth
+    - url: https://godotengine.org/
+      icon: fas fa-superscript
+      label: Godot
 ---
 
 # Godot Synth Engine
