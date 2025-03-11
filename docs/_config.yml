@@ -18,6 +18,12 @@ description: A powerful and flexible synthesizer engine for Godot 4 providing vi
 url: https://eclipsinglines.github.io
 baseurl: /GodotSynth
 repository: EclipsingLines/GodotSynth
+author:
+   name: EclipsingLines
+   links:
+     - url: https://linktr.ee/eclipsinglines
+       icon: "fas fa-link"
+       label: Linktree
 # Theme and layout settings
 chulapa-skin:
   skin  : solar
