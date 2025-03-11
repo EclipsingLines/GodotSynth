@@ -2,6 +2,8 @@
 
 A powerful and flexible synthesizer engine for Godot 4, providing virtual analog synthesis with extensive modulation capabilities and audio effects.
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/O5O21BTCOZ)
+
 ## Features
 
 - **Virtual Analog Synthesis**: High-quality oscillators with multiple waveform types
@@ -50,18 +52,22 @@ config.top_waveform = WaveHelper.WAVE_SQUARE
 The synth engine includes a variety of audio effects:
 
 ### Filters
+
 - LowPassFilter, HighPassFilter, BandPassFilter, NotchFilter
 - FormantFilter, MoogFilter, MS20Filter, SteinerParkerFilter, ShelfFilter
 
 ### Delay Effects
+
 - DelayEffect, PingPongDelay, FilteredDelay, MultiTapDelay
 - TapeDelay, ReverseDelay, CombFilterDelay
 
 ### Distortion
+
 - ClipDistortion, WaveShaperDistortion, FoldbackDistortion
 - BitcrushDistortion, OverdriveDistortion, FuzzDistortion, RectifierDistortion
 
 ### Spatial
+
 - Reverb
 
 ## Basic Usage Example
