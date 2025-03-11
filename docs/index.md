@@ -1,7 +1,7 @@
 ---
 layout: landingpage
 title: Godot Synth Engine
-subtitle: First impression is the last impression
+subtitle: Powerful and flexible audio synthesis engine collection for use with the Godot engine (4.4+). SFX and procedural music. 
 header_type: hero
 header_img : "./assets/img/gallery/synth_main.jpg"
 show_sociallinks  : true

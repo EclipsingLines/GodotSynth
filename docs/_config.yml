@@ -22,6 +22,7 @@ repository: EclipsingLines/GodotSynth
 # Theme and layout settings
 chulapa-skin:
   skin  : solar
+  highlight   : "COFFEE"
 navbar: true
 header_type: base
 footer: true
