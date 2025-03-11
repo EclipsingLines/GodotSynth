@@ -13,3 +13,32 @@ export_presets.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# Build artifacts
+*.o
+*.os
+*.obj
+*.bc
+
+# IDE specific
+.vscode/
+.vs/
+.idea/
+*.code-workspace
+
+# Build directories
+build/
+bin/
+
+# Platform-specific build files
+.sconsign.dblite
+*.pdb
+*.lib
+*.exp
+*.ilk
+*.dll
+*.so
+*.dylib
+
+# Aider files
+.aider*

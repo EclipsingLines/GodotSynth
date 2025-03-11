@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Synth Waveform Analyzer</title>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <style>
+        .control-panel {
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .section {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: inline-block;
+            width: 160px;
+        }
+
+        input[type="number"] {
+            width: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="control-panel">
+        <h2>Waveform Analyzer</h2>
+
+        <div class="section">
+            <label>Paste CSV Data:</label>
+            <textarea id="csvData" rows="6" cols="80"></textarea>
+        </div>
+
+        <div class="section">
+            <label>Downsample Factor:</label>
+            <input type="number" id="downsample" value="100" min="1" max="1000">
+
+            <label>Detail View Start (s):</label>
+            <input type="number" id="detailStart" value="0.0" step="0.01">
+
+            <label>Detail View End (s):</label>
+            <input type="number" id="detailEnd" value="0.02" step="0.01">
+
+            <button onclick="analyze()">Analyze</button>
+        </div>
+
+        <div id="plots">
+            <div id="overviewPlot"></div>
+            <div id="detailPlot"></div>
+        </div>
+
+        <div id="stats" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        function processData(csv, downsample, startTime, endTime) {
+            const lines = csv.split('\n');
+            const data = {
+                full: { x: [], y: [] },
+                resampled: { x: [], y: [] },
+                detail: { x: [], y: [] }
+            };
+
+            let dcOffset = 0;
+            let sampleCount = 0;
+
+            lines.forEach((line, idx) => {
+                if (line.trim() === '') return;
+
+                const [timeStr, valueStr] = line.split(',');
+                const time = parseFloat(timeStr);
+                const value = parseFloat(valueStr);
+
+                // Collect DC offset data
+                dcOffset += value;
+                sampleCount++;
+
+                // Full dataset
+                data.full.x.push(time);
+                data.full.y.push(value);
+
+                // Downsampled data
+                if (idx % downsample === 0) {
+                    data.resampled.x.push(time);
+                    data.resampled.y.push(value);
+                }
+
+                // Detailed view
+                if (time >= startTime && time <= endTime) {
+                    data.detail.x.push(time);
+                    data.detail.y.push(value);
+                }
+            });
+
+            dcOffset /= sampleCount;
+
+            return {
+                data,
+                stats: {
+                    dcOffset: dcOffset.toFixed(4),
+                    totalSamples: sampleCount,
+                    resampledSamples: data.resampled.x.length
+                }
+            };
+        }
+
+        function analyze() {
+            const csv = document.getElementById('csvData').value;
+            const downsample = parseInt(document.getElementById('downsample').value);
+            const startTime = parseFloat(document.getElementById('detailStart').value);
+            const endTime = parseFloat(document.getElementById('detailEnd').value);
+
+            const processed = processData(csv, downsample, startTime, endTime);
+
+            // Update stats
+            document.getElementById('stats').innerHTML = `
+                Samples: ${processed.stats.totalSamples} |
+                Resampled: ${processed.stats.resampledSamples} |
+                DC Offset: ${processed.stats.dcOffset}
+            `;
+
+            // Create overview plot
+            Plotly.newPlot('overviewPlot', [{
+                x: processed.data.resampled.x,
+                y: processed.data.resampled.y,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Resampled'
+            }], {
+                title: `Overview (${downsample}x downsampled)`,
+                xaxis: { title: 'Time (s)' },
+                yaxis: { range: [-1.1, 1.1] }
+            });
+
+            // Create detailed plot
+            Plotly.newPlot('detailPlot', [{
+                x: processed.data.detail.x,
+                y: processed.data.detail.y,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Detail'
+            }], {
+                title: `Detail View (${startTime.toFixed(2)}-${endTime.toFixed(2)}s)`,
+                xaxis: { title: 'Time (s)' },
+                yaxis: { range: [-1.1, 1.1] }
+            });
+        }
+    </script>
+</body>
+
+</html>

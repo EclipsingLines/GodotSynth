@@ -1,0 +1,12 @@
+[gd_resource type="BaseParameterModulator" load_steps=3 format=3 uid="uid://8um460s14n2a"]
+
+[sub_resource type="Curve" id="Curve_mtbni"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.279069, 1), 0.0, 0.0, 0, 0, Vector2(0.399224, 0.7), 0.0, 0.0, 0, 0, Vector2(0.799741, 0.7), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 5
+
+[sub_resource type="ADSR" id="ADSR_tjcaf"]
+attack = 0.69677
+visual_curve = SubResource("Curve_mtbni")
+
+[resource]
+envelope = SubResource("ADSR_tjcaf")

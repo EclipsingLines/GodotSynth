@@ -1,0 +1,73 @@
+title: Glaits Documentation
+description: Documentation for the Glaits SIMD-optimized audio synthesis GDExtension for Godot 4
+theme: jekyll-theme-minimal
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  math_engine: mathjax
+
+plugins:
+  - jekyll-relative-links
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+relative_links:
+  enabled: true
+  collections: true
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+      mermaid: true
+  - scope:
+      path: "oscillator_engines"
+    values:
+      category: "Oscillator Engines"
+  - scope:
+      path: "api"
+    values:
+      category: "API Reference"
+
+sass:
+  style: compressed
+
+# Mermaid diagram support
+mermaid:
+  version: "9.3.0"
+  
+# Custom variables
+repo_name: Glaits
+repo_url: https://github.com/yourusername/Glaits
+version: "2.0.0"
+support_email: support@example.com
+
+# Navigation
+header_pages:
+  - synth_engine_capabilities.md
+  - architecture/overview.md
+  - implementation/overview.md
+  - integration/godot.md
+
+# Footer links
+footer_links:
+  - title: GitHub
+    url: https://github.com/yourusername/Glaits
+  - title: Issues
+    url: https://github.com/yourusername/Glaits/issues
+  - title: License
+    url: https://github.com/yourusername/Glaits/blob/main/LICENSE.md
+  - title: Godot Asset Library
+    url: https://godotengine.org/asset-library/asset/

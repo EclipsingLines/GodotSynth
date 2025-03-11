@@ -1,0 +1,642 @@
+[gd_scene load_steps=23 format=3 uid="uid://cyndffxmsa4rn"]
+
+[ext_resource type="Script" uid="uid://n0quo1dyvxfv" path="res://synth_player.gd" id="1_3eeuk"]
+[ext_resource type="Script" uid="uid://cwv0buggdocub" path="res://key_note.gd" id="1_7fek3"]
+[ext_resource type="Theme" uid="uid://dmft0dpsjewks" path="res://piano_key_theme.tres" id="2_fic21"]
+[ext_resource type="Script" uid="uid://c8oikiv8y15k2" path="res://audio_engine/music_engine/music_note.gd" id="3_dqhhv"]
+
+[sub_resource type="Resource" id="Resource_pj01b"]
+script = ExtResource("3_dqhhv")
+midi_note = 0
+duration = 0.0
+velocity = 0.85
+articulation = 0.0
+timbre = 0.0
+metadata/_custom_type_script = "uid://c8oikiv8y15k2"
+
+[sub_resource type="Curve" id="Curve_pj01b"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.027027, 1), 0.0, 0.0, 0, 0, Vector2(0.189189, 0.7), 0.0, 0.0, 0, 0, Vector2(0.72973, 0.7), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 5
+
+[sub_resource type="ADSR" id="ADSR_soc20"]
+attack = 0.05
+visual_curve = SubResource("Curve_pj01b")
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_6dab6"]
+modulation/mod_amount = 1.0
+modulation/mod_source = SubResource("ADSR_soc20")
+modulation/mod_type = 2
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_nqi2y"]
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_cdj6m"]
+base_value = 0.1
+modulation/mod_max = 0.5
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_gi8b8"]
+base_value = 0.5
+modulation/mod_max = 0.9
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_l35g5"]
+base_value = 0.6
+modulation/mod_max = 0.9
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_7jvcg"]
+base_value = 0.2
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_pu54e"]
+base_value = 0.02
+modulation/mod_max = 0.1
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_np0fl"]
+base_value = 0.3
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_4wbpd"]
+base_value = 0.7
+
+[sub_resource type="Reverb" id="Reverb_0aq2s"]
+room_size_parameter = SubResource("ModulatedParameter_np0fl")
+damping_parameter = SubResource("ModulatedParameter_gi8b8")
+width_parameter = SubResource("ModulatedParameter_4wbpd")
+mix_parameter = SubResource("ModulatedParameter_7jvcg")
+pre_delay_parameter = SubResource("ModulatedParameter_pu54e")
+diffusion_parameter = SubResource("ModulatedParameter_l35g5")
+
+[sub_resource type="EffectChain" id="EffectChain_eovjq"]
+effects = Array[SynthAudioEffect]([SubResource("Reverb_0aq2s")])
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_huhme"]
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_yvmvt"]
+modulation/mod_min = -24.0
+modulation/mod_max = 24.0
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_n4eyf"]
+base_value = 0.5
+modulation/mod_min = 0.1
+modulation/mod_max = 0.9
+
+[sub_resource type="ChordSynthConfiguration" id="ChordSynthConfiguration_dmk0v"]
+chord_type_parameter = SubResource("ModulatedParameter_nqi2y")
+inversion_parameter = SubResource("ModulatedParameter_huhme")
+amplitude_parameter = SubResource("ModulatedParameter_6dab6")
+pitch_parameter = SubResource("ModulatedParameter_yvmvt")
+pulse_width_parameter = SubResource("ModulatedParameter_n4eyf")
+detune_parameter = SubResource("ModulatedParameter_cdj6m")
+effect_chain = SubResource("EffectChain_eovjq")
+root_note_only = true
+parameters = {
+"amplitude": SubResource("ModulatedParameter_6dab6"),
+"chord_type": SubResource("ModulatedParameter_nqi2y"),
+"detune": SubResource("ModulatedParameter_cdj6m"),
+"inversion": SubResource("ModulatedParameter_huhme"),
+"pitch": SubResource("ModulatedParameter_yvmvt"),
+"pulse_width": SubResource("ModulatedParameter_n4eyf")
+}
+
+[node name="Control" type="CanvasLayer"]
+script = ExtResource("1_3eeuk")
+note = SubResource("Resource_pj01b")
+sound = SubResource("ChordSynthConfiguration_dmk0v")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1024, 256)
+layout_mode = 2
+alignment = 1
+
+[node name="key_white_c" type="Control" parent="CenterContainer/HBoxContainer"]
+custom_minimum_size = Vector2(24, 256)
+layout_mode = 2
+script = ExtResource("1_7fek3")
+note = 48
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_c"]
+custom_minimum_size = Vector2(48, 256)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_c"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_black_c#" type="Control" parent="CenterContainer/HBoxContainer"]
+z_index = 1
+custom_minimum_size = Vector2(24, 186)
+layout_mode = 2
+size_flags_vertical = 0
+script = ExtResource("1_7fek3")
+note = 49
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_c#"]
+modulate = Color(0, 0, 0, 1)
+custom_minimum_size = Vector2(48, 186)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -24.0
+offset_right = 24.0
+offset_bottom = 186.0
+grow_horizontal = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_c#"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_white_d" type="Control" parent="CenterContainer/HBoxContainer"]
+custom_minimum_size = Vector2(24, 256)
+layout_mode = 2
+script = ExtResource("1_7fek3")
+note = 50
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_d"]
+custom_minimum_size = Vector2(48, 256)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_d"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_black_d#" type="Control" parent="CenterContainer/HBoxContainer"]
+z_index = 1
+custom_minimum_size = Vector2(24, 186)
+layout_mode = 2
+size_flags_vertical = 0
+script = ExtResource("1_7fek3")
+note = 51
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_d#"]
+modulate = Color(0, 0, 0, 1)
+custom_minimum_size = Vector2(48, 186)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -24.0
+offset_right = 24.0
+offset_bottom = 186.0
+grow_horizontal = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_d#"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_white_e" type="Control" parent="CenterContainer/HBoxContainer"]
+custom_minimum_size = Vector2(24, 256)
+layout_mode = 2
+script = ExtResource("1_7fek3")
+note = 52
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_e"]
+custom_minimum_size = Vector2(48, 256)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_e"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_black_null_1" type="Control" parent="CenterContainer/HBoxContainer"]
+z_index = 1
+custom_minimum_size = Vector2(24, 186)
+layout_mode = 2
+size_flags_vertical = 0
+script = ExtResource("1_7fek3")
+note = 48
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_null_1"]
+visible = false
+modulate = Color(0, 0, 0, 1)
+custom_minimum_size = Vector2(48, 186)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -24.0
+offset_right = 24.0
+offset_bottom = 186.0
+grow_horizontal = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_null_1"]
+visible = false
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_white_f" type="Control" parent="CenterContainer/HBoxContainer"]
+custom_minimum_size = Vector2(24, 256)
+layout_mode = 2
+script = ExtResource("1_7fek3")
+note = 53
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_f"]
+custom_minimum_size = Vector2(48, 256)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_f"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_black_f#" type="Control" parent="CenterContainer/HBoxContainer"]
+z_index = 1
+custom_minimum_size = Vector2(24, 186)
+layout_mode = 2
+size_flags_vertical = 0
+script = ExtResource("1_7fek3")
+note = 54
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_f#"]
+modulate = Color(0, 0, 0, 1)
+custom_minimum_size = Vector2(48, 186)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -24.0
+offset_right = 24.0
+offset_bottom = 186.0
+grow_horizontal = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_f#"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_white_g" type="Control" parent="CenterContainer/HBoxContainer"]
+custom_minimum_size = Vector2(24, 256)
+layout_mode = 2
+script = ExtResource("1_7fek3")
+note = 55
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_g"]
+custom_minimum_size = Vector2(48, 256)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_g"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_black_g#" type="Control" parent="CenterContainer/HBoxContainer"]
+z_index = 1
+custom_minimum_size = Vector2(24, 186)
+layout_mode = 2
+size_flags_vertical = 0
+script = ExtResource("1_7fek3")
+note = 56
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_g#"]
+modulate = Color(0, 0, 0, 1)
+custom_minimum_size = Vector2(48, 186)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -24.0
+offset_right = 24.0
+offset_bottom = 186.0
+grow_horizontal = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_g#"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_white_a" type="Control" parent="CenterContainer/HBoxContainer"]
+custom_minimum_size = Vector2(24, 256)
+layout_mode = 2
+script = ExtResource("1_7fek3")
+note = 57
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_a"]
+custom_minimum_size = Vector2(48, 256)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_a"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_black_a#" type="Control" parent="CenterContainer/HBoxContainer"]
+z_index = 1
+custom_minimum_size = Vector2(24, 186)
+layout_mode = 2
+size_flags_vertical = 0
+script = ExtResource("1_7fek3")
+note = 58
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_a#"]
+modulate = Color(0, 0, 0, 1)
+custom_minimum_size = Vector2(48, 186)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -24.0
+offset_right = 24.0
+offset_bottom = 186.0
+grow_horizontal = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_a#"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_white_b" type="Control" parent="CenterContainer/HBoxContainer"]
+custom_minimum_size = Vector2(24, 256)
+layout_mode = 2
+script = ExtResource("1_7fek3")
+note = 59
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_b"]
+custom_minimum_size = Vector2(48, 256)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_b"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_black_null_3" type="Control" parent="CenterContainer/HBoxContainer"]
+z_index = 1
+custom_minimum_size = Vector2(24, 186)
+layout_mode = 2
+size_flags_vertical = 0
+script = ExtResource("1_7fek3")
+note = 48
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_null_3"]
+visible = false
+modulate = Color(0, 0, 0, 1)
+custom_minimum_size = Vector2(48, 186)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -24.0
+offset_right = 24.0
+offset_bottom = 186.0
+grow_horizontal = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_null_3"]
+visible = false
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
+
+[node name="key_white_c2" type="Control" parent="CenterContainer/HBoxContainer"]
+custom_minimum_size = Vector2(24, 256)
+layout_mode = 2
+script = ExtResource("1_7fek3")
+note = 60
+
+[node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_c2"]
+custom_minimum_size = Vector2(48, 256)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_fic21")
+
+[node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_c2"]
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -23.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "C3"
+horizontal_alignment = 1
