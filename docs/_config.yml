@@ -9,7 +9,7 @@ subtitle: A powerful and flexible synthesizer engine for Godot 4
 description: A powerful and flexible synthesizer engine for Godot 4 providing virtual analog synthesis with extensive modulation capabilities
 url: # Your GitHub Pages URL or custom domain
 baseurl: # Leave blank for GitHub Pages
-repository: # yourusername/godot-synth-engine
+repository: EclipsingLines/GodotSynth # yourusername/godot-synth-engine
 
 # Theme and layout settings
 chulapa-skin: base
@@ -35,7 +35,7 @@ navbar_list:
 
 # Social links (optional)
 social:
-  github: # yourusername/godot-synth-engine
+  github: EclipsingLines/GodotSynth # yourusername/godot-synth-engine
 
 # FontAwesome
 fa_version: "6"
