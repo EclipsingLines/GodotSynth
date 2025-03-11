@@ -1,7 +1,7 @@
 ---
 layout: landingpage
 title: Godot Synth Engine
-subtitle: Powerful and flexible audio synthesis engine collection for use with the Godot game engine (4.4+). /n SFX and procedural music. 
+subtitle: Powerful and flexible audio synthesis engine collection for use with the Godot game engine (4.4+).<br>SFX and procedural music. 
 header_type: splash
 header_img : "./assets/img/synth_main.webp"
 show_sociallinks  : true
