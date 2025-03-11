@@ -1,6 +1,10 @@
 ---
 layout: landingpage
 title: Godot Synth Engine
+subtitle: First impression is the last impression
+header_type: hero
+header_img : "./assets/img/gallery/synth_main.jpg"
+show_sociallinks  : true
 ---
 
 # Godot Synth Engine
