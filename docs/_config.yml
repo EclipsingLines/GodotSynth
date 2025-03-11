@@ -1,3 +1,47 @@
+# Chulapa theme configuration
 remote_theme: dieghernan/chulapa
+
+# Site Settings and SEO
+locale: "en-US"
 title: Godot Synth Engine
-description: A powerful and flexible synthesizer engine for Godot 4
+title_separator: " | "
+subtitle: A powerful and flexible synthesizer engine for Godot 4
+description: A powerful and flexible synthesizer engine for Godot 4 providing virtual analog synthesis with extensive modulation capabilities
+url: # Your GitHub Pages URL or custom domain
+baseurl: # Leave blank for GitHub Pages
+repository: # yourusername/godot-synth-engine
+
+# Theme and layout settings
+chulapa-skin: base
+navbar: true
+header_type: base
+footer: true
+
+# Navigation
+navbar_fixed: true
+navbar_list:
+  - title: Home
+    url: /
+  - title: Documentation
+    url: /docs/
+  - title: Engines
+    url: /engines
+  - title: Modulation
+    url: /modulation
+  - title: Effects
+    url: /effects
+  - title: GitHub
+    url: # Your repository URL
+
+# Social links (optional)
+social:
+  github: # yourusername/godot-synth-engine
+
+# FontAwesome
+fa_version: "6"
+
+# Search settings (optional)
+search:
+  provider: lunr
+  label: Search
+  landing_page: /search
