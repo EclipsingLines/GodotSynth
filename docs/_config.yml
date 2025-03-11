@@ -20,7 +20,8 @@ baseurl: /GodotSynth
 repository: EclipsingLines/GodotSynth
 
 # Theme and layout settings
-chulapa-skin: base
+chulapa-skin:
+  skin: solar
 navbar: true
 header_type: base
 footer: true
