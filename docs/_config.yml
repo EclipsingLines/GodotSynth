@@ -18,7 +18,6 @@ description: A powerful and flexible synthesizer engine for Godot 4 providing vi
 url: https://eclipsinglines.github.io
 baseurl: /GodotSynth
 repository: EclipsingLines/GodotSynth
-footer_custom: 'Copyright &copy; <a href="https://linktr.ee/eclipsinglines" target="_blank">EclipsingLines</a> 2025'
 # Theme and layout settings
 chulapa-skin:
   skin  : solar
@@ -26,6 +25,7 @@ chulapa-skin:
 navbar: true
 header_type: base
 footer: true
+footer_custom: 'Copyright &copy; <a href="https://linktr.ee/eclipsinglines" target="_blank">EclipsingLines</a> 2025'
 
 # Navigation
 navbar_fixed: true
