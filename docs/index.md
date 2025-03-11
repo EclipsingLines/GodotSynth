@@ -7,10 +7,10 @@ header_img : "./assets/img/gallery/synth_main.jpg"
 show_sociallinks  : true
 project_links:
     - url: https://github.com/EclipsingLines/GodotSynth
-      icon: https://github.com/godotengine/godot-website/blob/master/favicon.ico
+      icon: fab fa-github
       label: Synth
     - url: https://godotengine.org/
-      icon: fas fa-superscript
+      icon: fas fa-godot
       label: Godot
 ---
 
