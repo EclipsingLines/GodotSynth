@@ -30,8 +30,8 @@ chulapa-skin:
   highlight   : "ZENBURN"
 navbar: true
 header_type: base
-footer: true
-footer_custom: 'Copyright &copy; <a href="https://linktr.ee/eclipsinglines" target="_blank">EclipsingLines</a> 2025'
+footer:
+  copyright: '&copy; <a href="https://linktr.ee/eclipsinglines" target="_blank">EclipsingLines</a> 2025'
 
 # Navigation
 navbar_fixed: true
