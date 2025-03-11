@@ -22,7 +22,7 @@ footer_custom: 'Copyright &copy; <a href="https://linktr.ee/eclipsinglines" targ
 # Theme and layout settings
 chulapa-skin:
   skin  : solar
-  highlight   : zenburn
+  highlight   : "zenburn"
 navbar: true
 header_type: base
 footer: true
