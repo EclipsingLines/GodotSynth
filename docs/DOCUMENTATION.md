@@ -1,3 +1,8 @@
+---
+layout: custom_default
+title: Godot Synth Engine Documentation
+---
+
 # Godot Synth Engine Documentation
 
 This document provides an overview of the Godot Synth Engine, its architecture, and how to use it in your Godot projects.

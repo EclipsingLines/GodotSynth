@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: custom_default
 title: Synthesis Engines
 ---
 

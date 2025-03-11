@@ -14,6 +14,8 @@ project_links:
       label: Godot
 ---
 
+{% include kofi-widget.html %}
+
 # Godot Synth Engine
 
 A powerful and flexible synthesizer engine for Godot 4, providing virtual analog synthesis with extensive modulation capabilities and audio effects.
