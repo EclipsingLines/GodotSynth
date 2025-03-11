@@ -32,6 +32,8 @@ navbar: true
 header_type: base
 footer:
   copyright: '&copy; <a href="https://linktr.ee/eclipsinglines" target="_blank">EclipsingLines</a> 2025'
+  custom: true
+  custom_file: kofi-widget.html
 
 # Navigation
 navbar_fixed: true
