@@ -1,15 +1,23 @@
 # Chulapa theme configuration
 remote_theme: dieghernan/chulapa
 
+# Required plugins for Chulapa theme
+plugins:
+  - jekyll-paginate
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-github-metadata
+  - jekyll-include-cache
+
 # Site Settings and SEO
 locale: "en-US"
 title: Godot Synth Engine
 title_separator: " | "
 subtitle: A powerful and flexible synthesizer engine for Godot 4
 description: A powerful and flexible synthesizer engine for Godot 4 providing virtual analog synthesis with extensive modulation capabilities
-url: # Your GitHub Pages URL or custom domain
-baseurl: # Leave blank for GitHub Pages
-repository: EclipsingLines/GodotSynth # yourusername/godot-synth-engine
+url: https://eclipsinglines.github.io
+baseurl: /GodotSynth
+repository: EclipsingLines/GodotSynth
 
 # Theme and layout settings
 chulapa-skin: base
@@ -31,11 +39,11 @@ navbar_list:
   - title: Effects
     url: /effects
   - title: GitHub
-    url: # Your repository URL
+    url: https://github.com/EclipsingLines/GodotSynth
 
 # Social links (optional)
 social:
-  github: EclipsingLines/GodotSynth # yourusername/godot-synth-engine
+  github: EclipsingLines/GodotSynth
 
 # FontAwesome
 fa_version: "6"
