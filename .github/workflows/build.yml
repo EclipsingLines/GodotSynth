@@ -142,4 +142,4 @@ jobs:
           release_name: Godot Synth Latest
           draft: false
           prerelease: false
-          files: ${{ github.event.repository.name }}.zip
+          files: ${{ github.event.repository.name }}
