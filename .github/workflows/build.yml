@@ -132,6 +132,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ github.event.repository.name }}
+          
+      - name: Debug Artifact Structure
+        run: |
+          find . -type f | sort
+          ls -la
+       
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
