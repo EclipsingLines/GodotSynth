@@ -1,0 +1,65 @@
+﻿name: 🍏 iOS Builds
+on: [ workflow_call, workflow_dispatch ]
+
+jobs:
+  build:
+    name: 🍏 iOS ${{ matrix.arch }} ${{ matrix.target }}
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ios]
+        target: [debug, release]
+        arch: [universal]
+
+    steps:
+      - name: Checkout Godot Synth
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Base Dependencies
+        uses: ./.github/actions/base-deps
+        with:
+            platform: ${{ matrix.platform }}
+
+      - name: Setup Build Cache
+        uses: ./.github/actions/build-cache
+        with:
+          cache-name: ${{ matrix.platform }}-${{ matrix.target }}
+        continue-on-error: true
+
+      - name: Build Godot Synth
+        env:
+            SCONS_CACHE: "${{ github.workspace }}/.scons-cache/"
+            TARGET: 'template_${{ matrix.target }}'
+            ARCH: '${{ matrix.arch }}'
+        shell: sh
+        run: |
+            scons target=$TARGET platform='${{ matrix.platform }}' arch=$ARCH debug_symbols=no -j2
+
+      - name: Include Files
+        shell: sh
+        run: |
+          ls -l project/addons/godot_synth/bin/*
+          cp '${{ github.workspace }}/README.md' '${{ github.workspace }}/LICENSE.txt' ${{ github.workspace }}/project/addons/godot_synth/
+
+      - name: Upload Package
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: t3d-${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.target }}
+          path: |
+            ${{ github.workspace }}/project/
+
+  merge:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          include-hidden-files: true
+          name: ${{ github.event.repository.name }}
+          pattern: t3d-*
+          delete-merged: true
