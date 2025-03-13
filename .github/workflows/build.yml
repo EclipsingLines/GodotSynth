@@ -111,7 +111,7 @@ jobs:
       - name: Copy README.md and LICENSE to addon and make a new directory for artifacts
         shell: bash
         run: |
-          for addon in ${{ github.workspace }}/project/addons/*/; do
+          for addon in ${{ github.workspace }}/project/addons/**/; do
             cp --no-clobber '${{ github.workspace }}/README.md' '${{ github.workspace }}/LICENSE' "$addon"
           done
           mkdir --parents ${{ github.workspace }}/github-artifact/${{ github.event.repository.name }}-${{ github.sha }}/
