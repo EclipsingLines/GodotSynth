@@ -139,7 +139,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}  # Use the latest tag
-          release_name: Godot Synth Latest
+          name: Godot Synth Latest
           draft: false
           prerelease: false
           files: ${{ github.event.repository.name }}
