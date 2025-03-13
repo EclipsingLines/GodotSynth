@@ -42,7 +42,7 @@ jobs:
         shell: sh
         run: |
           ls -l project/addons/godot_synth/bin/
-          strip project/addons/godot_synth/bin/libterrain.*
+          strip project/addons/godot_synth/bin/libgodot_synth.*
           ls -l project/addons/godot_synth/bin/
           cp '${{ github.workspace }}/README.md' '${{ github.workspace }}/LICENSE' ${{ github.workspace }}/project/addons/godot_synth/
 

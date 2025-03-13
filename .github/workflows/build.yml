@@ -95,7 +95,7 @@ jobs:
         shell: sh
         run: |
           ls -l project/addons/godot_synth/bin/
-          strip project/addons/godot_synth/bin/libsynth.*
+          strip project/addons/godot_synth/bin/libgodot_synth.*
           ls -l project/addons/godot_synth/bin/
 
       - name: Include Files
