@@ -134,4 +134,4 @@ jobs:
           release_name: Godot Synth Latest
           draft: false
           prerelease: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_TOKEN }}
