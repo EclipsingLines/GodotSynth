@@ -142,7 +142,7 @@ jobs:
 
       - name: Create ZIP Archive
         run: |
-          cd ./merged-artifacts
+          cd ./release_artifact
           zip -r ../${{ github.event.repository.name }}.zip ./*
           cd ..
           ls -la
