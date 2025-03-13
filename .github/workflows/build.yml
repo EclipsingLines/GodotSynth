@@ -67,7 +67,7 @@ jobs:
             flags: threads=no
 
     steps:
-      - name: Checkout Terrain3D
+      - name: Checkout Godot Synth
         uses: actions/checkout@v4
         with:
           submodules: recursive
