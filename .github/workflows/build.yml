@@ -21,7 +21,47 @@ jobs:
         identifier: [linux, windows, macos, ios, android-arm32, android-arm64, web-nothreads]
         target: [debug, release]
         include:
-          # your existing matrix entries
+          - identifier: linux
+            platform: linux
+            name: 🐧 Linux
+            runner: ubuntu-22.04
+            flags: arch=x86_64
+            
+          - identifier: windows
+            platform: windows
+            name: 🪟 Windows
+            runner: ubuntu-22.04
+            flags: arch=x86_64
+
+          - identifier: macos
+            platform: macos
+            name: 🍎 macOS
+            runner: macos-latest
+            flags: arch=universal
+
+          - identifier: ios
+            platform: ios
+            name: 🍏 iOS
+            runner: macos-latest
+            flags: arch=universal
+
+          - identifier: android-arm32
+            platform: android
+            name: 🤖 Android Arm32
+            runner: ubuntu-22.04
+            flags: arch=arm32
+
+          - identifier: android-arm64
+            platform: android
+            name: 🤖 Android Arm64
+            runner: ubuntu-22.04
+            flags: arch=arm64
+
+          - identifier: web-nothreads
+            platform: web
+            name: 🌐 Web No-threads
+            runner: ubuntu-22.04
+            flags: threads=no
     steps:
       - name: Checkout Godot Synth
         uses: actions/checkout@v4
