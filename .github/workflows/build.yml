@@ -140,13 +140,20 @@ jobs:
           ls -la
        
 
+      - name: Create ZIP Archive
+        run: |
+          cd ./merged-artifacts
+          zip -r ../${{ github.event.repository.name }}.zip ./*
+          cd ..
+          ls -la
+                                                                                                                                                  
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref_name }}  # Use the latest tag
-          name: Godot Synth - ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          name: Godot Synth ${{ github.ref_name }}
           draft: false
           prerelease: false
-          files: ./release_artifact/${{ github.event.repository.name }}
+          files: ${{ github.event.repository.name }}.zip
