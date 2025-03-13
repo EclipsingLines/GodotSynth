@@ -130,6 +130,8 @@ jobs:
       - name: Create GitHub release
         uses: actions/create-release@v1
         with:
+          tag_name: ${{ github.ref_name }}  # Use the latest tag
           release_name: Godot Synth Latest
           draft: false
           prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
