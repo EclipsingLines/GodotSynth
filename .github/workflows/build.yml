@@ -6,7 +6,7 @@ on:
     pull_request:
         paths: [ '**' ]
     workflow_dispatch:
-
+permissions: write-all
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
