@@ -1,7 +1,8 @@
 name: 🛠️ Builds
 on:
   push:
-  pull_request:
+    tags:
+      - '*'
   workflow_dispatch:
 
 jobs:
@@ -103,7 +104,6 @@ jobs:
           SCONS_CACHE_LIMIT: 4096
         run: |
           scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}' -j2
-          ls -l project/addons/*/bin/
       # TODO: Replace '--no-clobber' with '--update=none' in ubuntu 24.04
       # TODO: Workaround artifact folder structure: https://github.com/actions/upload-artifact/issues/174
       - name: Copy README.md and LICENSE to addon and make a new directory for artifacts
