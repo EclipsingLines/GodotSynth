@@ -1,5 +1,3 @@
-# Modeled off of godot-cpp https://github.com/godotengine/godot-cpp/blob/master/.github/workflows/ci.yml
-
 name: 🛠️ Build All
 on: 
     push:
@@ -23,48 +21,7 @@ jobs:
         identifier: [linux, windows, macos, ios, android-arm32, android-arm64, web-nothreads]
         target: [debug, release]
         include:
-          - identifier: linux
-            platform: linux
-            name: 🐧 Linux
-            runner: ubuntu-22.04
-            flags: arch=x86_64
-            
-          - identifier: windows
-            platform: windows
-            name: 🪟 Windows
-            runner: ubuntu-22.04
-            flags: arch=x86_64
-
-          - identifier: macos
-            platform: macos
-            name: 🍎 macOS
-            runner: macos-latest
-            flags: arch=universal
-
-          - identifier: ios
-            platform: ios
-            name: 🍏 iOS
-            runner: macos-latest
-            flags: arch=universal
-
-          - identifier: android-arm32
-            platform: android
-            name: 🤖 Android Arm32
-            runner: ubuntu-22.04
-            flags: arch=arm32
-
-          - identifier: android-arm64
-            platform: android
-            name: 🤖 Android Arm64
-            runner: ubuntu-22.04
-            flags: arch=arm64
-
-          - identifier: web-nothreads
-            platform: web
-            name: 🌐 Web No-threads
-            runner: ubuntu-22.04
-            flags: threads=no
-
+          # your existing matrix entries
     steps:
       - name: Checkout Godot Synth
         uses: actions/checkout@v4
@@ -122,3 +79,50 @@ jobs:
           name: ${{ github.event.repository.name }}
           pattern: t3d-*
           delete-merged: true
+
+  release:
+    runs-on: ubuntu-latest
+    needs: merge
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1` 2>/dev/null)
+          if [ -z "$latest_tag" ]; then
+            latest_tag="v0.0.0"
+          fi
+          echo ::set-output name=tag::${latest_tag}
+
+      - name: Calculate next version
+        id: next_version
+        run: |
+          latest_tag=${{ steps.get_latest_tag.outputs.tag }}
+          echo "Latest tag: $latest_tag"
+          if [[ "$latest_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            major=$(echo $latest_tag | cut -d. -f1 | cut -dv -f2)
+            minor=$(echo $latest_tag | cut -d. -f2)
+            patch=$(echo $latest_tag | cut -d. -f3)
+            new_version="v$major.$(($minor + 1)).0"
+          else
+            new_version="v1.0.0"
+          fi
+          echo "New version: $new_version"
+          echo ::set-output name=version::$new_version
+
+      - name: Create new tag
+        run: |
+          git tag ${{ steps.next_version.outputs.version }}
+          git push origin ${{ steps.next_version.outputs.version }}
+
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.next_version.outputs.version }}
+          release_name: Release ${{ steps.next_version.outputs.version }}
+          body: |
+            New release ${{ steps.next_version.outputs.version }}
+          draft: false
+          prerelease: false
