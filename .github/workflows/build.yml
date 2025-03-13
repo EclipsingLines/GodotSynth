@@ -1,7 +1,8 @@
 name: 🛠️ Builds
 on:
   push:
-  pull_request:
+    tags:
+      - '*'
   workflow_dispatch:
 
 jobs:
