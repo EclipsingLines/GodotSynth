@@ -19,12 +19,12 @@ jobs:
           submodules: recursive
 
       - name: Setup Base Dependencies
-        uses: ./actions/base-deps
+        uses: ./.github/actions/base-deps
         with:
             platform: ${{ matrix.platform }}
 
       - name: Setup Build Cache
-        uses: ./actions/build-cache
+        uses: ./.github/actions/build-cache
         with:
           cache-name: ${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.target }}
         continue-on-error: true
