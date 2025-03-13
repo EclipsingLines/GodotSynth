@@ -132,7 +132,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ github.event.repository.name }}
-          
+          path: ./release_artifact
+
       - name: Debug Artifact Structure
         run: |
           find . -type f | sort
@@ -145,7 +146,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}  # Use the latest tag
-          name: Godot Synth Latest
+          name: Godot Synth - ${{ github.ref_name }}
           draft: false
           prerelease: false
-          files: GodotSynth/${{ github.event.repository.name }}
+          files: ./release_artifact/${{ github.event.repository.name }}
