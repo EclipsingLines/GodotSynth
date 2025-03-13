@@ -128,6 +128,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download Merged Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         env:
