@@ -42,7 +42,7 @@ jobs:
         shell: sh
         run: |
           ls -l project/addons/godot_synth/bin/
-          cp '${{ github.workspace }}/README.md' '${{ github.workspace }}/LICENSE.txt' ${{ github.workspace }}/project/addons/godot_synth/
+          cp '${{ github.workspace }}/README.md' '${{ github.workspace }}/LICENSE' ${{ github.workspace }}/project/addons/godot_synth/
 
       - name: Upload Package
         uses: actions/upload-artifact@v4
