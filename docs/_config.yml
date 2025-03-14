@@ -21,9 +21,9 @@ repository: EclipsingLines/GodotSynth
 author:
    name: EclipsingLines
    links:
-     - url: https://linktr.ee/eclipsinglines
+     - url: https://eclipsinglines.github.io/
        icon: "fas fa-link"
-       label: Linktree
+       label: Website
 # Theme and layout settings
 chulapa-skin:
   skin  : solar
@@ -31,7 +31,7 @@ chulapa-skin:
 navbar: true
 header_type: base
 footer:
-  copyright: '&copy; <a href="https://linktr.ee/eclipsinglines" target="_blank">EclipsingLines</a> 2025'
+  copyright: '&copy; <a href="https://eclipsinglines.github.io/" target="_blank">EclipsingLines</a> 2025'
   custom: true
   custom_file: kofi-widget.html
 
