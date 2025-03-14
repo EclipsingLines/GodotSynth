@@ -86,7 +86,7 @@ library = env.SharedLibrary(
     source=sources,
 )
 
-copy = env.InstallAs("{}/godot_synth/bin/{}lib{}".format(projectdir, filepath, file), library)
+copy = env.InstallAs("{}/godot_synth/bin/{}{}".format(projectdir, filepath, file), library)
 
 default_args = [library, copy]
 Default(*default_args)
