@@ -89,21 +89,21 @@ Check the synth_player node for more information on a how to play notes.
 
 ## Planned Features
 
-[ ] Virtual Analog Engine
-[ ] Chord Engine
-[ ] 4 OP FM Engine
-[ ] Formant Engine
-[ ] Wavetable Engine
+- [x] Virtual Analog Engine
+- [ ] Chord Engine
+- [ ] 4 OP FM Engine
+- [ ] Formant Engine
+- [ ] Wavetable Engine
 
-[ ] Custom editor window for testing sounds in editor
-[ ] Single track step sequencer module
+- [ ] Custom editor window for testing sounds in editor
+- [ ] Single track step sequencer module
 
-[ ] LFO lookup table caching
-[ ] SIMD optimizations
-[ ] Sound caching and async preloading
+- [ ] LFO lookup table caching
+- [ ] SIMD optimizations
+- [ ] Sound caching and async preloading
 
-[ ] Gold braided cable end simulation
-[ ] Warmer tone slider
+- [ ] Gold braided cable end simulation
+- [ ] Warmer tone slider
 
 ## Contributing
 
