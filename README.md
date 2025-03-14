@@ -56,7 +56,7 @@ Configures the virtual analog synthesizer with oscillators, parameters, and effe
 
 ## Effects
 
-> ![INFO]
+> [!IMPORTANT]
 > These effects all accept modulation parameters, which also makes them more CPU intensive than the Godot counterparts.
 > If you don't need modulation on the effects please consider using the Godot audio effects in your audio bus instead.
 
@@ -80,7 +80,7 @@ The synth engine includes a variety of audio effects:
 ### Spatial
 > [!WARNING]
 > The reverb is currently not enabled due to CPU issues.
-- Reverb
+- ~~Reverb~~
 
 ## Basic Usage Example
 
