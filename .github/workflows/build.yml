@@ -156,4 +156,4 @@ jobs:
           name: Godot Synth ${{ github.ref_name }}
           draft: false
           prerelease: false
-          files: ${{ github.event.repository.name }}.zip
+          files: ${{ github.event.repository.name }}-${{ github.ref_name }}.zip
