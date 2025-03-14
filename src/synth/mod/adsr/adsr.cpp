@@ -20,15 +20,24 @@ void ADSR::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_release", "value"), &ADSR::set_release);
 	ClassDB::bind_method(D_METHOD("get_release"), &ADSR::get_release);
 
+	// Bind curve type setters/getters
+	ClassDB::bind_method(D_METHOD("set_attack_type", "type"), &ADSR::set_attack_type);
+	ClassDB::bind_method(D_METHOD("get_attack_type"), &ADSR::get_attack_type);
+	ClassDB::bind_method(D_METHOD("set_decay_type", "type"), &ADSR::set_decay_type);
+	ClassDB::bind_method(D_METHOD("get_decay_type"), &ADSR::get_decay_type);
+	ClassDB::bind_method(D_METHOD("set_release_type", "type"), &ADSR::set_release_type);
+	ClassDB::bind_method(D_METHOD("get_release_type"), &ADSR::get_release_type);
+
 	// Expose properties.
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "attack", PROPERTY_HINT_RANGE, "0.00001,5.0,0.00001"), "set_attack", "get_attack");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "decay", PROPERTY_HINT_RANGE, "0.00001,5.0,0.00001"), "set_decay", "get_decay");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "sustain_level", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_sustain", "get_sustain");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "release", PROPERTY_HINT_RANGE, "0.00001,5.0,0.00001"), "set_release", "get_release");
 
-	ClassDB::bind_method(D_METHOD("get_curve"), &ADSR::get_curve);
-	ClassDB::bind_method(D_METHOD("set_curve", "curve"), &ADSR::set_curve);
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "visual_curve", PROPERTY_HINT_RESOURCE_TYPE, "Curve"), "set_curve", "get_curve");
+	// Expose curve type properties with enum hints
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "attack_type", PROPERTY_HINT_ENUM, "Linear,Exponential,Logarithmic"), "set_attack_type", "get_attack_type");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "decay_type", PROPERTY_HINT_ENUM, "Linear,Exponential,Logarithmic"), "set_decay_type", "get_decay_type");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "release_type", PROPERTY_HINT_ENUM, "Linear,Exponential,Logarithmic"), "set_release_type", "get_release_type");
 
 	// Expose enum constants.
 	BIND_ENUM_CONSTANT(ATTACK);
@@ -36,6 +45,11 @@ void ADSR::_bind_methods() {
 	BIND_ENUM_CONSTANT(SUSTAIN);
 	BIND_ENUM_CONSTANT(RELEASE);
 	BIND_ENUM_CONSTANT(OFF);
+
+	// Expose curve type enum constants
+	BIND_ENUM_CONSTANT(LINEAR);
+	BIND_ENUM_CONSTANT(EXPONENTIAL);
+	BIND_ENUM_CONSTANT(LOGARITHMIC);
 }
 
 ADSR::ADSR() {
@@ -49,13 +63,15 @@ ADSR::ADSR() {
 	// For display we assume a fixed sustain duration.
 	default_sustain_time = 1.0f;
 
+	// Default curve types
+	attack_type = LINEAR;
+	decay_type = LINEAR;
+	release_type = LINEAR;
+
 	// Initialize state
 	current_level = 0.0f;
 	current_stage = OFF;
 	stage_start_time = 0.0;
-
-	visual_curve.instantiate(); // Create the Curve instance
-	_update_curve();
 }
 
 ADSR::~ADSR() {
@@ -134,13 +150,40 @@ float ADSR::get_value(const Ref<SynthNoteContext> &context) const {
 
 	switch (current_stage) {
 		case ADSR::ATTACK: {
-			float t = (abs_time - stage_start_time) / attack;
-			current_level = CLAMP(t, 0.0f, 1.0f);
+			float t = CLAMP((abs_time - stage_start_time) / attack, 0.0f, 1.0f);
+
+			// Apply the selected curve type for attack
+			switch (attack_type) {
+				case LINEAR:
+					current_level = t;
+					break;
+				case EXPONENTIAL:
+					current_level = t * t; // Simple exponential curve: t^2
+					break;
+				case LOGARITHMIC:
+					current_level = Math::sqrt(t); // Simple logarithmic curve: sqrt(t)
+					break;
+			}
 			break;
 		}
 		case ADSR::DECAY: {
 			float t = CLAMP((abs_time - stage_start_time) / decay, 0.0f, 1.0f);
-			current_level = Math::lerp(1.0f, sustain_level, t);
+
+			// Apply the selected curve type for decay
+			float decay_curve;
+			switch (decay_type) {
+				case LINEAR:
+					decay_curve = t;
+					break;
+				case EXPONENTIAL:
+					decay_curve = t * t; // Simple exponential curve: t^2
+					break;
+				case LOGARITHMIC:
+					decay_curve = Math::sqrt(t); // Simple logarithmic curve: sqrt(t)
+					break;
+			}
+
+			current_level = Math::lerp(1.0f, sustain_level, decay_curve);
 			break;
 		}
 		case ADSR::SUSTAIN:
@@ -148,8 +191,23 @@ float ADSR::get_value(const Ref<SynthNoteContext> &context) const {
 			break;
 		case ADSR::RELEASE: {
 			float t = CLAMP((abs_time - stage_start_time) / release, 0.0f, 1.0f);
+
+			// Apply the selected curve type for release
+			float release_curve;
+			switch (release_type) {
+				case LINEAR:
+					release_curve = t;
+					break;
+				case EXPONENTIAL:
+					release_curve = t * t; // Simple exponential curve: t^2
+					break;
+				case LOGARITHMIC:
+					release_curve = Math::sqrt(t); // Simple logarithmic curve: sqrt(t)
+					break;
+			}
+
 			// Use the stored release start level for consistent release behavior
-			current_level = Math::lerp(release_start_level, 0.0f, t);
+			current_level = Math::lerp(release_start_level, 0.0f, release_curve);
 			break;
 		}
 		case ADSR::OFF:
@@ -179,17 +237,8 @@ void ADSR::reset() {
 	UtilityFunctions::print("ADSR | Reset called - Stage: OFF | Level: 0.00");
 }
 
-void ADSR::set_curve(Ref<Curve> p_curve) {
-	visual_curve = p_curve;
-}
-
-Ref<Curve> ADSR::get_curve() const {
-	return visual_curve;
-}
-
 void ADSR::set_attack(float p_attack) {
 	attack = std::max(p_attack, MIN_TIME);
-	_update_curve();
 }
 
 float ADSR::get_attack() const {
@@ -198,7 +247,6 @@ float ADSR::get_attack() const {
 
 void ADSR::set_decay(float p_decay) {
 	decay = std::max(p_decay, MIN_TIME);
-	_update_curve();
 }
 
 float ADSR::get_decay() const {
@@ -207,7 +255,6 @@ float ADSR::get_decay() const {
 
 void ADSR::set_sustain(float p_sustain) {
 	sustain_level = CLAMP(p_sustain, 0.0f, 1.0f);
-	_update_curve();
 }
 
 float ADSR::get_sustain() const {
@@ -216,33 +263,32 @@ float ADSR::get_sustain() const {
 
 void ADSR::set_release(float p_release) {
 	release = std::max(p_release, MIN_TIME);
-	_update_curve();
 }
 
 float ADSR::get_release() const {
 	return release;
 }
 
-void ADSR::_update_curve() {
-	// Compute the total envelope time including the "fake" sustain.
-	total_time = attack + decay + default_sustain_time + release;
+void ADSR::set_attack_type(CurveType p_type) {
+	attack_type = p_type;
+}
 
-	// Clear existing points.
-	if (visual_curve->get_point_count() != 5) {
-		for (int i = 0; i < 5; i++) {
-			visual_curve->add_point(Vector2(0, 0));
-		}
-	} else {
-		visual_curve->set_point_value(1, 1);
-		visual_curve->set_point_value(2, sustain_level);
-		visual_curve->set_point_value(3, sustain_level);
-		visual_curve->set_point_value(4, 0);
+ADSR::CurveType ADSR::get_attack_type() const {
+	return attack_type;
+}
 
-		visual_curve->set_point_offset(1, attack / total_time);
-		visual_curve->set_point_offset(2, (attack + decay) / total_time);
-		visual_curve->set_point_offset(3, (float)(attack + decay + default_sustain_time) / total_time);
-		visual_curve->set_point_offset(4, 1);
-	}
+void ADSR::set_decay_type(CurveType p_type) {
+	decay_type = p_type;
+}
 
-	visual_curve->bake();
+ADSR::CurveType ADSR::get_decay_type() const {
+	return decay_type;
+}
+
+void ADSR::set_release_type(CurveType p_type) {
+	release_type = p_type;
+}
+
+ADSR::CurveType ADSR::get_release_type() const {
+	return release_type;
 }

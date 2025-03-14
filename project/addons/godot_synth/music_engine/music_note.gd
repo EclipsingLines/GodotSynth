@@ -6,5 +6,10 @@ class_name MusicNote extends Resource
 @export_range(0,1,0.05) var articulation:float
 @export_range(0,1,0.05) var timbre:float
 
+
+func _init(p_note:int, p_duration:float):
+	midi_note = p_note
+	duration = p_duration
+
 var freq:float: 
 	get(): return MidiNotes.midi_to_pitch(midi_note)

@@ -127,7 +127,8 @@ void register_distortion_effects() {
 }
 
 void register_spatial_effects() {
-	GDREGISTER_CLASS(Reverb);
+	// TODO: Fix reverb
+	//GDREGISTER_CLASS(Reverb);
 }
 
 void register_effects() {
@@ -200,7 +201,8 @@ void initialize_gdextension_types(ModuleInitializationLevel p_level) {
 		register_va_classes();
 
 		// Register Chord synth classes
-		register_chord_classes();
+		// TODO: fix chord engine
+		// register_chord_classes();
 	}
 }
 

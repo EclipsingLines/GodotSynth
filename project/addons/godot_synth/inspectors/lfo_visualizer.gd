@@ -61,11 +61,3 @@ func _draw():
             draw_line(prev_point, Vector2(x, y), Color.WHITE, 2)
         
         prev_point = Vector2(x, y)
-    
-    # Draw frequency markers
-    var font = get_theme_default_font()
-    var font_size = get_theme_default_font_size()
-    
-    # Draw rate value
-    var rate_text = str(lfo.get_rate()) + " Hz"
-    draw_string(font, Vector2(draw_rect.position.x + 5, draw_rect.position.y + 15), rate_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color.WHITE)

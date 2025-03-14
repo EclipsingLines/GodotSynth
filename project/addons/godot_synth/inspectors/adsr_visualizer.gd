@@ -25,27 +25,70 @@ func _generate_points():
     var sustain = adsr.get_sustain()
     var release = adsr.get_release()
     
+    var attack_type = adsr.get_attack_type()
+    var decay_type = adsr.get_decay_type()
+    var release_type = adsr.get_release_type()
+    
     var total_time = attack + decay + sustain_duration + release
     var time_scale = 1.0 / total_time
     
     # Start point (0,0)
     points.append(Vector2(0, 0))
     
-    # Attack peak (attack, 1)
-    var attack_time = attack * time_scale
-    points.append(Vector2(attack_time, 1))
+    # Generate attack points
+    var attack_points = 10
+    for i in range(1, attack_points + 1):
+        var t = float(i) / attack_points
+        var time = attack * t * time_scale
+        var value
+        
+        match attack_type:
+            ADSR.LINEAR:
+                value = t
+            ADSR.EXPONENTIAL:
+                value = pow(t, 2)
+            ADSR.LOGARITHMIC:
+                value = sqrt(t)
+        
+        points.append(Vector2(time, value))
     
-    # End of decay (attack+decay, sustain)
-    var decay_time = (attack + decay) * time_scale
-    points.append(Vector2(decay_time, sustain))
+    # Generate decay points
+    var decay_points = 10
+    for i in range(0, decay_points + 1):
+        var t = float(i) / decay_points
+        var time = attack * time_scale + decay * t * time_scale
+        var value
+        
+        match decay_type:
+            ADSR.LINEAR:
+                value = lerp(1.0, sustain, t)
+            ADSR.EXPONENTIAL:
+                value = lerp(1.0, sustain, pow(t, 2))
+            ADSR.LOGARITHMIC:
+                value = lerp(1.0, sustain, sqrt(t))
+        
+        points.append(Vector2(time, value))
     
-    # End of sustain (attack+decay+sustain_duration, sustain)
+    # Sustain point
     var sustain_time = (attack + decay + sustain_duration) * time_scale
     points.append(Vector2(sustain_time, sustain))
     
-    # End of release (attack+decay+sustain_duration+release, 0)
-    var release_time = (attack + decay + sustain_duration + release) * time_scale
-    points.append(Vector2(release_time, 0))
+    # Generate release points
+    var release_points = 10
+    for i in range(0, release_points + 1):
+        var t = float(i) / release_points
+        var time = sustain_time + release * t * time_scale
+        var value
+        
+        match release_type:
+            ADSR.LINEAR:
+                value = lerp(sustain, 0.0, t)
+            ADSR.EXPONENTIAL:
+                value = lerp(sustain, 0.0, pow(t, 2))
+            ADSR.LOGARITHMIC:
+                value = lerp(sustain, 0.0, sqrt(t))
+        
+        points.append(Vector2(time, value))
 
 func _draw():
     if points.size() < 2:

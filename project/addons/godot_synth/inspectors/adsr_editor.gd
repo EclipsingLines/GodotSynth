@@ -44,6 +44,23 @@ func _setup_controls(container):
     
     container.add_child(attack_container)
     
+    # Attack type control
+    var attack_type_container = HBoxContainer.new()
+    var attack_type_label = Label.new()
+    attack_type_label.text = "Attack Type"
+    attack_type_container.add_child(attack_type_label)
+    
+    var attack_type_option = OptionButton.new()
+    attack_type_option.add_item("Linear", ADSR.LINEAR)
+    attack_type_option.add_item("Exponential", ADSR.EXPONENTIAL)
+    attack_type_option.add_item("Logarithmic", ADSR.LOGARITHMIC)
+    attack_type_option.select(adsr.get_attack_type())
+    attack_type_option.size_flags_horizontal = SIZE_EXPAND_FILL
+    attack_type_option.connect("item_selected", Callable(self, "_on_attack_type_changed"))
+    attack_type_container.add_child(attack_type_option)
+    
+    container.add_child(attack_type_container)
+    
     # Decay control
     var decay_container = HBoxContainer.new()
     var decay_label = Label.new()
@@ -60,6 +77,23 @@ func _setup_controls(container):
     decay_container.add_child(decay_edit)
     
     container.add_child(decay_container)
+    
+    # Decay type control
+    var decay_type_container = HBoxContainer.new()
+    var decay_type_label = Label.new()
+    decay_type_label.text = "Decay Type"
+    decay_type_container.add_child(decay_type_label)
+    
+    var decay_type_option = OptionButton.new()
+    decay_type_option.add_item("Linear", ADSR.LINEAR)
+    decay_type_option.add_item("Exponential", ADSR.EXPONENTIAL)
+    decay_type_option.add_item("Logarithmic", ADSR.LOGARITHMIC)
+    decay_type_option.select(adsr.get_decay_type())
+    decay_type_option.size_flags_horizontal = SIZE_EXPAND_FILL
+    decay_type_option.connect("item_selected", Callable(self, "_on_decay_type_changed"))
+    decay_type_container.add_child(decay_type_option)
+    
+    container.add_child(decay_type_container)
     
     # Sustain control
     var sustain_container = HBoxContainer.new()
@@ -94,6 +128,23 @@ func _setup_controls(container):
     release_container.add_child(release_edit)
     
     container.add_child(release_container)
+    
+    # Release type control
+    var release_type_container = HBoxContainer.new()
+    var release_type_label = Label.new()
+    release_type_label.text = "Release Type"
+    release_type_container.add_child(release_type_label)
+    
+    var release_type_option = OptionButton.new()
+    release_type_option.add_item("Linear", ADSR.LINEAR)
+    release_type_option.add_item("Exponential", ADSR.EXPONENTIAL)
+    release_type_option.add_item("Logarithmic", ADSR.LOGARITHMIC)
+    release_type_option.select(adsr.get_release_type())
+    release_type_option.size_flags_horizontal = SIZE_EXPAND_FILL
+    release_type_option.connect("item_selected", Callable(self, "_on_release_type_changed"))
+    release_type_container.add_child(release_type_option)
+    
+    container.add_child(release_type_container)
 
 func _on_attack_changed(value):
     if updating:
@@ -128,6 +179,33 @@ func _on_release_changed(value):
     
     updating = true
     emit_changed("release", value)
+    visualizer.update()
+    updating = false
+
+func _on_attack_type_changed(index):
+    if updating:
+        return
+    
+    updating = true
+    emit_changed("attack_type", index)
+    visualizer.update()
+    updating = false
+
+func _on_decay_type_changed(index):
+    if updating:
+        return
+    
+    updating = true
+    emit_changed("decay_type", index)
+    visualizer.update()
+    updating = false
+
+func _on_release_type_changed(index):
+    if updating:
+        return
+    
+    updating = true
+    emit_changed("release_type", index)
     visualizer.update()
     updating = false
 

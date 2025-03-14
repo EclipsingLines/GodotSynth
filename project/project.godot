@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Godot Synth"
-run/main_scene="res://piano_key.tscn"
+run/main_scene="res://addons/godot_synth/keyboard/piano_keyboard.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
 

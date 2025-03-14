@@ -18,13 +18,12 @@ public:
 		dup->set_decay(decay);
 		dup->set_sustain(sustain_level);
 		dup->set_release(release);
-		
-		// Duplicate the curve if it exists
-		if (visual_curve.is_valid()) {
-			Ref<Curve> new_curve = visual_curve->duplicate();
-			dup->set_curve(new_curve);
-		}
-		
+
+		// Copy curve types
+		dup->set_attack_type(attack_type);
+		dup->set_decay_type(decay_type);
+		dup->set_release_type(release_type);
+
 		return dup;
 	}
 
@@ -38,6 +37,13 @@ public:
 		OFF
 	};
 
+	// The envelope curve types.
+	enum CurveType {
+		LINEAR,
+		EXPONENTIAL,
+		LOGARITHMIC
+	};
+
 private:
 	// ADSR parameters.
 	float attack;
@@ -46,18 +52,19 @@ private:
 	float release;
 	float total_time;
 	float release_level;
-	// For display only: a fixed sustain duration for visualizing the curve.
-	Ref<Curve> visual_curve;
+
 	float default_sustain_time;
-	
+
+	// Curve type for each stage
+	CurveType attack_type;
+	CurveType decay_type;
+	CurveType release_type;
+
 	// State variables
 	mutable float current_level;
 	mutable Stage current_stage;
-	mutable double stage_start_time;  // Stores the note_time when the current stage began
+	mutable double stage_start_time; // Stores the note_time when the current stage began
 	mutable float release_start_level; // Stores the level at the start of release
-
-	// Update the curve's baked points based on ADSR parameters for visualization.
-	void _update_curve();
 
 protected:
 	static void _bind_methods();
@@ -69,11 +76,6 @@ public:
 	// Implement ModulationSource interface
 	float get_value(const Ref<SynthNoteContext> &context) const override;
 	void reset() override;
-
-	// Curve used for visuals
-	// TODO: Make custom UI inspector for mod sources
-	Ref<Curve> get_curve() const;
-	void set_curve(Ref<Curve> p_curve);
 
 	// ADSR parameter setters/getters.
 	void set_attack(float p_attack);
@@ -87,7 +89,18 @@ public:
 
 	void set_release(float p_release);
 	float get_release() const;
+
+	// Curve type setters/getters
+	void set_attack_type(CurveType p_type);
+	CurveType get_attack_type() const;
+
+	void set_decay_type(CurveType p_type);
+	CurveType get_decay_type() const;
+
+	void set_release_type(CurveType p_type);
+	CurveType get_release_type() const;
 };
 
 } // namespace godot
 VARIANT_ENUM_CAST(ADSR::Stage);
+VARIANT_ENUM_CAST(ADSR::CurveType);

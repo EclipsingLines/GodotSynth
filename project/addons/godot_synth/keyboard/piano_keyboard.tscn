@@ -1,12 +1,12 @@
-[gd_scene load_steps=15 format=3 uid="uid://cyndffxmsa4rn"]
+[gd_scene load_steps=25 format=3 uid="uid://cyndffxmsa4rn"]
 
-[ext_resource type="Script" uid="uid://n0quo1dyvxfv" path="res://demo/synth_player.gd" id="1_3eeuk"]
-[ext_resource type="Script" uid="uid://cwv0buggdocub" path="res://demo/key_note.gd" id="1_7fek3"]
-[ext_resource type="Theme" uid="uid://dmft0dpsjewks" path="res://demo/piano_key_theme.tres" id="2_fic21"]
-[ext_resource type="Script" uid="uid://c8oikiv8y15k2" path="res://demo/audio_engine/music_engine/music_note.gd" id="3_dqhhv"]
+[ext_resource type="Script" uid="uid://n0quo1dyvxfv" path="res://addons/godot_synth/keyboard/synth_keyboard_player.gd" id="1_n5yr4"]
+[ext_resource type="Script" uid="uid://c8oikiv8y15k2" path="res://addons/godot_synth/music_engine/music_note.gd" id="2_u1yls"]
+[ext_resource type="Script" uid="uid://cwv0buggdocub" path="res://addons/godot_synth/keyboard/key_note.gd" id="3_d7j1h"]
+[ext_resource type="Theme" uid="uid://dmft0dpsjewks" path="res://addons/godot_synth/keyboard/piano_key_theme.tres" id="4_110ew"]
 
 [sub_resource type="Resource" id="Resource_pj01b"]
-script = ExtResource("3_dqhhv")
+script = ExtResource("2_u1yls")
 midi_note = 0
 duration = 0.0
 velocity = 0.85
@@ -14,51 +14,102 @@ articulation = 0.0
 timbre = 0.0
 metadata/_custom_type_script = "uid://c8oikiv8y15k2"
 
-[sub_resource type="Curve" id="Curve_6dab6"]
-_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0, 0), 0.0, 0.0, 0, 0]
-point_count = 5
-
-[sub_resource type="ADSR" id="ADSR_nqi2y"]
-visual_curve = SubResource("Curve_6dab6")
-
-[sub_resource type="ModulatedParameter" id="ModulatedParameter_cdj6m"]
-modulation/mod_amount = 1.0
-modulation/mod_source = SubResource("ADSR_nqi2y")
-modulation/mod_type = 2
-
-[sub_resource type="Curve" id="Curve_pj01b"]
-_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0, 0), 0.0, 0.0, 0, 0]
-point_count = 5
-
 [sub_resource type="ADSR" id="ADSR_soc20"]
-visual_curve = SubResource("Curve_pj01b")
+attack = 1.55001
+decay = 0.89001
+sustain_level = 0.8
+release = 0.3
+attack_type = 1
+decay_type = 1
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_6dab6"]
+mod_amount = 0.72
+source = SubResource("ADSR_soc20")
+mod_type = 2
+
+[sub_resource type="ADSR" id="ADSR_cdj6m"]
+attack = 0.05
+sustain_level = 0.6
+release = 0.3
 
 [sub_resource type="ModulatedParameter" id="ModulatedParameter_gi8b8"]
-base_value = 0.54
-modulation/mod_source = SubResource("ADSR_soc20")
+base_value = 0.6
+mod_amount = 0.3
+source = SubResource("ADSR_cdj6m")
 
 [sub_resource type="ModulatedParameter" id="ModulatedParameter_l35g5"]
-modulation/mod_min = -24.0
-modulation/mod_max = 24.0
+mod_min = -24.0
+mod_max = 24.0
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_pu54e"]
+base_value = 0.5
+
+[sub_resource type="BandPassFilter" id="BandPassFilter_np0fl"]
+cutoff_parameter = SubResource("ModulatedParameter_gi8b8")
+resonance_parameter = SubResource("ModulatedParameter_pu54e")
+gain_parameter = SubResource("ModulatedParameter_l35g5")
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_4wbpd"]
+base_value = 0.7
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_0aq2s"]
+base_value = 0.3
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_eovjq"]
+base_value = 0.3
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_huhme"]
+base_value = 0.2
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_yvmvt"]
+base_value = 0.5
+
+[sub_resource type="PingPongDelay" id="PingPongDelay_n4eyf"]
+delay_time_parameter = SubResource("ModulatedParameter_0aq2s")
+feedback_parameter = SubResource("ModulatedParameter_eovjq")
+mix_parameter = SubResource("ModulatedParameter_huhme")
+cross_feedback_parameter = SubResource("ModulatedParameter_4wbpd")
+offset_parameter = SubResource("ModulatedParameter_yvmvt")
+
+[sub_resource type="EffectChain" id="EffectChain_dmk0v"]
+effects = Array[SynthAudioEffect]([SubResource("BandPassFilter_np0fl"), SubResource("PingPongDelay_n4eyf")])
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_6j2rv"]
+base_value = 0.4
+
+[sub_resource type="LFO" id="LFO_7nthr"]
+rate = 5.0
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_w3iit"]
+base_value = 72.0
+mod_amount = 0.3
+mod_min = -24.0
+mod_max = 24.0
+source = SubResource("LFO_7nthr")
 
 [sub_resource type="ModulatedParameter" id="ModulatedParameter_7jvcg"]
 base_value = 0.5
 
 [sub_resource type="VASynthConfiguration" id="VASynthConfiguration_pu54e"]
-waveform = 0.54
-waveform_modulation = SubResource("ModulatedParameter_gi8b8")
-amplitude_modulation = SubResource("ModulatedParameter_cdj6m")
-pitch_modulation = SubResource("ModulatedParameter_l35g5")
+bottom_waveform = 6
+middle_waveform = 7
+top_waveform = 8
+waveform = 0.4
+waveform_modulation = SubResource("ModulatedParameter_6j2rv")
+amplitude_modulation = SubResource("ModulatedParameter_6dab6")
+pitch = 72.0
+pitch_modulation = SubResource("ModulatedParameter_w3iit")
 pulse_width_modulation = SubResource("ModulatedParameter_7jvcg")
+effect_chain = SubResource("EffectChain_dmk0v")
 parameters = {
-"amplitude": SubResource("ModulatedParameter_cdj6m"),
-"pitch": SubResource("ModulatedParameter_l35g5"),
+"amplitude": SubResource("ModulatedParameter_6dab6"),
+"pitch": SubResource("ModulatedParameter_w3iit"),
 "pulse_width": SubResource("ModulatedParameter_7jvcg"),
-"waveform": SubResource("ModulatedParameter_gi8b8")
+"waveform": SubResource("ModulatedParameter_6j2rv")
 }
 
 [node name="Control" type="CanvasLayer"]
-script = ExtResource("1_3eeuk")
+script = ExtResource("1_n5yr4")
 note = SubResource("Resource_pj01b")
 sound = SubResource("VASynthConfiguration_pu54e")
 
@@ -78,7 +129,7 @@ alignment = 1
 [node name="key_white_c" type="Control" parent="CenterContainer/HBoxContainer"]
 custom_minimum_size = Vector2(24, 256)
 layout_mode = 2
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 48
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_c"]
@@ -90,7 +141,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_c"]
 modulate = Color(0, 0, 0, 1)
@@ -113,7 +164,7 @@ z_index = 1
 custom_minimum_size = Vector2(24, 186)
 layout_mode = 2
 size_flags_vertical = 0
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 49
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_c#"]
@@ -128,7 +179,7 @@ offset_right = 24.0
 offset_bottom = 186.0
 grow_horizontal = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_c#"]
 layout_mode = 1
@@ -148,7 +199,7 @@ horizontal_alignment = 1
 [node name="key_white_d" type="Control" parent="CenterContainer/HBoxContainer"]
 custom_minimum_size = Vector2(24, 256)
 layout_mode = 2
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 50
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_d"]
@@ -160,7 +211,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_d"]
 modulate = Color(0, 0, 0, 1)
@@ -183,7 +234,7 @@ z_index = 1
 custom_minimum_size = Vector2(24, 186)
 layout_mode = 2
 size_flags_vertical = 0
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 51
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_d#"]
@@ -198,7 +249,7 @@ offset_right = 24.0
 offset_bottom = 186.0
 grow_horizontal = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_d#"]
 layout_mode = 1
@@ -218,7 +269,7 @@ horizontal_alignment = 1
 [node name="key_white_e" type="Control" parent="CenterContainer/HBoxContainer"]
 custom_minimum_size = Vector2(24, 256)
 layout_mode = 2
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 52
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_e"]
@@ -230,7 +281,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_e"]
 modulate = Color(0, 0, 0, 1)
@@ -253,7 +304,7 @@ z_index = 1
 custom_minimum_size = Vector2(24, 186)
 layout_mode = 2
 size_flags_vertical = 0
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 48
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_null_1"]
@@ -269,7 +320,7 @@ offset_right = 24.0
 offset_bottom = 186.0
 grow_horizontal = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_null_1"]
 visible = false
@@ -291,7 +342,7 @@ horizontal_alignment = 1
 [node name="key_white_f" type="Control" parent="CenterContainer/HBoxContainer"]
 custom_minimum_size = Vector2(24, 256)
 layout_mode = 2
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 53
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_f"]
@@ -303,7 +354,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_f"]
 modulate = Color(0, 0, 0, 1)
@@ -326,7 +377,7 @@ z_index = 1
 custom_minimum_size = Vector2(24, 186)
 layout_mode = 2
 size_flags_vertical = 0
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 54
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_f#"]
@@ -341,7 +392,7 @@ offset_right = 24.0
 offset_bottom = 186.0
 grow_horizontal = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_f#"]
 layout_mode = 1
@@ -361,7 +412,7 @@ horizontal_alignment = 1
 [node name="key_white_g" type="Control" parent="CenterContainer/HBoxContainer"]
 custom_minimum_size = Vector2(24, 256)
 layout_mode = 2
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 55
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_g"]
@@ -373,7 +424,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_g"]
 modulate = Color(0, 0, 0, 1)
@@ -396,7 +447,7 @@ z_index = 1
 custom_minimum_size = Vector2(24, 186)
 layout_mode = 2
 size_flags_vertical = 0
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 56
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_g#"]
@@ -411,7 +462,7 @@ offset_right = 24.0
 offset_bottom = 186.0
 grow_horizontal = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_g#"]
 layout_mode = 1
@@ -431,7 +482,7 @@ horizontal_alignment = 1
 [node name="key_white_a" type="Control" parent="CenterContainer/HBoxContainer"]
 custom_minimum_size = Vector2(24, 256)
 layout_mode = 2
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 57
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_a"]
@@ -443,7 +494,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_a"]
 modulate = Color(0, 0, 0, 1)
@@ -466,7 +517,7 @@ z_index = 1
 custom_minimum_size = Vector2(24, 186)
 layout_mode = 2
 size_flags_vertical = 0
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 58
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_a#"]
@@ -481,7 +532,7 @@ offset_right = 24.0
 offset_bottom = 186.0
 grow_horizontal = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_a#"]
 layout_mode = 1
@@ -501,7 +552,7 @@ horizontal_alignment = 1
 [node name="key_white_b" type="Control" parent="CenterContainer/HBoxContainer"]
 custom_minimum_size = Vector2(24, 256)
 layout_mode = 2
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 59
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_b"]
@@ -513,7 +564,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_b"]
 modulate = Color(0, 0, 0, 1)
@@ -536,7 +587,7 @@ z_index = 1
 custom_minimum_size = Vector2(24, 186)
 layout_mode = 2
 size_flags_vertical = 0
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 48
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_black_null_3"]
@@ -552,7 +603,7 @@ offset_right = 24.0
 offset_bottom = 186.0
 grow_horizontal = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_black_null_3"]
 visible = false
@@ -574,7 +625,7 @@ horizontal_alignment = 1
 [node name="key_white_c2" type="Control" parent="CenterContainer/HBoxContainer"]
 custom_minimum_size = Vector2(24, 256)
 layout_mode = 2
-script = ExtResource("1_7fek3")
+script = ExtResource("3_d7j1h")
 note = 60
 
 [node name="button" type="Button" parent="CenterContainer/HBoxContainer/key_white_c2"]
@@ -586,7 +637,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme = ExtResource("2_fic21")
+theme = ExtResource("4_110ew")
 
 [node name="key_label" type="Label" parent="CenterContainer/HBoxContainer/key_white_c2"]
 modulate = Color(0, 0, 0, 1)
