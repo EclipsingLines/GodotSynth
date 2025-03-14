@@ -1,6 +1,5 @@
 class_name SynthPlayer extends Node
 
-@export var note:MusicNote
 @export var sound:SynthConfiguration
 # Called when the node enters the scene tree for the first time.
 var synth
@@ -22,7 +21,6 @@ func _process(_delta: float) -> void:
 	while i >= 0:
 		var context = released_notes[i]
 		if context and context.is_note_finished():
-			print("Note finished and removed from released_notes array")
 			# Explicitly unref the context to ensure it's properly released
 			released_notes[i] = null
 			released_notes.remove_at(i)
@@ -34,11 +32,9 @@ func stop_note(id:int):
 		var context:SynthNoteContext = (active_notes[id] as Array).pop_back()
 		# Call note_off on the context
 		if context:
-			print("About to call note_off on context: ", context)
 			# Make sure the context is valid before calling note_off
 			if is_instance_valid(context):
 				context.note_off(context.absolute_time)
-				print("Note off called, adding to released_notes array")
 				# Add to released notes array to track until tail is finished
 				released_notes.append(context)
 			else:
@@ -49,7 +45,8 @@ func stop_note(id:int):
 			active_notes.erase(id)
 	
 func play_note(midi:MidiNotes.MidiNote, id:int):
-	var note_instance :MusicNote = note.duplicate(true)
+	var note_instance := MusicNote.new(midi)
+	note_instance.velocity = 1
 	note_instance.midi_note = midi
 	
 	# Create array for this ID if it doesn't exist
@@ -64,12 +61,10 @@ func play_note(midi:MidiNotes.MidiNote, id:int):
 		var old_contexts = active_notes[id].duplicate()
 		for old_context in old_contexts:
 			if old_context and is_instance_valid(old_context) and old_context.is_note_active_state():
-				print("Stopping previous note instance for id: ", id)
 				old_context.note_off(old_context.absolute_time)
 				released_notes.append(old_context)
 	
 	# Start the new note
 	context.note_on(note_instance.midi_note, note_instance.velocity)
 	(active_notes[id] as Array).push_front(context)
-	print("Playing note: ", midi, " with id: ", id)
 	

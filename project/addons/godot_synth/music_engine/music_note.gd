@@ -7,7 +7,7 @@ class_name MusicNote extends Resource
 @export_range(0,1,0.05) var timbre:float
 
 
-func _init(p_note:int, p_duration:float):
+func _init(p_note:int, p_duration:float=-1):
 	midi_note = p_note
 	duration = p_duration
 

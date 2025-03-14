@@ -1,18 +1,8 @@
-[gd_scene load_steps=25 format=3 uid="uid://cyndffxmsa4rn"]
+[gd_scene load_steps=23 format=3 uid="uid://cyndffxmsa4rn"]
 
 [ext_resource type="Script" uid="uid://n0quo1dyvxfv" path="res://addons/godot_synth/keyboard/synth_keyboard_player.gd" id="1_n5yr4"]
-[ext_resource type="Script" uid="uid://c8oikiv8y15k2" path="res://addons/godot_synth/music_engine/music_note.gd" id="2_u1yls"]
 [ext_resource type="Script" uid="uid://cwv0buggdocub" path="res://addons/godot_synth/keyboard/key_note.gd" id="3_d7j1h"]
 [ext_resource type="Theme" uid="uid://dmft0dpsjewks" path="res://addons/godot_synth/keyboard/piano_key_theme.tres" id="4_110ew"]
-
-[sub_resource type="Resource" id="Resource_pj01b"]
-script = ExtResource("2_u1yls")
-midi_note = 0
-duration = 0.0
-velocity = 0.85
-articulation = 0.0
-timbre = 0.0
-metadata/_custom_type_script = "uid://c8oikiv8y15k2"
 
 [sub_resource type="ADSR" id="ADSR_soc20"]
 attack = 1.55001
@@ -110,7 +100,6 @@ parameters = {
 
 [node name="Control" type="CanvasLayer"]
 script = ExtResource("1_n5yr4")
-note = SubResource("Resource_pj01b")
 sound = SubResource("VASynthConfiguration_pu54e")
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
