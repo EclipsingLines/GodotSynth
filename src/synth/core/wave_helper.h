@@ -80,54 +80,54 @@ public:
 			case NOISE:
 				return unipolar ? (float)rand() / RAND_MAX
 								: 2.0f * ((float)rand() / RAND_MAX) - 1.0f;
-								
+
 			case SUPER_SAW: {
 				// Super saw - multiple detuned saw waves
 				// pulse_width controls how many saws (1-7)
 				int num_saws = 1 + static_cast<int>(6.0f * pulse_width); // 1 to 7 saws
 				float detune_amount = 0.01f; // Amount of detuning between saws
 				float result = 0.0f;
-				
+
 				for (int i = 0; i < num_saws; i++) {
 					// Calculate detune factor, centered around original phase
 					float detune = (i - (num_saws - 1) / 2.0f) * detune_amount;
 					float detuned_phase = Math::fposmod(phase + detune, 1.0f);
-					
+
 					// Get basic saw wave
 					float saw_phase = detuned_phase;
 					float saw_value = unipolar ? saw_phase : 2.0f * saw_phase - 1.0f;
-					
+
 					// Add to result with slight amplitude reduction for more saws
 					result += saw_value / std::sqrt(static_cast<float>(num_saws));
 				}
-				
+
 				return result;
 			}
-			
+
 			case SUB_SQUARE: {
 				// Sub square - plays an octave lower
 				// Use half the frequency (double the period) for octave down
 				float sub_phase = Math::fposmod(phase * 0.5f, 1.0f);
 				return (sub_phase < pulse_width) ? (unipolar ? 1.0f : 1.0f)
-											    : (unipolar ? 0.0f : -1.0f);
+												 : (unipolar ? 0.0f : -1.0f);
 			}
-			
+
 			case PULSE_TRAIN: {
 				// Pulse train - series of narrow pulses at regular intervals
 				// pulse_width controls pulse density (0.01 = sparse, 0.99 = dense)
 				float pulse_period = 1.0f / (1.0f + 9.0f * pulse_width); // Maps 0.01-0.99 to 0.1-0.01 period
 				float pulse_duration = pulse_period * 0.2f; // Each pulse is 20% of the period
 				float local_phase = Math::fposmod(phase, pulse_period);
-				return (local_phase < pulse_duration) ? (unipolar ? 1.0f : 1.0f) 
+				return (local_phase < pulse_duration) ? (unipolar ? 1.0f : 1.0f)
 													  : (unipolar ? 0.0f : -1.0f);
 			}
-			
+
 			case SINE_FOLD: {
 				// Sine fold - sine wave that folds back when exceeding threshold
 				// pulse_width controls folding threshold (lower = more folding)
 				float threshold = 0.1f + 0.8f * pulse_width; // Maps 0.01-0.99 to 0.108-0.892
 				float sine_val = std::sin(2.0f * Math_PI * phase);
-				
+
 				// Apply folding
 				while (std::abs(sine_val) > threshold) {
 					if (sine_val > threshold) {
@@ -136,48 +136,48 @@ public:
 						sine_val = -2.0f * threshold - sine_val;
 					}
 				}
-				
+
 				// Normalize to full range
 				sine_val = sine_val / threshold;
-				
+
 				return unipolar ? 0.5f * (sine_val + 1.0f) : sine_val;
 			}
-			
+
 			case ADDITIVE: {
 				// Additive harmonic - fundamental plus harmonics
 				// pulse_width controls harmonic content (more width = more harmonics)
 				int num_harmonics = 1 + static_cast<int>(15.0f * pulse_width); // 1-16 harmonics
 				float result = 0.0f;
 				float amp_sum = 0.0f;
-				
+
 				for (int i = 1; i <= num_harmonics; i++) {
 					// Amplitude decreases for higher harmonics
 					float harmonic_amp = 1.0f / i;
 					result += harmonic_amp * std::sin(2.0f * Math_PI * phase * i);
 					amp_sum += harmonic_amp;
 				}
-				
+
 				// Normalize
 				result /= amp_sum;
-				
+
 				return unipolar ? 0.5f * (result + 1.0f) : result;
 			}
-			
+
 			case SYNC_SAW: {
 				// Sync saw - hard-sync sawtooth oscillator
 				// pulse_width controls the sync ratio (1.0 to 10.0)
 				float sync_ratio = 1.0f + 9.0f * pulse_width; // Maps 0.01-0.99 to 1.09-9.91
 				float master_phase = phase;
 				float slave_phase = Math::fposmod(phase * sync_ratio, 1.0f);
-				
+
 				// Reset slave oscillator when master completes a cycle
 				if (master_phase < 0.01f) {
 					slave_phase = 0.0f;
 				}
-				
+
 				// Generate sawtooth wave from slave oscillator
 				float saw_value = unipolar ? slave_phase : 2.0f * slave_phase - 1.0f;
-				
+
 				return saw_value;
 			}
 
