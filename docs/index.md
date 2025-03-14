@@ -11,7 +11,7 @@ project_links:
       label: Download
     - url: https://github.com/EclipsingLines/GodotSynth
       icon: fab fa-github
-      label: Synth
+      label: Source
     - url: https://godotengine.org/
       icon: fas fa-gamepad
       label: Godot
