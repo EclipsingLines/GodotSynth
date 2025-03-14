@@ -23,7 +23,7 @@ func _parse_property(object, type, name, hint_type, hint_string, usage_flags, wi
             
             add_property_editor(name, editor)
             return true
-        elif name.begins_with("modulation/") or name == "invert_mod":
+        elif name.begins_with("mod") or name == "invert_mod":
             # Skip these properties as they'll be handled by our custom editor
             return true
     

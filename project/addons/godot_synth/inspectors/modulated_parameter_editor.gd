@@ -87,23 +87,6 @@ func _setup_modulation_controls(container):
     
     container.add_child(invert_container)
     
-    # Mod Source
-    var source_container = HBoxContainer.new()
-    var source_label = Label.new()
-    source_label.text = "Source"
-    source_container.add_child(source_label)
-    
-    var source_edit: EditorResourcePicker = EditorResourcePicker.new()
-    source_edit.editable = true
-    source_edit.base_type = "ModulationSource"
-    source_edit.edited_resource = parameter.get_mod_source()
-    source_edit.size_flags_horizontal = SIZE_EXPAND_FILL
-    source_edit.connect("resource_changed", Callable(self, "_on_mod_source_changed"))
-    
-    source_container.add_child(source_edit)
-    
-    container.add_child(source_container)
-
 # Base value is now controlled by the configuration
 
 func _on_mod_amount_changed(value):
@@ -111,7 +94,7 @@ func _on_mod_amount_changed(value):
         return
     
     updating = true
-    emit_changed("modulation/mod_amount", value)
+    emit_changed("mod_amount", value)
     visualization_slider.update_from_parameter()
     updating = false
 
@@ -122,7 +105,7 @@ func _on_mod_type_changed(index):
         return
     
     updating = true
-    emit_changed("modulation/mod_type", index)
+    emit_changed("mod_type", index)
     visualization_slider.update_from_parameter()
     updating = false
 
@@ -132,15 +115,6 @@ func _on_invert_mod_changed(button_pressed):
     
     updating = true
     emit_changed("invert_mod", button_pressed)
-    visualization_slider.update_from_parameter()
-    updating = false
-
-func _on_mod_source_changed(resource):
-    if updating:
-        return
-    
-    updating = true
-    emit_changed("modulation/mod_source", resource)
     visualization_slider.update_from_parameter()
     updating = false
 

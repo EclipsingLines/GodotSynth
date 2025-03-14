@@ -46,17 +46,28 @@ func _draw():
             mod_max = base_value + (0 if invert_mod else 1) * mod_amount
         
         MODULATION_MULTIPLICATIVE:
+            # For LFOs (-1 to 1), show full range around base value
             var factor = 1.0 + mod_amount
             if invert_mod:
                 mod_min = base_value / factor
                 mod_max = base_value
             else:
-                mod_min = base_value
-                mod_max = base_value * factor
+                # Show full range for LFO modulation (-1 to 1)
+                mod_min = base_value * (1.0 - mod_amount) # LFO at -1
+                mod_max = base_value * (1.0 + mod_amount) # LFO at +1
         
         MODULATION_ABSOLUTE:
-            mod_min = min(base_value, mod_amount)
-            mod_max = max(base_value, mod_amount)
+            # For standard use
+            var standard_min = min(base_value, mod_amount)
+            var standard_max = max(base_value, mod_amount)
+            
+            # For LFOs (-1 to 1), show full range
+            var lfo_min = base_value - mod_amount # LFO at -1
+            var lfo_max = base_value + mod_amount # LFO at +1
+            
+            # Use the wider range of the two calculations
+            mod_min = min(standard_min, lfo_min)
+            mod_max = max(standard_max, lfo_max)
         
         MODULATION_GATE:
             mod_min = base_value

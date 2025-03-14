@@ -40,11 +40,11 @@ void ModulatedParameter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("duplicate"), &ModulatedParameter::duplicate);
 
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "base_value"), "set_base_value", "get_base_value");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "modulation/mod_amount"), "set_mod_amount", "get_mod_amount");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "modulation/mod_min"), "set_mod_min", "get_mod_min");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "modulation/mod_max"), "set_mod_max", "get_mod_max");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "modulation/mod_source", PROPERTY_HINT_RESOURCE_TYPE, "ModulationSource"), "set_mod_source", "get_mod_source");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "modulation/mod_type", PROPERTY_HINT_ENUM, "Additive,Multiplicative,Absolute,Gate"), "set_mod_type", "get_mod_type");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "mod_amount"), "set_mod_amount", "get_mod_amount");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "mod_min"), "set_mod_min", "get_mod_min");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "mod_max"), "set_mod_max", "get_mod_max");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "source", PROPERTY_HINT_RESOURCE_TYPE, "ModulationSource"), "set_mod_source", "get_mod_source");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "mod_type", PROPERTY_HINT_ENUM, "Additive,Multiplicative,Absolute,Gate"), "set_mod_type", "get_mod_type");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "invert_mod"), "set_invert_mod", "get_invert_mod");
 }
 
