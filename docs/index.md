@@ -7,13 +7,13 @@ header_img : "./assets/img/synth_main.webp"
 show_sociallinks  : true
 project_links:
     - url: https://github.com/EclipsingLines/GodotSynth/releases
-      icon: fas file-arrow-down
+      icon: fas fa-file-arrow-down
       label: Download
     - url: https://github.com/EclipsingLines/GodotSynth
       icon: fab fa-github
       label: Synth
     - url: https://godotengine.org/
-      icon: fas fa-godot
+      icon: fas fa-gamepad
       label: Godot
 ---
 
