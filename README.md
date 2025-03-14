@@ -1,4 +1,4 @@
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/O5O21BTCOZ) [![GitHub Release](https://img.shields.io/github/v/release/eclipsinglines/godotsynth?style=for-the-badge)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/O5O21BTCOZ) [![GitHub Release](https://img.shields.io/github/v/release/eclipsinglines/godotsynth?style=for-the-badge&logo=godotengine&logoColor=white)
 ](https://github.com/EclipsingLines/GodotSynth/releases)
  [![Website](https://img.shields.io/website?url=https%3A%2F%2Feclipsinglines.github.io%2FGodotSynth%2F&style=for-the-badge)](https://eclipsinglines.github.io/GodotSynth/)
 
@@ -56,6 +56,53 @@ Configures the virtual analog synthesizer with oscillators, parameters, and effe
 > You can save your own variations of any of the included resources
 > Build yourself a library of sounds, modulators, effect chains and effects using Godot's built in resource management.
 
+## Modulated Parameters
+
+These are parameters that change automatically over time.
+
+![image](https://github.com/user-attachments/assets/c622c5d6-a32d-417c-be3c-180641391a6c)
+
+- Multiple modulation sources
+- Visual approximation of the modulation range
+- Real time visualization of the modulation source shape
+
+### Modulation Sources
+
+#### LFO
+
+Low Frecuency Oscillator
+
+![image](https://github.com/user-attachments/assets/305be2c9-f1a3-487c-8317-294ce77f690c)
+
+- Sine wave
+- Triangle wave
+- Saw Wave
+- Square wave
+- Random
+
+#### ADSR Envelope
+
+Attack-Delay-Sustain-Release Envelope
+
+![image](https://github.com/user-attachments/assets/d964e48c-e3d6-4541-9976-4066ef8938d0)
+
+- Multiple attack, decay and release shapes
+	- Linear
+	- Logarithmic
+	- Exponential
+
+#### Velocity
+
+Velocity is controlled from the note context, this allows for controlling modulation parameters from GDScript
+
+#### Keyboard Tracking
+
+Uses the midi note for modulation, useful for filters and other effects.
+
+#### Note duration
+
+Uses the total duration of the note for modulation.
+
 ## Effects
 
 > [!IMPORTANT]
@@ -83,6 +130,14 @@ The synth engine includes a variety of audio effects:
 > [!WARNING]
 > The reverb is currently not enabled due to CPU issues.
 - ~~Reverb~~
+
+## Presets
+
+Small collection of predefined set of parameters, can be used directly or as a starting point for more complex sounds.
+
+> [!WARNING]
+> The current presets are part of the public beta and will most likely change.
+> Do not rely on these for production sounds and always save your own sound resources
 
 ## Basic Usage Example
 
