@@ -1,4 +1,4 @@
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/O5O21BTCOZ) ![GitHub Release](https://img.shields.io/github/v/release/eclipsinglines/godotsynth) 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/O5O21BTCOZ) [![GitHub Release](https://img.shields.io/github/v/release/eclipsinglines/godotsynth?style=for-the-badge)](https://github.com/EclipsingLines/GodotSynth/releases)
 
 # Godot Synth Engine
 
