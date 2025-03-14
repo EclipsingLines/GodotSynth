@@ -103,7 +103,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: t3d-${{ matrix.identifier }}-${{ matrix.target }}
+          name: godot-extension-${{ matrix.identifier }}-${{ matrix.target }}
           path: |
             ${{ github.workspace }}/project/
 
@@ -116,7 +116,7 @@ jobs:
         with:
           include-hidden-files: true
           name: ${{ github.event.repository.name }}
-          pattern: t3d-*
+          pattern: godot-extension-*
           delete-merged: true
 
   release:
