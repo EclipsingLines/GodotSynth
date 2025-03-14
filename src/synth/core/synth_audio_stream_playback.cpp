@@ -98,7 +98,6 @@ int SynthAudioStreamPlayback::_mix(AudioFrame *p_buffer, float p_rate_scale, int
 			voice->clear_context();
 		}
 		active_voices.erase(voice_id);
-		UtilityFunctions::print("Removed finished voice with ID: " + String::num(voice_id));
 	}
 
 	// Convert mono mix buffer to stereo output and apply limiting
@@ -140,7 +139,6 @@ void SynthAudioStreamPlayback::_stop() {
 
 void SynthAudioStreamPlayback::add_voice(int64_t id, const Ref<SynthVoice> &voice) {
 	if (!voice.is_valid()) {
-		UtilityFunctions::printerr("Cannot add invalid voice");
 		return;
 	}
 
@@ -152,8 +150,6 @@ void SynthAudioStreamPlayback::add_voice(int64_t id, const Ref<SynthVoice> &voic
 
 	// Add the voice to the active voices
 	active_voices[id] = voice;
-	UtilityFunctions::print("Added voice with ID " + String::num(id) + ", total voices: " +
-			String::num(active_voices.size()));
 
 	// If we exceed max polyphony, we might need to remove the oldest voice
 	// But only if it doesn't have active delay tails

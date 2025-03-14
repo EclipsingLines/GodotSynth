@@ -70,7 +70,6 @@ String SynthConfiguration::get_output_bus() const {
 
 Ref<AudioStreamGeneratorEngine> SynthConfiguration::create_engine() const {
 	// Base implementation returns null - to be overridden by derived classes
-	UtilityFunctions::print("Base SynthConfiguration::create_engine called");
 	return Ref<AudioStreamGeneratorEngine>();
 }
 

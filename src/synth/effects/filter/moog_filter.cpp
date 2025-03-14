@@ -30,7 +30,6 @@ inline float fast_tanh(float x) {
 
 float MoogFilter::process_sample(float sample, const Ref<SynthNoteContext> &context) {
 	if (!context.is_valid()) {
-		UtilityFunctions::print("Filter - Context not valid");
 		return sample;
 	}
 

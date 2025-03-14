@@ -31,7 +31,6 @@ Ref<AudioStreamPlayback> SynthAudioStream::_instantiate_playback() const {
 	Ref<SynthAudioStreamPlayback> playback;
 	playback.instantiate();
 	playback->set_sample_rate(mix_rate);
-	UtilityFunctions::print("SynthAudioStream: Instantiated playback with sample rate " + String::num(mix_rate));
 	return playback;
 }
 

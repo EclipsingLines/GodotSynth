@@ -58,7 +58,6 @@ Ref<AudioStreamGeneratorEngine> EngineFactory::create_engine_from_config(const R
 		if (param.is_valid()) {
 			// Create a new parameter instance
 			Ref<ModulatedParameter> new_param = param->duplicate();
-			UtilityFunctions::print("Copying param: " + name);
 			engine->set_parameter(name, new_param);
 		}
 	}

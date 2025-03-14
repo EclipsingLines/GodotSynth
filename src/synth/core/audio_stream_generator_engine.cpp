@@ -25,7 +25,7 @@ void AudioStreamGeneratorEngine::_bind_methods() {
 
 AudioStreamGeneratorEngine::AudioStreamGeneratorEngine() {
 	effect_chain = Ref<EffectChain>();
-	
+
 	// Initialize the waveform cache if it doesn't exist
 	if (!WaveHelperCache::get_singleton()) {
 		Ref<WaveHelperCache> cache = memnew(WaveHelperCache);
@@ -37,11 +37,6 @@ AudioStreamGeneratorEngine::~AudioStreamGeneratorEngine() {
 }
 
 PackedFloat32Array AudioStreamGeneratorEngine::process_block(int buffer_size, const Ref<SynthNoteContext> &context) {
-	// Add debug output
-	UtilityFunctions::print("Base AudioStreamGeneratorEngine::process_block called, buffer size=" +
-			String::num(buffer_size) +
-			", context valid=" + String(context.is_valid() ? "true" : "false"));
-
 	// Create a new buffer filled with silence
 	PackedFloat32Array output_buffer;
 	output_buffer.resize(buffer_size);
@@ -53,7 +48,7 @@ PackedFloat32Array AudioStreamGeneratorEngine::process_block(int buffer_size, co
 
 void AudioStreamGeneratorEngine::set_effect_chain(const Ref<EffectChain> &p_chain) {
 	effect_chain = p_chain;
-	
+
 	// Reset the effect chain when it's set
 	if (effect_chain.is_valid()) {
 		effect_chain->reset();
@@ -71,7 +66,7 @@ void AudioStreamGeneratorEngine::reset() {
 	if (effect_chain.is_valid()) {
 		effect_chain->reset();
 	}
-	
+
 	// Note: We don't reset the waveform cache as it's shared across all engines
 }
 
@@ -101,12 +96,12 @@ Ref<AudioStreamGeneratorEngine> AudioStreamGeneratorEngine::duplicate() const {
 
 float AudioStreamGeneratorEngine::get_tail_length() const {
 	float max_tail_length = 0.0f;
-	
+
 	// Get the maximum tail length from the effect chain
 	if (effect_chain.is_valid()) {
 		max_tail_length = effect_chain->get_max_tail_length();
 	}
-	
+
 	return max_tail_length;
 }
 
@@ -114,12 +109,12 @@ bool AudioStreamGeneratorEngine::has_active_tail(const Ref<SynthNoteContext> &co
 	if (!context.is_valid() || !context->is_note_off()) {
 		return false;
 	}
-	
+
 	// Get the time since note off
 	double note_off_time = context->get_note_off_time();
 	double current_time = context->get_absolute_time();
 	double time_since_note_off = current_time - note_off_time;
-	
+
 	// Check if we're still within the tail length
 	return time_since_note_off < get_tail_length();
 }

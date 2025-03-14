@@ -59,27 +59,14 @@ void AudioSynthPlayer::_ready() {
 	set_volume_db(0.0); // Ensure volume is at 0 dB (full volume)
 	play();
 
-	// Debug playback state
-	UtilityFunctions::print("Started playback, is_playing=" + String(is_playing() ? "true" : "false") +
-			", volume_db=" + String::num(get_volume_db()));
-
 	// Get the playback interface after starting playback
 	Ref<AudioStreamPlayback> stream_playback = get_stream_playback();
 	if (stream_playback.is_valid()) {
 		playback = static_cast<Ref<SynthAudioStreamPlayback>>(stream_playback.ptr());
-		if (playback.is_valid()) {
-			UtilityFunctions::print("Successfully got SynthAudioStreamPlayback");
-		} else {
-			UtilityFunctions::printerr("Failed to cast to SynthAudioStreamPlayback");
-		}
-	} else {
-		UtilityFunctions::printerr("Failed to get stream playback");
 	}
 
 	// Initialize the voice pool
 	initialize_voice_pool();
-
-	UtilityFunctions::print("AudioSynthPlayer ready - Sample rate: " + String::num(sample_rate));
 }
 
 void AudioSynthPlayer::_process(double delta) {
@@ -88,9 +75,6 @@ void AudioSynthPlayer::_process(double delta) {
 		Ref<AudioStreamPlayback> stream_playback = get_stream_playback();
 		if (stream_playback.is_valid()) {
 			playback = static_cast<Ref<SynthAudioStreamPlayback>>(stream_playback.ptr());
-			if (playback.is_valid()) {
-				UtilityFunctions::print("_process: Successfully got SynthAudioStreamPlayback");
-			}
 		}
 	}
 }
@@ -155,7 +139,6 @@ void AudioSynthPlayer::initialize_voice_pool() {
 	}
 
 	next_voice_index = 0;
-	UtilityFunctions::print("Voice pool initialized with " + String::num_int64(polyphony) + " voices");
 }
 
 Ref<SynthVoice> AudioSynthPlayer::allocate_voice() {
@@ -181,8 +164,6 @@ Ref<SynthVoice> AudioSynthPlayer::allocate_voice() {
 
 	} while (next_voice_index != start_index);
 
-	// If we get here, all voices are active, so take the next one (voice stealing)
-	UtilityFunctions::print("All voices active, stealing voice " + String::num_int64(next_voice_index));
 	Ref<SynthVoice> voice = voice_pool[next_voice_index];
 	voice->reset(); // Reset the voice before reusing it
 	next_voice_index = (next_voice_index + 1) % polyphony;
@@ -200,7 +181,6 @@ Ref<SynthNoteContext> AudioSynthPlayer::get_context() {
 		if (stream_playback.is_valid()) {
 			playback = static_cast<Ref<SynthAudioStreamPlayback>>(stream_playback.ptr());
 			if (!playback.is_valid()) {
-				UtilityFunctions::printerr("get_context: Failed to cast to SynthAudioStreamPlayback");
 				return nullptr;
 			}
 		}
@@ -249,7 +229,6 @@ Ref<SynthNoteContext> AudioSynthPlayer::get_context() {
 	playback->add_voice(voice_id, voice);
 	context->set_voice_id(voice_id);
 
-	UtilityFunctions::print("Allocated voice with ID: " + String::num_int64(voice_id) + " at time: " + String::num(current_time));
 	return context;
 }
 
@@ -260,7 +239,6 @@ void AudioSynthPlayer::stop_all_notes() {
 
 	// Release all active voices
 	playback->release_all_voices();
-	UtilityFunctions::print("Stopped all notes");
 }
 
 void AudioSynthPlayer::set_parameter(const String &p_name, float p_value) {

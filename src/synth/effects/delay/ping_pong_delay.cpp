@@ -173,8 +173,6 @@ void PingPongDelay::reset() {
     buffer_position_1 = 0;
     buffer_position_2 = 0;
     
-    // Log that the delay effect has been reset
-    UtilityFunctions::print("PingPongDelay: Reset called - buffers cleared");
 }
 
 float PingPongDelay::get_tail_length() const {

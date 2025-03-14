@@ -57,17 +57,13 @@ float EffectChain::get_max_tail_length() const {
 Ref<EffectChain> EffectChain::duplicate() const {
 	Ref<EffectChain> new_chain = memnew(EffectChain);
 
-	UtilityFunctions::print("Duplicating effect chain: " + String::num(effects.size()));
-
 	// Create new instances of each effect
 	for (int i = 0; i < effects.size(); i++) {
 		Ref<SynthAudioEffect> effect = effects[i];
 		if (effect.is_valid()) {
 			Ref<SynthAudioEffect> new_effect = effect->duplicate();
-			UtilityFunctions::print("Duplicating effect: " + effect->get_name());
 			if (new_effect.is_valid()) {
 				new_chain->add_effect(new_effect);
-				UtilityFunctions::print("Duplicated effect: " + new_effect->get_name());
 			}
 		}
 	}
@@ -84,8 +80,6 @@ float EffectChain::process_sample(const float &sample, const Ref<SynthNoteContex
 		Ref<SynthAudioEffect> effect = effects[i];
 		if (effect.is_valid()) {
 			processed_sample = effect->process_sample(processed_sample, context);
-		} else {
-			UtilityFunctions::print("Effect not valid - " + effect->get_name());
 		}
 	}
 

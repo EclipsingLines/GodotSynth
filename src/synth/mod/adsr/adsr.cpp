@@ -79,7 +79,6 @@ ADSR::~ADSR() {
 
 float ADSR::get_value(const Ref<SynthNoteContext> &context) const {
 	if (!context.is_valid()) {
-		UtilityFunctions::printerr("ADSR::get_value returning: 0 - Context not valid");
 		return 0.0f;
 	}
 
@@ -94,7 +93,6 @@ float ADSR::get_value(const Ref<SynthNoteContext> &context) const {
 			if (is_note_on) {
 				current_stage = ADSR::ATTACK;
 				stage_start_time = abs_time;
-				UtilityFunctions::print("ADSR | Stage: OFF -> ATTACK");
 			}
 			break;
 
@@ -103,11 +101,9 @@ float ADSR::get_value(const Ref<SynthNoteContext> &context) const {
 				current_stage = ADSR::RELEASE;
 				stage_start_time = abs_time;
 				release_start_level = current_level; // Store the level at the start of release
-				UtilityFunctions::print("ADSR | Stage: ATTACK -> RELEASE | Start Level: " + String::num(release_start_level));
 			} else if (abs_time - stage_start_time >= attack) {
 				current_stage = ADSR::DECAY;
 				stage_start_time = abs_time;
-				UtilityFunctions::print("ADSR | Stage: ATTACK -> DECAY");
 			}
 			break;
 
@@ -116,10 +112,8 @@ float ADSR::get_value(const Ref<SynthNoteContext> &context) const {
 				current_stage = ADSR::RELEASE;
 				stage_start_time = abs_time;
 				release_start_level = current_level; // Store the level at the start of release
-				UtilityFunctions::print("ADSR | Stage: DECAY -> RELEASE | Start Level: " + String::num(release_start_level));
 			} else if (abs_time - stage_start_time >= decay) {
 				current_stage = ADSR::SUSTAIN;
-				UtilityFunctions::print("ADSR | Stage: DECAY -> SUSTAIN");
 			}
 			break;
 
@@ -128,7 +122,6 @@ float ADSR::get_value(const Ref<SynthNoteContext> &context) const {
 				current_stage = ADSR::RELEASE;
 				stage_start_time = abs_time;
 				release_start_level = current_level; // Store the level at the start of release
-				UtilityFunctions::print("ADSR | Stage: SUSTAIN -> RELEASE | Start Level: " + String::num(release_start_level));
 			}
 			break;
 
@@ -137,10 +130,8 @@ float ADSR::get_value(const Ref<SynthNoteContext> &context) const {
 				// Retrigger
 				current_stage = ADSR::ATTACK;
 				stage_start_time = abs_time;
-				UtilityFunctions::print("ADSR | Stage: RELEASE -> ATTACK (retrigger)");
 			} else if (abs_time - stage_start_time >= release) {
 				current_stage = ADSR::OFF;
-				UtilityFunctions::print("ADSR | Stage: RELEASE -> OFF");
 			}
 			break;
 	}

@@ -108,12 +108,6 @@ Ref<AudioStreamGeneratorEngine> VASynthConfiguration::create_engine() const {
 	engine->set_middle_waveform(middle_waveform);
 	engine->set_top_waveform(top_waveform);
 
-	// Debug output - using String::num_int64 to convert enum values to strings
-	UtilityFunctions::print("Creating engine with waveforms: " +
-			String::num_int64((int64_t)bottom_waveform) + ", " +
-			String::num_int64((int64_t)middle_waveform) + ", " +
-			String::num_int64((int64_t)top_waveform));
-
 	// Transfer all parameters to the engine
 	Dictionary params = get_parameters();
 	Array param_names = params.keys();

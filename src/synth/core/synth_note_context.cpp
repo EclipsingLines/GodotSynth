@@ -164,21 +164,14 @@ void SynthNoteContext::note_on(int p_note, float p_velocity) {
 
 	// Set state to ACTIVE
 	set_note_state(NOTE_STATE_ACTIVE);
-
-	UtilityFunctions::print("Note ON - MIDI: " + String::num(p_note) + " Velocity: " + String::num(p_velocity));
 }
 
 void SynthNoteContext::note_off(float p_time) {
-	// Always print something to confirm the method is being called
-	UtilityFunctions::print("SynthNoteContext::note_off called with time: " + String::num(p_time));
-
 	if (!is_note_active) {
 		// Already off, nothing to do
-		UtilityFunctions::print("Note off - NOTE NOT ACTIVE");
 		return;
 	}
 
-	UtilityFunctions::print("Note off - NOTE ACTIVE");
 	start_release(p_time);
 }
 
@@ -279,7 +272,6 @@ void SynthNoteContext::reset_release_state() {
 void SynthNoteContext::set_note_state(NoteState p_state) {
 	if (note_state != p_state) {
 		note_state = p_state;
-		UtilityFunctions::print("Note state changed to: " + get_note_state_name() + " at " + String::num(note_time));
 	}
 }
 
@@ -338,7 +330,6 @@ void SynthNoteContext::reset() {
 	note_time = 0.0;
 	has_active_tail = false;
 	is_note_triggered = false;
-	UtilityFunctions::print("Resetting context");
 
 	// Reset to READY state
 	set_note_state(NOTE_STATE_READY);

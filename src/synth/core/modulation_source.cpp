@@ -17,7 +17,6 @@ float ModulationSource::get_value(const Ref<SynthNoteContext> &context) const {
 
 void ModulationSource::reset() {
 	// Base implementation does nothing, to be overridden by derived classes
-	UtilityFunctions::print("ModulationSource::reset called");
 }
 
 } // namespace godot

@@ -96,15 +96,12 @@ PackedFloat32Array VAOscillatorEngine::process_block(int buffer_size, const Ref<
 	if (!context.is_valid()) {
 		// Fill buffer with silence
 		std::fill(output_buffer.ptrw(), output_buffer.ptrw() + buffer_size, 0.0f);
-		UtilityFunctions::print("Silence buffer - No Context");
 		return output_buffer;
 	}
 
 	// If no note is playing, return silence
 	if (context->get_note() < 0 || context->get_velocity() <= 0.0f) {
 		std::fill(output_buffer.ptrw(), output_buffer.ptrw() + buffer_size, 0.0f);
-		UtilityFunctions::print("Silence buffer - note: " + String::num(context->get_note()) +
-				" velocity: " + String::num(context->get_velocity()));
 		return output_buffer;
 	}
 
@@ -245,7 +242,6 @@ Ref<AudioStreamGeneratorEngine> VAOscillatorEngine::duplicate() const {
 		Ref<ModulatedParameter> param = params[name];
 		if (param.is_valid()) {
 			Ref<ModulatedParameter> new_param = param->duplicate();
-			UtilityFunctions::print("Copy Parameter: " + name);
 			new_engine->set_parameter(name, new_param);
 		}
 	}
