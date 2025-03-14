@@ -6,6 +6,9 @@ header_type: splash
 header_img : "./assets/img/synth_main.webp"
 show_sociallinks  : true
 project_links:
+    - url: https://github.com/EclipsingLines/GodotSynth/releases
+      icon: fas file-arrow-down
+      label: Download
     - url: https://github.com/EclipsingLines/GodotSynth
       icon: fab fa-github
       label: Synth
