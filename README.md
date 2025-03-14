@@ -21,10 +21,11 @@ A powerful and flexible synthesizer engine for Godot 4, providing virtual analog
 The main player node that handles audio playback and voice allocation.
 
 ```gdscript
-var synth = AudioSynthPlayer.new()
-synth.configuration = my_synth_config
-synth.polyphony = 8  # Set number of voices
-add_child(synth)
+@export var sound:SynthConfiguration
+var synth
+func initialize_synth() -> void:
+	synth = AudioSynthPlayer.new()
+	synth.configuration = sound
 ```
 
 ### SynthNoteContext
@@ -35,20 +36,29 @@ Represents a playing note and provides control over its lifecycle.
 var context = synth.get_context()
 context.note_on(note, velocity)  # Start a note
 context.note_off(time)           # Release a note
+context = null                   # Release the context object from memory
 ```
+
+Always use a new context for each note, this allows you to do "articulation" on the played notes, you can use tweens, lerps and curves to drive the values in the context.
+
+> [!TIP]
+> Use curves to drive the velocity for a more natural sounding voice.
 
 ### VASynthConfiguration
 
 Configures the virtual analog synthesizer with oscillators, parameters, and effects.
 
-```gdscript
-var config = VASynthConfiguration.new()
-config.bottom_waveform = WaveHelper.WAVE_SINE
-config.middle_waveform = WaveHelper.WAVE_SAW
-config.top_waveform = WaveHelper.WAVE_SQUARE
-```
+![image](https://github.com/user-attachments/assets/b2bb414f-5989-41b1-ac91-c19fddbe95d8)
+
+> [!TIP]
+> You can save your own variations of any of the included resources
+> Build yourself a library of sounds, modulators, effect chains and effects using Godot's built in resource management.
 
 ## Effects
+
+> ![INFO]
+> These effects all accept modulation parameters, which also makes them more CPU intensive than the Godot counterparts.
+> If you don't need modulation on the effects please consider using the Godot audio effects in your audio bus instead.
 
 The synth engine includes a variety of audio effects:
 
@@ -68,31 +78,40 @@ The synth engine includes a variety of audio effects:
 - BitcrushDistortion, OverdriveDistortion, FuzzDistortion, RectifierDistortion
 
 ### Spatial
-
+> [!WARNING]
+> The reverb is currently not enabled due to CPU issues.
 - Reverb
 
 ## Basic Usage Example
 
-```gdscript
-extends Node
+Check the piano_keyboard scene inside the addons folder, this scene allows your to test sound configurations.
+Check the synth_player node for more information on a how to play notes.
 
-# Reference to your synth configuration
-@export var sound: VASynthConfiguration
+## Planned Features
 
-func _ready():
-    # Create a synth player
-    var synth = AudioSynthPlayer.new()
-    synth.configuration = sound
-    add_child(synth)
-    
-    # Play a note
-    var context = synth.get_context()
-    context.note_on(60, 0.8)  # MIDI note 60 (C4) with velocity 0.8
-    
-    # Stop the note after 1 second
-    await get_tree().create_timer(1.0).timeout
-    context.note_off(context.absolute_time)
-```
+[ ] Virtual Analog Engine
+[ ] Chord Engine
+[ ] 4 OP FM Engine
+[ ] Formant Engine
+[ ] Wavetable Engine
+
+[ ] Custom editor window for testing sounds in editor
+[ ] Single track step sequencer module
+
+[ ] LFO lookup table caching
+[ ] SIMD optimizations
+[ ] Sound caching and async preloading
+
+[ ] Gold braided cable end simulation
+[ ] Warmer tone slider
+
+## Contributing
+
+This project is open for contributions, if you are knowledgable in sound design, audio processing, SIMD operations or any other related field please consider contributing to the project.
+
+I am looking for people to help create presets, optimize the code and implement new engines.
+
+I would also kindly take a donation.
 
 ## License
 
