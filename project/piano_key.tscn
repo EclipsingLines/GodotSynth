@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://cyndffxmsa4rn"]
+[gd_scene load_steps=14 format=3 uid="uid://cyndffxmsa4rn"]
 
 [ext_resource type="Script" uid="uid://n0quo1dyvxfv" path="res://demo/synth_player.gd" id="1_3eeuk"]
 [ext_resource type="Script" uid="uid://cwv0buggdocub" path="res://demo/key_note.gd" id="1_7fek3"]
@@ -15,121 +15,50 @@ timbre = 0.0
 metadata/_custom_type_script = "uid://c8oikiv8y15k2"
 
 [sub_resource type="Curve" id="Curve_pj01b"]
-_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.027027, 1), 0.0, 0.0, 0, 0, Vector2(0.189189, 0.7), 0.0, 0.0, 0, 0, Vector2(0.72973, 0.7), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0, 0), 0.0, 0.0, 0, 0]
 point_count = 5
 
 [sub_resource type="ADSR" id="ADSR_soc20"]
-resource_local_to_scene = false
-resource_name = ""
-attack = 0.05
 visual_curve = SubResource("Curve_pj01b")
 
 [sub_resource type="ModulatedParameter" id="ModulatedParameter_6dab6"]
-resource_local_to_scene = false
-resource_name = ""
 modulation/mod_amount = 1.0
 modulation/mod_source = SubResource("ADSR_soc20")
 modulation/mod_type = 2
 
+[sub_resource type="LFO" id="LFO_pj01b"]
+
 [sub_resource type="ModulatedParameter" id="ModulatedParameter_nqi2y"]
-resource_local_to_scene = false
-resource_name = ""
+base_value = 0.26
+modulation/mod_amount = 0.31
+modulation/mod_source = SubResource("LFO_pj01b")
+modulation/mod_type = 1
 
 [sub_resource type="ModulatedParameter" id="ModulatedParameter_cdj6m"]
-resource_local_to_scene = false
-resource_name = ""
-base_value = 0.1
-modulation/mod_max = 0.5
-
-[sub_resource type="ModulatedParameter" id="ModulatedParameter_gi8b8"]
-resource_local_to_scene = false
-resource_name = ""
-base_value = 0.5
-modulation/mod_max = 0.9
-
-[sub_resource type="ModulatedParameter" id="ModulatedParameter_l35g5"]
-resource_local_to_scene = false
-resource_name = ""
-base_value = 0.6
-modulation/mod_max = 0.9
-
-[sub_resource type="ModulatedParameter" id="ModulatedParameter_7jvcg"]
-resource_local_to_scene = false
-resource_name = ""
-base_value = 0.2
-
-[sub_resource type="ModulatedParameter" id="ModulatedParameter_pu54e"]
-resource_local_to_scene = false
-resource_name = ""
-base_value = 0.02
-modulation/mod_max = 0.1
-
-[sub_resource type="ModulatedParameter" id="ModulatedParameter_np0fl"]
-resource_local_to_scene = false
-resource_name = ""
-base_value = 0.3
-
-[sub_resource type="ModulatedParameter" id="ModulatedParameter_4wbpd"]
-resource_local_to_scene = false
-resource_name = ""
-base_value = 0.7
-
-[sub_resource type="Reverb" id="Reverb_0aq2s"]
-resource_local_to_scene = false
-resource_name = ""
-room_size_parameter = SubResource("ModulatedParameter_np0fl")
-damping_parameter = SubResource("ModulatedParameter_gi8b8")
-width_parameter = SubResource("ModulatedParameter_4wbpd")
-mix_parameter = SubResource("ModulatedParameter_7jvcg")
-pre_delay_parameter = SubResource("ModulatedParameter_pu54e")
-diffusion_parameter = SubResource("ModulatedParameter_l35g5")
-
-[sub_resource type="EffectChain" id="EffectChain_eovjq"]
-resource_local_to_scene = false
-resource_name = ""
-effects = [SubResource("Reverb_0aq2s")]
-
-[sub_resource type="ModulatedParameter" id="ModulatedParameter_huhme"]
-resource_local_to_scene = false
-resource_name = ""
-
-[sub_resource type="ModulatedParameter" id="ModulatedParameter_yvmvt"]
-resource_local_to_scene = false
-resource_name = ""
 modulation/mod_min = -24.0
 modulation/mod_max = 24.0
 
-[sub_resource type="ModulatedParameter" id="ModulatedParameter_n4eyf"]
-resource_local_to_scene = false
-resource_name = ""
-base_value = 0.5
-modulation/mod_min = 0.1
-modulation/mod_max = 0.9
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_pj01b"]
+base_value = 0.1
 
-[sub_resource type="ChordSynthConfiguration" id="ChordSynthConfiguration_dmk0v"]
-resource_local_to_scene = false
-resource_name = ""
-chord_type_parameter = SubResource("ModulatedParameter_nqi2y")
-inversion_parameter = SubResource("ModulatedParameter_huhme")
-amplitude_parameter = SubResource("ModulatedParameter_6dab6")
-pitch_parameter = SubResource("ModulatedParameter_yvmvt")
-pulse_width_parameter = SubResource("ModulatedParameter_n4eyf")
-detune_parameter = SubResource("ModulatedParameter_cdj6m")
-effect_chain = SubResource("EffectChain_eovjq")
-root_note_only = true
+[sub_resource type="VASynthConfiguration" id="VASynthConfiguration_gi8b8"]
+waveform = 0.26
+waveform_modulation = SubResource("ModulatedParameter_nqi2y")
+amplitude_modulation = SubResource("ModulatedParameter_6dab6")
+pitch_modulation = SubResource("ModulatedParameter_cdj6m")
+pulse_width = 0.1
+pulse_width_modulation = SubResource("ModulatedParameter_pj01b")
 parameters = {
 "amplitude": SubResource("ModulatedParameter_6dab6"),
-"chord_type": SubResource("ModulatedParameter_nqi2y"),
-"detune": SubResource("ModulatedParameter_cdj6m"),
-"inversion": SubResource("ModulatedParameter_huhme"),
-"pitch": SubResource("ModulatedParameter_yvmvt"),
-"pulse_width": SubResource("ModulatedParameter_n4eyf")
+"pitch": SubResource("ModulatedParameter_cdj6m"),
+"pulse_width": SubResource("ModulatedParameter_pj01b"),
+"waveform": SubResource("ModulatedParameter_nqi2y")
 }
 
 [node name="Control" type="CanvasLayer"]
 script = ExtResource("1_3eeuk")
 note = SubResource("Resource_pj01b")
-sound = SubResource("ChordSynthConfiguration_dmk0v")
+sound = SubResource("VASynthConfiguration_gi8b8")
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 anchors_preset = 15

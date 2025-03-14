@@ -17,4 +17,4 @@ config/icon="res://icon.svg"
 
 [editor_plugins]
 
-enabled=PackedStringArray()
+enabled=PackedStringArray("res://addons/godot_synth/plugin.cfg")

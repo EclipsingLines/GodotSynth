@@ -34,22 +34,46 @@ void VASynthConfiguration::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "top_waveform", PROPERTY_HINT_ENUM, WAVE_ENUM_VALUES), "set_top_waveform",
 			"get_top_waveform");
 
-	// Directly expose modulated parameters
+	// Bind base value properties
+	ClassDB::bind_method(D_METHOD("set_waveform_base_value", "value"), &VASynthConfiguration::set_waveform_base_value);
+	ClassDB::bind_method(D_METHOD("get_waveform_base_value"), &VASynthConfiguration::get_waveform_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "waveform", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_waveform_base_value", "get_waveform_base_value");
+
 	ClassDB::bind_method(D_METHOD("set_waveform_parameter", "param"), &VASynthConfiguration::set_waveform_parameter);
 	ClassDB::bind_method(D_METHOD("get_waveform_parameter"), &VASynthConfiguration::get_waveform_parameter);
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "waveform_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"), "set_waveform_parameter", "get_waveform_parameter");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "waveform_modulation", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
+			"set_waveform_parameter", "get_waveform_parameter");
+
+	ClassDB::bind_method(D_METHOD("set_amplitude_base_value", "value"), &VASynthConfiguration::set_amplitude_base_value);
+	ClassDB::bind_method(D_METHOD("get_amplitude_base_value"), &VASynthConfiguration::get_amplitude_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "amplitude", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_amplitude_base_value", "get_amplitude_base_value");
 
 	ClassDB::bind_method(D_METHOD("set_amplitude_parameter", "param"), &VASynthConfiguration::set_amplitude_parameter);
 	ClassDB::bind_method(D_METHOD("get_amplitude_parameter"), &VASynthConfiguration::get_amplitude_parameter);
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "amplitude_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"), "set_amplitude_parameter", "get_amplitude_parameter");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "amplitude_modulation", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
+			"set_amplitude_parameter", "get_amplitude_parameter");
+
+	ClassDB::bind_method(D_METHOD("set_pitch_base_value", "value"), &VASynthConfiguration::set_pitch_base_value);
+	ClassDB::bind_method(D_METHOD("get_pitch_base_value"), &VASynthConfiguration::get_pitch_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "pitch", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_pitch_base_value", "get_pitch_base_value");
 
 	ClassDB::bind_method(D_METHOD("set_pitch_parameter", "param"), &VASynthConfiguration::set_pitch_parameter);
 	ClassDB::bind_method(D_METHOD("get_pitch_parameter"), &VASynthConfiguration::get_pitch_parameter);
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "pitch_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"), "set_pitch_parameter", "get_pitch_parameter");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "pitch_modulation", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
+			"set_pitch_parameter", "get_pitch_parameter");
+
+	ClassDB::bind_method(D_METHOD("set_pulse_width_base_value", "value"), &VASynthConfiguration::set_pulse_width_base_value);
+	ClassDB::bind_method(D_METHOD("get_pulse_width_base_value"), &VASynthConfiguration::get_pulse_width_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "pulse_width", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_pulse_width_base_value", "get_pulse_width_base_value");
 
 	ClassDB::bind_method(D_METHOD("set_pulse_width_parameter", "param"), &VASynthConfiguration::set_pulse_width_parameter);
 	ClassDB::bind_method(D_METHOD("get_pulse_width_parameter"), &VASynthConfiguration::get_pulse_width_parameter);
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "pulse_width_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"), "set_pulse_width_parameter", "get_pulse_width_parameter");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "pulse_width_modulation", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
+			"set_pulse_width_parameter", "get_pulse_width_parameter");
 
 	ClassDB::bind_method(D_METHOD("set_effect_chain", "chain"), &SynthConfiguration::set_effect_chain);
 	ClassDB::bind_method(D_METHOD("get_effect_chain"), &SynthConfiguration::get_effect_chain);
@@ -147,6 +171,22 @@ Ref<ModulatedParameter> VASynthConfiguration::get_waveform_parameter() const {
 	return get_parameter(PARAM_WAVEFORM);
 }
 
+void VASynthConfiguration::set_waveform_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_waveform_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+		waveform_position = p_value; // Update stored position
+	}
+}
+
+float VASynthConfiguration::get_waveform_base_value() const {
+	Ref<ModulatedParameter> param = get_waveform_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
+}
+
 void VASynthConfiguration::set_amplitude_parameter(const Ref<ModulatedParameter> &p_param) {
 	if (p_param.is_valid()) {
 		set_parameter(PARAM_AMPLITUDE, p_param);
@@ -155,6 +195,21 @@ void VASynthConfiguration::set_amplitude_parameter(const Ref<ModulatedParameter>
 
 Ref<ModulatedParameter> VASynthConfiguration::get_amplitude_parameter() const {
 	return get_parameter(PARAM_AMPLITUDE);
+}
+
+void VASynthConfiguration::set_amplitude_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_amplitude_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float VASynthConfiguration::get_amplitude_base_value() const {
+	Ref<ModulatedParameter> param = get_amplitude_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
 }
 
 void VASynthConfiguration::set_pitch_parameter(const Ref<ModulatedParameter> &p_param) {
@@ -167,6 +222,21 @@ Ref<ModulatedParameter> VASynthConfiguration::get_pitch_parameter() const {
 	return get_parameter(PARAM_PITCH);
 }
 
+void VASynthConfiguration::set_pitch_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_pitch_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float VASynthConfiguration::get_pitch_base_value() const {
+	Ref<ModulatedParameter> param = get_pitch_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
+}
+
 void VASynthConfiguration::set_pulse_width_parameter(const Ref<ModulatedParameter> &p_param) {
 	if (p_param.is_valid()) {
 		set_parameter(PARAM_PULSE_WIDTH, p_param);
@@ -175,6 +245,21 @@ void VASynthConfiguration::set_pulse_width_parameter(const Ref<ModulatedParamete
 
 Ref<ModulatedParameter> VASynthConfiguration::get_pulse_width_parameter() const {
 	return get_parameter(PARAM_PULSE_WIDTH);
+}
+
+void VASynthConfiguration::set_pulse_width_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_pulse_width_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float VASynthConfiguration::get_pulse_width_base_value() const {
+	Ref<ModulatedParameter> param = get_pulse_width_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
 }
 
 // Preset management

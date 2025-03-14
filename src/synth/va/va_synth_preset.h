@@ -2,17 +2,17 @@
 #include "../core/modulated_parameter.h"
 #include "../core/synth_preset.h"
 #include "../core/wave_helper.h"
+#include "../effects/delay/ping_pong_delay.h"
+#include "../effects/distortion/bitcrush_distortion.h"
+#include "../effects/distortion/clip_distortion.h"
+#include "../effects/distortion/overdrive_distortion.h"
+#include "../effects/effect_chain.h"
+#include "../effects/filter/band_pass_filter.h"
+#include "../effects/filter/high_pass_filter.h"
+#include "../effects/filter/low_pass_filter.h"
 #include "../effects/spatial/reverb.h"
 #include "../mod/duration/note_duration_mod_source.h"
 #include "../mod/lfo/lfo.h"
-#include "../effects/effect_chain.h"
-#include "../effects/filter/low_pass_filter.h"
-#include "../effects/filter/high_pass_filter.h"
-#include "../effects/filter/band_pass_filter.h"
-#include "../effects/delay/ping_pong_delay.h"
-#include "../effects/distortion/clip_distortion.h"
-#include "../effects/distortion/bitcrush_distortion.h"
-#include "../effects/distortion/overdrive_distortion.h"
 #include "va_configuration_prototype.h"
 
 namespace godot {
@@ -75,6 +75,12 @@ public:
 		pitch_param->set_mod_min(-24.0f); // -24 semitones (2 octaves down)
 		pitch_param->set_mod_max(24.0f); // +24 semitones (2 octaves up)
 		va_config->pitch = pitch_param;
+
+		Ref<ModulatedParameter> pulse_width_param = memnew(ModulatedParameter);
+		pulse_width_param->set_base_value(0.5f);
+		pulse_width_param->set_mod_min(0.0f);
+		pulse_width_param->set_mod_max(1.0f);
+		va_config->pulse_width = pulse_width_param;
 
 		return va_config;
 	};

@@ -46,16 +46,24 @@ public:
 	// Direct modulated parameter accessors
 	void set_waveform_parameter(const Ref<ModulatedParameter> &p_param);
 	Ref<ModulatedParameter> get_waveform_parameter() const;
+	void set_waveform_base_value(float p_value);
+	float get_waveform_base_value() const;
 
 	void set_amplitude_parameter(const Ref<ModulatedParameter> &p_param);
 	Ref<ModulatedParameter> get_amplitude_parameter() const;
+	void set_amplitude_base_value(float p_value);
+	float get_amplitude_base_value() const;
 
 	void set_pitch_parameter(const Ref<ModulatedParameter> &p_param);
 	Ref<ModulatedParameter> get_pitch_parameter() const;
-	
+	void set_pitch_base_value(float p_value);
+	float get_pitch_base_value() const;
+
 	void set_pulse_width_parameter(const Ref<ModulatedParameter> &p_param);
 	Ref<ModulatedParameter> get_pulse_width_parameter() const;
-	
+	void set_pulse_width_base_value(float p_value);
+	float get_pulse_width_base_value() const;
+
 	// Preset management
 	void set_preset(const Ref<VASynthPreset> &p_preset);
 	Ref<VASynthPreset> get_preset() const;

@@ -50,6 +50,7 @@ void ModulatedParameter::_bind_methods() {
 
 void ModulatedParameter::set_base_value(float p_value) {
 	base_value = p_value;
+	emit_changed();
 }
 
 float ModulatedParameter::get_base_value() const {
