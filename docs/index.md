@@ -1,7 +1,7 @@
 ---
 layout: landingpage
 title: Godot Synth Engine
-subtitle: Powerful and flexible audio synthesis engine collection for use with the Godot game engine (4.4+).<br>SFX and procedural music. 
+subtitle: Powerful and flexible audio synthesis engine collection for use with the Godot 4.4+ <br>SFX and procedural music. 
 header_type: splash
 header_img : "./assets/img/synth_main.webp"
 show_sociallinks  : true
@@ -61,3 +61,19 @@ Most of the synth configuration can be done directly in the Godot Editor using t
 - [Synthesis Engines](engines.html)
 - [Modulation System](modulation.html)
 - [Effects](effects.html)
+
+## Roadmap
+
+- [x] Virtual analog engine
+- [ ] Chord Engine
+- [ ] 4 OP FM Engine
+- [ ] Formant Engine
+- [ ] Wavetable Engine
+- [ ] Gold braided cable emulation
+- [ ] Custom editor window for testing sounds in editor
+- [ ] Single track step sequencer module
+- [ ] "Curve" modulation source
+- [ ] LFO lookup table caching
+- [ ] SIMD optimizations
+- [ ] Sound caching and async preloading
+- [ ] Warmer tone slider

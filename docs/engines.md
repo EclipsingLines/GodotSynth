@@ -11,27 +11,41 @@ The Godot Synth Engine currently provides a Virtual Analog (VA) synthesis engine
 
 ### Features
 
-- Multiple oscillator waveforms (Sine, Square, Saw, Triangle, Pulse)
-- Waveform blending between three oscillators
-- Adjustable pulse width for pulse waveforms
-- Frequency modulation capabilities
+- Multiple oscillator waveforms
+- Waveform blending
+- Adjustable pulse width
+- Deep modulation capabilities
 - Rich harmonic content
 
-### Using the VA Synth in GDScript
+### Using the Virtual Analog Engine
 
-```gdscript
-# Create a VA synth configuration
-var config = VASynthConfiguration.new()
+Create a new VASynthConfiguration resource
 
-# Set oscillator waveforms
-config.bottom_waveform = WaveHelper.WAVE_SINE
-config.middle_waveform = WaveHelper.WAVE_SAW
-config.top_waveform = WaveHelper.WAVE_SQUARE
+![image](assets/img/va_configuration.png)
 
-# Create a synth player
-var synth = AudioSynthPlayer.new()
-synth.configuration = config
-add_child(synth)
-```
+The VA engine consist of 3 different wave shapes with a morph parameter.
 
-Most configuration can be done directly in the Godot Editor using the inspector panel.
+Bottom waveform is at 0, mid waveform is at 0.5 and top waveform is at 1.
+
+The amplitude parameter is set by default to an ADSR but that can be changed if needed.
+
+Pitch controls the relative pitch, at 1 is the root note and at 0 is a 12 cent below.
+
+Pulse width controls the lenght of the pulse or square wave.
+
+### Available Waveforms
+
+- Sine
+- Square
+- Triangle
+- Saw
+- Log Saw
+- Exp Saw
+- Pulse
+- Noise
+- Super Saw
+- Sub Square
+- Pulse Train
+- Sine Fold
+- Additive
+- Sync Saw

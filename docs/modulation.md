@@ -10,7 +10,11 @@ The Godot Synth Engine features a powerful modulation system that allows you to 
 ## Modulation Sources
 
 - **ADSR Envelopes**: Control how parameters change over time with Attack, Decay, Sustain, and Release stages
+![image](assets/img/adsr.png)
+
 - **LFOs**: Low Frequency Oscillators for cyclic modulation
+![image](./assets/img/lfo.png)
+
 - **Velocity Tracking**: Modulate parameters based on note velocity
 - **Keyboard Tracking**: Modulate parameters based on note position
 - **Note Duration**: Modulate parameters based on how long a note has been playing
@@ -22,27 +26,10 @@ The Godot Synth Engine features a powerful modulation system that allows you to 
 - **Absolute**: Directly sets the parameter to the modulation value
 - **Gate**: On/off control based on modulation threshold
 
-## Using Modulation in GDScript
+## Using Modulation
 
-```gdscript
-# Create a modulated parameter
-var amp_param = ModulatedParameter.new()
-amp_param.base_value = 0.8
+![image](assets/img/modulated_parameter.png)
 
-# Create an ADSR envelope
-var envelope = ADSR.new()
-envelope.attack = 0.1
-envelope.decay = 0.2
-envelope.sustain = 0.7
-envelope.release = 0.5
+Expanding the modulated parameter allows for control of the modulation source and depth.
 
-# Apply the envelope to modulate the amplitude
-amp_param.modulation.mod_source = envelope
-amp_param.modulation.mod_amount = 1.0
-amp_param.modulation.mod_type = ModulationType.MULTIPLICATIVE
-
-# Set the parameter in your synth configuration
-config.set_parameter("amplitude", amp_param)
-```
-
-Most modulation setup can be done directly in the Godot Editor using the inspector panel.
+The white bar in the visualizer indicates the base value, the blue area represents the modulated region.

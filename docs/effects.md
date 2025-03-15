@@ -7,9 +7,25 @@ title: Audio Effects
 
 The Godot Synth Engine includes a variety of audio effects that can be chained together to shape your sound.
 
+These audio effects are less optimized than the default Godot audio effects but these allow for modulation on the parameters.
+
+> Modulation currently is a bit computationally intensive, only use when needed.
+
+## Bus Effect routing
+
+The sound configuration resource especifies an audio bus for the sound.
+This allows for different sounds to be rounted into distinct audio busses for SFX or music.
+
+> Godot has no limit on the number of audio busses, there's nothing and no one stopping you from creating an audio bus per sound.
+
+The sound effects included with the Godot engine are very versatile and really good quality, also much more performant than the ones I wrote.
+
+It is recommended to use the Godot audio effects when possible and only use the effects chain if a modulated effect is needed.
+
 ## Available Effect Types
 
 ### Filters
+
 - Low Pass Filter: Attenuates frequencies above the cutoff point
 - High Pass Filter: Attenuates frequencies below the cutoff point
 - Band Pass Filter: Passes frequencies within a certain range
@@ -19,6 +35,7 @@ The Godot Synth Engine includes a variety of audio effects that can be chained t
 - MS20 Filter: Korg MS-20 style filter
 
 ### Delay Effects
+
 - Simple Delay: Basic delay line
 - Ping Pong Delay: Alternating left/right delay
 - Filtered Delay: Delay with filtering
@@ -26,36 +43,28 @@ The Godot Synth Engine includes a variety of audio effects that can be chained t
 - Tape Delay: Tape-style delay with wow and flutter
 
 ### Distortion
+
 - Clip Distortion: Hard/soft clipping distortion
 - Waveshaper Distortion: Custom waveshaping
 - Foldback Distortion: Signal folding distortion
 - Bitcrush Distortion: Bit depth and sample rate reduction
 
 ### Spatial
-- Reverb: Room simulation with adjustable parameters
 
-## Using Effects in GDScript
+> The reverb effect is currently disabled due to CPU performance.
 
-```gdscript
-# Create an effect chain
-var chain = EffectChain.new()
+- ~~Reverb: Room simulation with adjustable parameters~~
 
-# Create a filter
-var filter = LowPassFilter.new()
-filter.cutoff_parameter.base_value = 1000.0  # 1000 Hz
-filter.resonance_parameter.base_value = 0.7  # Resonance amount
+## Using Effects
 
-# Add the filter to the chain
-chain.add_effect(filter)
+The effect chain is an array of modulated effects wrapped in a resource.
 
-# Add a delay effect
-var delay = DelayEffect.new()
-delay.time_parameter.base_value = 0.3  # 300ms delay
-delay.feedback_parameter.base_value = 0.4  # 40% feedback
-chain.add_effect(delay)
+This is to allow saving and loading of effect chain presets.
 
-# Set the effect chain in your synth configuration
-config.effect_chain = chain
-```
+![image](./assets/img/effect_chain.png)
 
-Most effect setup can be done directly in the Godot Editor using the inspector panel.
+The effects in the array are applied in the order that they are.
+
+Beware of very long delay tails as these are very computationally taxing.
+
+If you require a sound with a long delay tail make sure you use the Godot delay audio effects instead of the modulated one.
