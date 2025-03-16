@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Step sequencer
 - Gold braided cable emulation
 
-## [0.95] - 2025-03-16
+## [v0.95] - 2025-03-16
 
 ### Added
 
@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed modulated parameters on effects
 
-## [0.94] - 2025-03-14
+## [v0.94] - 2025-03-14
 
 ### Added
 
