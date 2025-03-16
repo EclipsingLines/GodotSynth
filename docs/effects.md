@@ -13,8 +13,8 @@ These audio effects are less optimized than the default Godot audio effects but 
 
 ## Bus Effect routing
 
-The sound configuration resource especifies an audio bus for the sound.
-This allows for different sounds to be rounted into distinct audio busses for SFX or music.
+The sound configuration resource specifies an audio bus for the sound.
+This allows for different sounds to be routed into distinct audio busses for SFX or music.
 
 > Godot has no limit on the number of audio busses, there's nothing and no one stopping you from creating an audio bus per sound.
 
