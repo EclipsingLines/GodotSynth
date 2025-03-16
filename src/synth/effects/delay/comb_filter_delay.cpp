@@ -14,11 +14,19 @@ const char *CombFilterDelay::PARAM_POLARITY = "polarity";
 
 void CombFilterDelay::_bind_methods() {
 	// Bind parameter accessors
+	ClassDB::bind_method(D_METHOD("set_resonance_base_value", "value"), &CombFilterDelay::set_resonance_base_value);
+	ClassDB::bind_method(D_METHOD("get_resonance_base_value"), &CombFilterDelay::get_resonance_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "resonance", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_resonance_base_value", "get_resonance_base_value");
 	ClassDB::bind_method(D_METHOD("set_resonance_parameter", "param"), &CombFilterDelay::set_resonance_parameter);
 	ClassDB::bind_method(D_METHOD("get_resonance_parameter"), &CombFilterDelay::get_resonance_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "resonance_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_resonance_parameter", "get_resonance_parameter");
 
+	ClassDB::bind_method(D_METHOD("set_polarity_base_value", "value"), &CombFilterDelay::set_polarity_base_value);
+	ClassDB::bind_method(D_METHOD("get_polarity_base_value"), &CombFilterDelay::get_polarity_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "polarity", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_polarity_base_value", "get_polarity_base_value");
 	ClassDB::bind_method(D_METHOD("set_polarity_parameter", "param"), &CombFilterDelay::set_polarity_parameter);
 	ClassDB::bind_method(D_METHOD("get_polarity_parameter"), &CombFilterDelay::get_polarity_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "polarity_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
@@ -177,6 +185,21 @@ Ref<ModulatedParameter> CombFilterDelay::get_resonance_parameter() const {
 	return get_parameter(PARAM_RESONANCE);
 }
 
+void CombFilterDelay::set_resonance_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_resonance_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float CombFilterDelay::get_resonance_base_value() const {
+	Ref<ModulatedParameter> param = get_resonance_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
+}
+
 void CombFilterDelay::set_polarity_parameter(const Ref<ModulatedParameter> &param) {
 	if (param.is_valid()) {
 		set_parameter(PARAM_POLARITY, param);
@@ -185,6 +208,21 @@ void CombFilterDelay::set_polarity_parameter(const Ref<ModulatedParameter> &para
 
 Ref<ModulatedParameter> CombFilterDelay::get_polarity_parameter() const {
 	return get_parameter(PARAM_POLARITY);
+}
+
+void CombFilterDelay::set_polarity_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_polarity_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float CombFilterDelay::get_polarity_base_value() const {
+	Ref<ModulatedParameter> param = get_polarity_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
 }
 
 } // namespace godot

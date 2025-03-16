@@ -28,6 +28,17 @@ public:
 	FuzzDistortion();
 	~FuzzDistortion();
 
+	void set_drive_base_value(float p_value);
+	float get_drive_base_value() const;
+	void set_mix_base_value(float p_value);
+	float get_mix_base_value() const;
+	void set_output_gain_base_value(float p_value);
+	float get_output_gain_base_value() const;
+	void set_fuzz_type_base_value(float p_value);
+	float get_fuzz_type_base_value() const;
+	void set_tone_base_value(float p_value);
+	float get_tone_base_value() const;
+
 	// Fuzz types
 	enum FuzzType {
 		FUZZ_CLASSIC,

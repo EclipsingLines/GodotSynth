@@ -68,6 +68,24 @@ public:
 
 	void set_filtering_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_filtering_parameter() const;
+
+	void set_delay_time_base_value(float p_value);
+	float get_delay_time_base_value() const;
+
+	void set_feedback_base_value(float p_value);
+	float get_feedback_base_value() const;
+
+	void set_mix_base_value(float p_value);
+	float get_mix_base_value() const;
+
+	void set_saturation_base_value(float p_value);
+	float get_saturation_base_value() const;
+
+	void set_wow_base_value(float p_value);
+	float get_wow_base_value() const;
+
+	void set_filtering_base_value(float p_value);
+	float get_filtering_base_value() const;
 };
 
 } // namespace godot

@@ -37,9 +37,13 @@ public:
 	// Parameter accessors
 	void set_resonance_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_resonance_parameter() const;
+	void set_resonance_base_value(float p_value);
+	float get_resonance_base_value() const;
 
 	void set_polarity_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_polarity_parameter() const;
+	void set_polarity_base_value(float p_value);
+	float get_polarity_base_value() const;
 };
 
 } // namespace godot

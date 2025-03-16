@@ -16,31 +16,56 @@ const char *FilteredDelay::PARAM_RESONANCE = "resonance";
 
 void FilteredDelay::_bind_methods() {
 	// Bind parameter accessors
+
+	ClassDB::bind_method(D_METHOD("set_delay_time_base_value", "value"), &FilteredDelay::set_delay_time_base_value);
+	ClassDB::bind_method(D_METHOD("get_delay_time_base_value"), &FilteredDelay::get_delay_time_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "delay_time", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_delay_time_base_value", "get_delay_time_base_value");
 	ClassDB::bind_method(D_METHOD("set_delay_time_parameter", "param"), &FilteredDelay::set_delay_time_parameter);
 	ClassDB::bind_method(D_METHOD("get_delay_time_parameter"), &FilteredDelay::get_delay_time_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "delay_time_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_delay_time_parameter", "get_delay_time_parameter");
 
+	ClassDB::bind_method(D_METHOD("set_feedback_base_value", "value"), &FilteredDelay::set_feedback_base_value);
+	ClassDB::bind_method(D_METHOD("get_feedback_base_value"), &FilteredDelay::get_feedback_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "feedback", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_feedback_base_value", "get_feedback_base_value");
 	ClassDB::bind_method(D_METHOD("set_feedback_parameter", "param"), &FilteredDelay::set_feedback_parameter);
 	ClassDB::bind_method(D_METHOD("get_feedback_parameter"), &FilteredDelay::get_feedback_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "feedback_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_feedback_parameter", "get_feedback_parameter");
 
+	ClassDB::bind_method(D_METHOD("set_mix_base_value", "value"), &FilteredDelay::set_mix_base_value);
+	ClassDB::bind_method(D_METHOD("get_mix_base_value"), &FilteredDelay::get_mix_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "mix", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_mix_base_value", "get_mix_base_value");
 	ClassDB::bind_method(D_METHOD("set_mix_parameter", "param"), &FilteredDelay::set_mix_parameter);
 	ClassDB::bind_method(D_METHOD("get_mix_parameter"), &FilteredDelay::get_mix_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "mix_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_mix_parameter", "get_mix_parameter");
 
+	ClassDB::bind_method(D_METHOD("set_lp_freq_base_value", "value"), &FilteredDelay::set_lp_freq_base_value);
+	ClassDB::bind_method(D_METHOD("get_lp_freq_base_value"), &FilteredDelay::get_lp_freq_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "lp_freq", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_lp_freq_base_value", "get_lp_freq_base_value");
 	ClassDB::bind_method(D_METHOD("set_lp_freq_parameter", "param"), &FilteredDelay::set_lp_freq_parameter);
 	ClassDB::bind_method(D_METHOD("get_lp_freq_parameter"), &FilteredDelay::get_lp_freq_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "lp_freq_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_lp_freq_parameter", "get_lp_freq_parameter");
 
+	ClassDB::bind_method(D_METHOD("set_hp_freq_base_value", "value"), &FilteredDelay::set_hp_freq_base_value);
+	ClassDB::bind_method(D_METHOD("get_hp_freq_base_value"), &FilteredDelay::get_hp_freq_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "hp_freq", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_hp_freq_base_value", "get_hp_freq_base_value");
 	ClassDB::bind_method(D_METHOD("set_hp_freq_parameter", "param"), &FilteredDelay::set_hp_freq_parameter);
 	ClassDB::bind_method(D_METHOD("get_hp_freq_parameter"), &FilteredDelay::get_hp_freq_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "hp_freq_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_hp_freq_parameter", "get_hp_freq_parameter");
 
+	ClassDB::bind_method(D_METHOD("set_resonance_base_value", "value"), &FilteredDelay::set_resonance_base_value);
+	ClassDB::bind_method(D_METHOD("get_resonance_base_value"), &FilteredDelay::get_resonance_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "resonance", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_resonance_base_value", "get_resonance_base_value");
 	ClassDB::bind_method(D_METHOD("set_resonance_parameter", "param"), &FilteredDelay::set_resonance_parameter);
 	ClassDB::bind_method(D_METHOD("get_resonance_parameter"), &FilteredDelay::get_resonance_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "resonance_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
@@ -276,6 +301,21 @@ Ref<ModulatedParameter> FilteredDelay::get_delay_time_parameter() const {
 	return get_parameter(PARAM_DELAY_TIME);
 }
 
+void FilteredDelay::set_delay_time_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_delay_time_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FilteredDelay::get_delay_time_base_value() const {
+	Ref<ModulatedParameter> param = get_delay_time_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
+}
+
 void FilteredDelay::set_feedback_parameter(const Ref<ModulatedParameter> &param) {
 	if (param.is_valid()) {
 		set_parameter(PARAM_FEEDBACK, param);
@@ -284,6 +324,21 @@ void FilteredDelay::set_feedback_parameter(const Ref<ModulatedParameter> &param)
 
 Ref<ModulatedParameter> FilteredDelay::get_feedback_parameter() const {
 	return get_parameter(PARAM_FEEDBACK);
+}
+
+void FilteredDelay::set_feedback_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_feedback_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FilteredDelay::get_feedback_base_value() const {
+	Ref<ModulatedParameter> param = get_feedback_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
 }
 
 void FilteredDelay::set_mix_parameter(const Ref<ModulatedParameter> &param) {
@@ -296,6 +351,21 @@ Ref<ModulatedParameter> FilteredDelay::get_mix_parameter() const {
 	return get_parameter(PARAM_MIX);
 }
 
+void FilteredDelay::set_mix_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_mix_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FilteredDelay::get_mix_base_value() const {
+	Ref<ModulatedParameter> param = get_mix_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
+}
+
 void FilteredDelay::set_lp_freq_parameter(const Ref<ModulatedParameter> &param) {
 	if (param.is_valid()) {
 		set_parameter(PARAM_LP_FREQ, param);
@@ -304,6 +374,21 @@ void FilteredDelay::set_lp_freq_parameter(const Ref<ModulatedParameter> &param) 
 
 Ref<ModulatedParameter> FilteredDelay::get_lp_freq_parameter() const {
 	return get_parameter(PARAM_LP_FREQ);
+}
+
+void FilteredDelay::set_lp_freq_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_lp_freq_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FilteredDelay::get_lp_freq_base_value() const {
+	Ref<ModulatedParameter> param = get_lp_freq_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
 }
 
 void FilteredDelay::set_hp_freq_parameter(const Ref<ModulatedParameter> &param) {
@@ -316,6 +401,21 @@ Ref<ModulatedParameter> FilteredDelay::get_hp_freq_parameter() const {
 	return get_parameter(PARAM_HP_FREQ);
 }
 
+void FilteredDelay::set_hp_freq_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_hp_freq_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FilteredDelay::get_hp_freq_base_value() const {
+	Ref<ModulatedParameter> param = get_hp_freq_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
+}
+
 void FilteredDelay::set_resonance_parameter(const Ref<ModulatedParameter> &param) {
 	if (param.is_valid()) {
 		set_parameter(PARAM_RESONANCE, param);
@@ -324,6 +424,21 @@ void FilteredDelay::set_resonance_parameter(const Ref<ModulatedParameter> &param
 
 Ref<ModulatedParameter> FilteredDelay::get_resonance_parameter() const {
 	return get_parameter(PARAM_RESONANCE);
+}
+
+void FilteredDelay::set_resonance_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_resonance_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FilteredDelay::get_resonance_base_value() const {
+	Ref<ModulatedParameter> param = get_resonance_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
 }
 
 } // namespace godot

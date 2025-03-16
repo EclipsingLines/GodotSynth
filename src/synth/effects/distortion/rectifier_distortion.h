@@ -32,12 +32,32 @@ public:
 	float get_tail_length() const override;
 	Ref<SynthAudioEffect> duplicate() const override;
 
-	// Parameter accessors
+	// Parameter accessorsvoid
+	void set_drive_parameter(const Ref<ModulatedParameter> &param);
+	Ref<ModulatedParameter> get_drive_parameter() const;
+
+	void set_mix_parameter(const Ref<ModulatedParameter> &param);
+	Ref<ModulatedParameter> get_mix_parameter() const;
+
+	void set_output_gain_parameter(const Ref<ModulatedParameter> &param);
+	Ref<ModulatedParameter> get_output_gain_parameter() const;
+
 	void set_mode_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_mode_parameter() const;
 
 	void set_asymmetry_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_asymmetry_parameter() const;
+
+	void set_drive_base_value(float p_value);
+	float get_drive_base_value() const;
+	void set_mix_base_value(float p_value);
+	float get_mix_base_value() const;
+	void set_output_gain_base_value(float p_value);
+	float get_output_gain_base_value() const;
+	void set_mode_base_value(float p_value);
+	float get_mode_base_value() const;
+	void set_asymmetry_base_value(float p_value);
+	float get_asymmetry_base_value() const;
 };
 
 } // namespace godot

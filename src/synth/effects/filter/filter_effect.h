@@ -55,6 +55,16 @@ public:
 
 	void set_gain_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_gain_parameter() const;
+
+	// Base value accessors
+	void set_cutoff_base_value(float p_value);
+	float get_cutoff_base_value() const;
+
+	void set_resonance_base_value(float p_value);
+	float get_resonance_base_value() const;
+
+	void set_gain_base_value(float p_value);
+	float get_gain_base_value() const;
 };
 
 } // namespace godot

@@ -10,12 +10,50 @@ const char *RectifierDistortion::PARAM_MODE = "mode";
 const char *RectifierDistortion::PARAM_ASYMMETRY = "asymmetry";
 
 void RectifierDistortion::_bind_methods() {
+	// Bind base value accessors
+	ClassDB::bind_method(D_METHOD("set_drive_base_value", "value"), &RectifierDistortion::set_drive_base_value);
+	ClassDB::bind_method(D_METHOD("get_drive_base_value"), &RectifierDistortion::get_drive_base_value);
+	ClassDB::bind_method(D_METHOD("set_mix_base_value", "value"), &RectifierDistortion::set_mix_base_value);
+	ClassDB::bind_method(D_METHOD("get_mix_base_value"), &RectifierDistortion::get_mix_base_value);
+	ClassDB::bind_method(D_METHOD("set_output_gain_base_value", "value"), &RectifierDistortion::set_output_gain_base_value);
+	ClassDB::bind_method(D_METHOD("get_output_gain_base_value"), &RectifierDistortion::get_output_gain_base_value);
+
+	ClassDB::bind_method(D_METHOD("set_mode_base_value", "value"), &RectifierDistortion::set_mode_base_value);
+	ClassDB::bind_method(D_METHOD("get_mode_base_value"), &RectifierDistortion::get_mode_base_value);
+	ClassDB::bind_method(D_METHOD("set_asymmetry_base_value", "value"), &RectifierDistortion::set_asymmetry_base_value);
+	ClassDB::bind_method(D_METHOD("get_asymmetry_base_value"), &RectifierDistortion::get_asymmetry_base_value);
+
 	// Bind parameter accessors
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "drive", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_drive_base_value", "get_drive_base_value");
+	ClassDB::bind_method(D_METHOD("set_drive_parameter", "param"), &RectifierDistortion::set_drive_parameter);
+	ClassDB::bind_method(D_METHOD("get_drive_parameter"), &RectifierDistortion::get_drive_parameter);
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "drive_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
+			"set_drive_parameter", "get_drive_parameter");
+
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "mix", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_mix_base_value", "get_mix_base_value");
+	ClassDB::bind_method(D_METHOD("set_mix_parameter", "param"), &RectifierDistortion::set_mix_parameter);
+	ClassDB::bind_method(D_METHOD("get_mix_parameter"), &RectifierDistortion::get_mix_parameter);
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "mix_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
+			"set_mix_parameter", "get_mix_parameter");
+
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "output_gain", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_output_gain_base_value", "get_output_gain_base_value");
+	ClassDB::bind_method(D_METHOD("set_output_gain_parameter", "param"), &RectifierDistortion::set_output_gain_parameter);
+	ClassDB::bind_method(D_METHOD("get_output_gain_parameter"), &RectifierDistortion::get_output_gain_parameter);
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "output_gain_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
+			"set_output_gain_parameter", "get_output_gain_parameter");
+
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "mode", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_mode_base_value", "get_mode_base_value");
 	ClassDB::bind_method(D_METHOD("set_mode_parameter", "param"), &RectifierDistortion::set_mode_parameter);
 	ClassDB::bind_method(D_METHOD("get_mode_parameter"), &RectifierDistortion::get_mode_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "mode_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_mode_parameter", "get_mode_parameter");
 
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "asymmetry", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_asymmetry_base_value", "get_asymmetry_base_value");
 	ClassDB::bind_method(D_METHOD("set_asymmetry_parameter", "param"), &RectifierDistortion::set_asymmetry_parameter);
 	ClassDB::bind_method(D_METHOD("get_asymmetry_parameter"), &RectifierDistortion::get_asymmetry_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "asymmetry_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
@@ -194,4 +232,88 @@ Ref<ModulatedParameter> RectifierDistortion::get_asymmetry_parameter() const {
 	return get_parameter(PARAM_ASYMMETRY);
 }
 
+void RectifierDistortion::set_mode_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_MODE);
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float RectifierDistortion::get_mode_base_value() const {
+	return get_parameter(PARAM_MODE)->get_base_value();
+}
+
+void RectifierDistortion::set_asymmetry_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_ASYMMETRY);
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float RectifierDistortion::get_asymmetry_base_value() const {
+	return get_parameter(PARAM_ASYMMETRY)->get_base_value();
+}
+
+void RectifierDistortion::set_drive_parameter(const Ref<ModulatedParameter> &param) {
+	if (param.is_valid()) {
+		set_parameter(PARAM_DRIVE, param);
+	}
+}
+
+Ref<ModulatedParameter> RectifierDistortion::get_drive_parameter() const {
+	return get_parameter(PARAM_DRIVE);
+}
+
+void RectifierDistortion::set_mix_parameter(const Ref<ModulatedParameter> &param) {
+	if (param.is_valid()) {
+		set_parameter(PARAM_MIX, param);
+	}
+}
+
+Ref<ModulatedParameter> RectifierDistortion::get_mix_parameter() const {
+	return get_parameter(PARAM_MIX);
+}
+
+void RectifierDistortion::set_output_gain_parameter(const Ref<ModulatedParameter> &param) {
+	if (param.is_valid()) {
+		set_parameter(PARAM_OUTPUT_GAIN, param);
+	}
+}
+
+Ref<ModulatedParameter> RectifierDistortion::get_output_gain_parameter() const {
+	return get_parameter(PARAM_OUTPUT_GAIN);
+}
+
+void RectifierDistortion::set_drive_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_DRIVE);
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float RectifierDistortion::get_drive_base_value() const {
+	return get_parameter(PARAM_DRIVE)->get_base_value();
+}
+
+void RectifierDistortion::set_mix_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_MIX);
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float RectifierDistortion::get_mix_base_value() const {
+	return get_parameter(PARAM_MIX)->get_base_value();
+}
+
+void RectifierDistortion::set_output_gain_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_OUTPUT_GAIN);
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float RectifierDistortion::get_output_gain_base_value() const {
+	return get_parameter(PARAM_OUTPUT_GAIN)->get_base_value();
+}
 } // namespace godot

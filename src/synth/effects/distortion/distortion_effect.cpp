@@ -25,10 +25,9 @@ DistortionEffect::DistortionEffect() {
 }
 
 DistortionEffect::~DistortionEffect() {
-	
 }
 
 void DistortionEffect::_bind_methods() {
-	// Intentionally left blank.  Subclasses will bind their own methods.
 }
-}
+
+} //namespace godot

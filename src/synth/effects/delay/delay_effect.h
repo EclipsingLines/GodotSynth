@@ -41,12 +41,18 @@ public:
 	// Parameter accessors
 	void set_delay_time_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_delay_time_parameter() const;
+	void set_delay_time_base_value(float p_value);
+	float get_delay_time_base_value() const;
 
 	void set_feedback_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_feedback_parameter() const;
+	void set_feedback_base_value(float p_value);
+	float get_feedback_base_value() const;
 
 	void set_mix_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_mix_parameter() const;
+	void set_mix_base_value(float p_value);
+	float get_mix_base_value() const;
 };
 
 } // namespace godot

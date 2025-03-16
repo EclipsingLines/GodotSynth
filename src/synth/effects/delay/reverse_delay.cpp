@@ -13,6 +13,10 @@ const char *ReverseDelay::PARAM_CROSSFADE = "crossfade";
 
 void ReverseDelay::_bind_methods() {
 	// Bind parameter accessors
+	ClassDB::bind_method(D_METHOD("set_crossfade_base_value", "value"), &ReverseDelay::set_crossfade_base_value);
+	ClassDB::bind_method(D_METHOD("get_crossfade_base_value"), &ReverseDelay::get_crossfade_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "crossfade_base_value", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_crossfade_base_value", "get_crossfade_base_value");
 	ClassDB::bind_method(D_METHOD("set_crossfade_parameter", "param"), &ReverseDelay::set_crossfade_parameter);
 	ClassDB::bind_method(D_METHOD("get_crossfade_parameter"), &ReverseDelay::get_crossfade_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "crossfade_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
@@ -182,4 +186,18 @@ Ref<ModulatedParameter> ReverseDelay::get_crossfade_parameter() const {
 	return get_parameter(PARAM_CROSSFADE);
 }
 
+void ReverseDelay::set_crossfade_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_crossfade_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float ReverseDelay::get_crossfade_base_value() const {
+	Ref<ModulatedParameter> param = get_crossfade_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
+}
 } // namespace godot

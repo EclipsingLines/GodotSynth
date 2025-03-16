@@ -13,16 +13,31 @@ const char *FilterEffect::PARAM_RESONANCE = "resonance";
 const char *FilterEffect::PARAM_GAIN = "gain";
 
 void FilterEffect::_bind_methods() {
-	// Bind direct parameter accessors
+	// Bind parameter accessors - base values first, then modulated parameters
+	// Cutoff Frequency
+	ClassDB::bind_method(D_METHOD("set_cutoff_base_value", "value"), &FilterEffect::set_cutoff_base_value);
+	ClassDB::bind_method(D_METHOD("get_cutoff_base_value"), &FilterEffect::get_cutoff_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "cutoff_base_value", PROPERTY_HINT_RANGE, "20,20000,1"), "set_cutoff_base_value", "get_cutoff_base_value");
+
 	ClassDB::bind_method(D_METHOD("set_cutoff_parameter", "param"), &FilterEffect::set_cutoff_parameter);
 	ClassDB::bind_method(D_METHOD("get_cutoff_parameter"), &FilterEffect::get_cutoff_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "cutoff_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_cutoff_parameter", "get_cutoff_parameter");
 
+	// Resonance
+	ClassDB::bind_method(D_METHOD("set_resonance_base_value", "value"), &FilterEffect::set_resonance_base_value);
+	ClassDB::bind_method(D_METHOD("get_resonance_base_value"), &FilterEffect::get_resonance_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "resonance_base_value", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_resonance_base_value", "get_resonance_base_value");
+
 	ClassDB::bind_method(D_METHOD("set_resonance_parameter", "param"), &FilterEffect::set_resonance_parameter);
 	ClassDB::bind_method(D_METHOD("get_resonance_parameter"), &FilterEffect::get_resonance_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "resonance_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_resonance_parameter", "get_resonance_parameter");
+
+	// Gain
+	ClassDB::bind_method(D_METHOD("set_gain_base_value", "value"), &FilterEffect::set_gain_base_value);
+	ClassDB::bind_method(D_METHOD("get_gain_base_value"), &FilterEffect::get_gain_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "gain_base_value"), "set_gain_base_value", "get_gain_base_value");
 
 	ClassDB::bind_method(D_METHOD("set_gain_parameter", "param"), &FilterEffect::set_gain_parameter);
 	ClassDB::bind_method(D_METHOD("get_gain_parameter"), &FilterEffect::get_gain_parameter);
@@ -97,6 +112,43 @@ void FilterEffect::set_gain_parameter(const Ref<ModulatedParameter> &param) {
 
 Ref<ModulatedParameter> FilterEffect::get_gain_parameter() const {
 	return get_parameter(PARAM_GAIN);
+}
+
+// Base value implementations
+void FilterEffect::set_cutoff_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_cutoff_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FilterEffect::get_cutoff_base_value() const {
+	Ref<ModulatedParameter> param = get_cutoff_parameter();
+	return param.is_valid() ? param->get_base_value() : 0.0f;
+}
+
+void FilterEffect::set_resonance_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_resonance_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FilterEffect::get_resonance_base_value() const {
+	Ref<ModulatedParameter> param = get_resonance_parameter();
+	return param.is_valid() ? param->get_base_value() : 0.0f;
+}
+
+void FilterEffect::set_gain_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_gain_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FilterEffect::get_gain_base_value() const {
+	Ref<ModulatedParameter> param = get_gain_parameter();
+	return param.is_valid() ? param->get_base_value() : 0.0f;
 }
 
 } // namespace godot

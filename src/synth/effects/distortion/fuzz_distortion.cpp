@@ -13,27 +13,50 @@ const char *FuzzDistortion::PARAM_FUZZ_TYPE = "fuzz_type";
 const char *FuzzDistortion::PARAM_TONE = "tone";
 
 void FuzzDistortion::_bind_methods() {
+	// Bind base value accessors
+	ClassDB::bind_method(D_METHOD("set_fuzz_type_base_value", "value"), &FuzzDistortion::set_fuzz_type_base_value);
+	ClassDB::bind_method(D_METHOD("get_fuzz_type_base_value"), &FuzzDistortion::get_fuzz_type_base_value);
+	ClassDB::bind_method(D_METHOD("set_tone_base_value", "value"), &FuzzDistortion::set_tone_base_value);
+	ClassDB::bind_method(D_METHOD("get_tone_base_value"), &FuzzDistortion::get_tone_base_value);
+
+	ClassDB::bind_method(D_METHOD("set_drive_base_value", "value"), &FuzzDistortion::set_drive_base_value);
+	ClassDB::bind_method(D_METHOD("get_drive_base_value"), &FuzzDistortion::get_drive_base_value);
+	ClassDB::bind_method(D_METHOD("set_mix_base_value", "value"), &FuzzDistortion::set_mix_base_value);
+	ClassDB::bind_method(D_METHOD("get_mix_base_value"), &FuzzDistortion::get_mix_base_value);
+	ClassDB::bind_method(D_METHOD("set_output_gain_base_value", "value"), &FuzzDistortion::set_output_gain_base_value);
+	ClassDB::bind_method(D_METHOD("get_output_gain_base_value"), &FuzzDistortion::get_output_gain_base_value);
+
 	// Bind methods and properties
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "drive", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_drive_base_value", "get_drive_base_value");
 	ClassDB::bind_method(D_METHOD("set_drive_parameter", "param"), &FuzzDistortion::set_drive_parameter);
 	ClassDB::bind_method(D_METHOD("get_drive_parameter"), &FuzzDistortion::get_drive_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "drive_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_drive_parameter", "get_drive_parameter");
 
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "mix", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_mix_base_value", "get_mix_base_value");
 	ClassDB::bind_method(D_METHOD("set_mix_parameter", "param"), &FuzzDistortion::set_mix_parameter);
 	ClassDB::bind_method(D_METHOD("get_mix_parameter"), &FuzzDistortion::get_mix_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "mix_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_mix_parameter", "get_mix_parameter");
 
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "output_gain", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_output_gain_base_value", "get_output_gain_base_value");
 	ClassDB::bind_method(D_METHOD("set_output_gain_parameter", "param"), &FuzzDistortion::set_output_gain_parameter);
 	ClassDB::bind_method(D_METHOD("get_output_gain_parameter"), &FuzzDistortion::get_output_gain_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "output_gain_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_output_gain_parameter", "get_output_gain_parameter");
 
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "fuzz_type", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_fuzz_type_base_value", "get_fuzz_type_base_value");
 	ClassDB::bind_method(D_METHOD("set_fuzz_type_parameter", "param"), &FuzzDistortion::set_fuzz_type_parameter);
 	ClassDB::bind_method(D_METHOD("get_fuzz_type_parameter"), &FuzzDistortion::get_fuzz_type_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "fuzz_type_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_fuzz_type_parameter", "get_fuzz_type_parameter");
 
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "tone", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_tone_base_value", "get_tone_base_value");
 	ClassDB::bind_method(D_METHOD("set_tone_parameter", "param"), &FuzzDistortion::set_tone_parameter);
 	ClassDB::bind_method(D_METHOD("get_tone_parameter"), &FuzzDistortion::get_tone_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "tone_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
@@ -279,6 +302,61 @@ void FuzzDistortion::set_tone_parameter(const Ref<ModulatedParameter> &param) {
 
 Ref<ModulatedParameter> FuzzDistortion::get_tone_parameter() const {
 	return get_parameter(PARAM_TONE);
+}
+
+void FuzzDistortion::set_fuzz_type_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_FUZZ_TYPE);
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FuzzDistortion::get_fuzz_type_base_value() const {
+	return get_parameter(PARAM_FUZZ_TYPE)->get_base_value();
+}
+
+void FuzzDistortion::set_tone_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_TONE);
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FuzzDistortion::get_tone_base_value() const {
+	return get_parameter(PARAM_TONE)->get_base_value();
+}
+
+void FuzzDistortion::set_drive_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_DRIVE);
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FuzzDistortion::get_drive_base_value() const {
+	return get_parameter(PARAM_DRIVE)->get_base_value();
+}
+
+void FuzzDistortion::set_mix_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_MIX);
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FuzzDistortion::get_mix_base_value() const {
+	return get_parameter(PARAM_MIX)->get_base_value();
+}
+
+void FuzzDistortion::set_output_gain_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_OUTPUT_GAIN);
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float FuzzDistortion::get_output_gain_base_value() const {
+	return get_parameter(PARAM_OUTPUT_GAIN)->get_base_value();
 }
 
 } // namespace godot

@@ -7,6 +7,9 @@ namespace godot {
 
 void NotchFilter::_bind_methods() {
 	// Bind methods and properties specific to NotchFilter
+
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "bandwidth", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_bandwidth_base_value", "get_bandwidth_base_value");
 	ClassDB::bind_method(D_METHOD("set_bandwidth_parameter", "param"), &NotchFilter::set_bandwidth_parameter);
 	ClassDB::bind_method(D_METHOD("get_bandwidth_parameter"), &NotchFilter::get_bandwidth_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "bandwidth_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
@@ -96,20 +99,20 @@ void NotchFilter::reset() {
 }
 
 Ref<SynthAudioEffect> NotchFilter::duplicate() const {
-    Ref<NotchFilter> new_filter = memnew(NotchFilter);
-    
-    // Copy parameters
-    Dictionary params = get_parameters();
-    Array param_names = params.keys();
-    for (int i = 0; i < param_names.size(); i++) {
-        String name = param_names[i];
-        Ref<ModulatedParameter> param = params[name];
-        if (param.is_valid()) {
-            new_filter->set_parameter(name, param->duplicate());
-        }
-    }
-    
-    return new_filter;
+	Ref<NotchFilter> new_filter = memnew(NotchFilter);
+
+	// Copy parameters
+	Dictionary params = get_parameters();
+	Array param_names = params.keys();
+	for (int i = 0; i < param_names.size(); i++) {
+		String name = param_names[i];
+		Ref<ModulatedParameter> param = params[name];
+		if (param.is_valid()) {
+			new_filter->set_parameter(name, param->duplicate());
+		}
+	}
+
+	return new_filter;
 }
 
 // Parameter accessors

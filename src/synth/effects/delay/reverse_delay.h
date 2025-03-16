@@ -39,6 +39,9 @@ public:
 	// Parameter accessors
 	void set_crossfade_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_crossfade_parameter() const;
+
+	void set_crossfade_base_value(float p_value);
+	float get_crossfade_base_value() const;
 };
 
 } // namespace godot

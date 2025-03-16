@@ -28,6 +28,17 @@ public:
 	OverdriveDistortion();
 	~OverdriveDistortion();
 
+	void set_drive_base_value(float p_value);
+	float get_drive_base_value() const;
+	void set_mix_base_value(float p_value);
+	float get_mix_base_value() const;
+	void set_output_gain_base_value(float p_value);
+	float get_output_gain_base_value() const;
+	void set_tone_base_value(float p_value);
+	float get_tone_base_value() const;
+	void set_character_base_value(float p_value);
+	float get_character_base_value() const;
+
 	float process_sample(float sample, const Ref<SynthNoteContext> &context) override;
 	void reset() override;
 	float get_tail_length() const override;

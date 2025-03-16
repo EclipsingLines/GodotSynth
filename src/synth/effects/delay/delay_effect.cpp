@@ -12,16 +12,34 @@ const char *DelayEffect::PARAM_FEEDBACK = "feedback";
 const char *DelayEffect::PARAM_MIX = "mix";
 
 void DelayEffect::_bind_methods() {
-	// Bind parameter accessors
+	// Bind parameter accessors - base values first, then modulated parameters
+	// Delay Time
+	ClassDB::bind_method(D_METHOD("set_delay_time_base_value", "value"), &DelayEffect::set_delay_time_base_value);
+	ClassDB::bind_method(D_METHOD("get_delay_time_base_value"), &DelayEffect::get_delay_time_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "delay_time", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_delay_time_base_value", "get_delay_time_base_value");
+
 	ClassDB::bind_method(D_METHOD("set_delay_time_parameter", "param"), &DelayEffect::set_delay_time_parameter);
 	ClassDB::bind_method(D_METHOD("get_delay_time_parameter"), &DelayEffect::get_delay_time_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "delay_time_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_delay_time_parameter", "get_delay_time_parameter");
 
+	// Feedback
+	ClassDB::bind_method(D_METHOD("set_feedback_base_value", "value"), &DelayEffect::set_feedback_base_value);
+	ClassDB::bind_method(D_METHOD("get_feedback_base_value"), &DelayEffect::get_feedback_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "feedback", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_feedback_base_value", "get_feedback_base_value");
+
 	ClassDB::bind_method(D_METHOD("set_feedback_parameter", "param"), &DelayEffect::set_feedback_parameter);
 	ClassDB::bind_method(D_METHOD("get_feedback_parameter"), &DelayEffect::get_feedback_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "feedback_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_feedback_parameter", "get_feedback_parameter");
+
+	// Mix
+	ClassDB::bind_method(D_METHOD("set_mix_base_value", "value"), &DelayEffect::set_mix_base_value);
+	ClassDB::bind_method(D_METHOD("get_mix_base_value"), &DelayEffect::get_mix_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "mix", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_mix_base_value", "get_mix_base_value");
 
 	ClassDB::bind_method(D_METHOD("set_mix_parameter", "param"), &DelayEffect::set_mix_parameter);
 	ClassDB::bind_method(D_METHOD("get_mix_parameter"), &DelayEffect::get_mix_parameter);
@@ -181,6 +199,21 @@ Ref<ModulatedParameter> DelayEffect::get_delay_time_parameter() const {
 	return get_parameter(PARAM_DELAY_TIME);
 }
 
+void DelayEffect::set_delay_time_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_delay_time_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float DelayEffect::get_delay_time_base_value() const {
+	Ref<ModulatedParameter> param = get_delay_time_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
+}
+
 void DelayEffect::set_feedback_parameter(const Ref<ModulatedParameter> &param) {
 	if (param.is_valid()) {
 		set_parameter(PARAM_FEEDBACK, param);
@@ -191,6 +224,21 @@ Ref<ModulatedParameter> DelayEffect::get_feedback_parameter() const {
 	return get_parameter(PARAM_FEEDBACK);
 }
 
+void DelayEffect::set_feedback_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_feedback_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float DelayEffect::get_feedback_base_value() const {
+	Ref<ModulatedParameter> param = get_feedback_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
+}
+
 void DelayEffect::set_mix_parameter(const Ref<ModulatedParameter> &param) {
 	if (param.is_valid()) {
 		set_parameter(PARAM_MIX, param);
@@ -199,6 +247,21 @@ void DelayEffect::set_mix_parameter(const Ref<ModulatedParameter> &param) {
 
 Ref<ModulatedParameter> DelayEffect::get_mix_parameter() const {
 	return get_parameter(PARAM_MIX);
+}
+
+void DelayEffect::set_mix_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_mix_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float DelayEffect::get_mix_base_value() const {
+	Ref<ModulatedParameter> param = get_mix_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
 }
 
 } // namespace godot

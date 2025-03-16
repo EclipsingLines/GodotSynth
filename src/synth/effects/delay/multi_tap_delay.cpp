@@ -16,31 +16,56 @@ const char *MultiTapDelay::PARAM_DECAY = "decay";
 
 void MultiTapDelay::_bind_methods() {
 	// Bind parameter accessors
+
+	ClassDB::bind_method(D_METHOD("set_base_delay_base_value", "value"), &MultiTapDelay::set_base_delay_base_value);
+	ClassDB::bind_method(D_METHOD("get_base_delay_base_value"), &MultiTapDelay::get_base_delay_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "base_delay", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_base_delay_base_value", "get_base_delay_base_value");
 	ClassDB::bind_method(D_METHOD("set_base_delay_parameter", "param"), &MultiTapDelay::set_base_delay_parameter);
 	ClassDB::bind_method(D_METHOD("get_base_delay_parameter"), &MultiTapDelay::get_base_delay_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "base_delay_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_base_delay_parameter", "get_base_delay_parameter");
 
+	ClassDB::bind_method(D_METHOD("set_feedback_base_value", "value"), &MultiTapDelay::set_feedback_base_value);
+	ClassDB::bind_method(D_METHOD("get_feedback_base_value"), &MultiTapDelay::get_feedback_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "feedback", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_feedback_base_value", "get_feedback_base_value");
 	ClassDB::bind_method(D_METHOD("set_feedback_parameter", "param"), &MultiTapDelay::set_feedback_parameter);
 	ClassDB::bind_method(D_METHOD("get_feedback_parameter"), &MultiTapDelay::get_feedback_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "feedback_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_feedback_parameter", "get_feedback_parameter");
 
+	ClassDB::bind_method(D_METHOD("set_mix_base_value", "value"), &MultiTapDelay::set_mix_base_value);
+	ClassDB::bind_method(D_METHOD("get_mix_base_value"), &MultiTapDelay::get_mix_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "mix", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_mix_base_value", "get_mix_base_value");
 	ClassDB::bind_method(D_METHOD("set_mix_parameter", "param"), &MultiTapDelay::set_mix_parameter);
 	ClassDB::bind_method(D_METHOD("get_mix_parameter"), &MultiTapDelay::get_mix_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "mix_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_mix_parameter", "get_mix_parameter");
 
+	ClassDB::bind_method(D_METHOD("set_spread_base_value", "value"), &MultiTapDelay::set_spread_base_value);
+	ClassDB::bind_method(D_METHOD("get_spread_base_value"), &MultiTapDelay::get_spread_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "spread", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_spread_base_value", "get_spread_base_value");
 	ClassDB::bind_method(D_METHOD("set_spread_parameter", "param"), &MultiTapDelay::set_spread_parameter);
 	ClassDB::bind_method(D_METHOD("get_spread_parameter"), &MultiTapDelay::get_spread_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "spread_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_spread_parameter", "get_spread_parameter");
 
+	ClassDB::bind_method(D_METHOD("set_taps_base_value", "value"), &MultiTapDelay::set_taps_base_value);
+	ClassDB::bind_method(D_METHOD("get_taps_base_value"), &MultiTapDelay::get_taps_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "taps", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_taps_base_value", "get_taps_base_value");
 	ClassDB::bind_method(D_METHOD("set_taps_parameter", "param"), &MultiTapDelay::set_taps_parameter);
 	ClassDB::bind_method(D_METHOD("get_taps_parameter"), &MultiTapDelay::get_taps_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "taps_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
 			"set_taps_parameter", "get_taps_parameter");
 
+	ClassDB::bind_method(D_METHOD("set_decay_base_value", "value"), &MultiTapDelay::set_decay_base_value);
+	ClassDB::bind_method(D_METHOD("get_decay_base_value"), &MultiTapDelay::get_decay_base_value);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "decay", PROPERTY_HINT_RANGE, "0,1,0.01"),
+			"set_decay_base_value", "get_decay_base_value");
 	ClassDB::bind_method(D_METHOD("set_decay_parameter", "param"), &MultiTapDelay::set_decay_parameter);
 	ClassDB::bind_method(D_METHOD("get_decay_parameter"), &MultiTapDelay::get_decay_parameter);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "decay_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
@@ -315,6 +340,21 @@ Ref<ModulatedParameter> MultiTapDelay::get_base_delay_parameter() const {
 	return get_parameter(PARAM_BASE_DELAY);
 }
 
+void MultiTapDelay::set_base_delay_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_base_delay_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float MultiTapDelay::get_base_delay_base_value() const {
+	Ref<ModulatedParameter> param = get_base_delay_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
+}
+
 void MultiTapDelay::set_feedback_parameter(const Ref<ModulatedParameter> &param) {
 	if (param.is_valid()) {
 		set_parameter(PARAM_FEEDBACK, param);
@@ -323,6 +363,21 @@ void MultiTapDelay::set_feedback_parameter(const Ref<ModulatedParameter> &param)
 
 Ref<ModulatedParameter> MultiTapDelay::get_feedback_parameter() const {
 	return get_parameter(PARAM_FEEDBACK);
+}
+
+void MultiTapDelay::set_feedback_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_feedback_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float MultiTapDelay::get_feedback_base_value() const {
+	Ref<ModulatedParameter> param = get_feedback_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
 }
 
 void MultiTapDelay::set_mix_parameter(const Ref<ModulatedParameter> &param) {
@@ -335,6 +390,21 @@ Ref<ModulatedParameter> MultiTapDelay::get_mix_parameter() const {
 	return get_parameter(PARAM_MIX);
 }
 
+void MultiTapDelay::set_mix_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_mix_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float MultiTapDelay::get_mix_base_value() const {
+	Ref<ModulatedParameter> param = get_mix_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
+}
+
 void MultiTapDelay::set_spread_parameter(const Ref<ModulatedParameter> &param) {
 	if (param.is_valid()) {
 		set_parameter(PARAM_SPREAD, param);
@@ -343,6 +413,21 @@ void MultiTapDelay::set_spread_parameter(const Ref<ModulatedParameter> &param) {
 
 Ref<ModulatedParameter> MultiTapDelay::get_spread_parameter() const {
 	return get_parameter(PARAM_SPREAD);
+}
+
+void MultiTapDelay::set_spread_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_spread_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float MultiTapDelay::get_spread_base_value() const {
+	Ref<ModulatedParameter> param = get_spread_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
 }
 
 void MultiTapDelay::set_taps_parameter(const Ref<ModulatedParameter> &param) {
@@ -355,6 +440,21 @@ Ref<ModulatedParameter> MultiTapDelay::get_taps_parameter() const {
 	return get_parameter(PARAM_TAPS);
 }
 
+void MultiTapDelay::set_taps_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_taps_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float MultiTapDelay::get_taps_base_value() const {
+	Ref<ModulatedParameter> param = get_taps_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
+}
+
 void MultiTapDelay::set_decay_parameter(const Ref<ModulatedParameter> &param) {
 	if (param.is_valid()) {
 		set_parameter(PARAM_DECAY, param);
@@ -363,6 +463,21 @@ void MultiTapDelay::set_decay_parameter(const Ref<ModulatedParameter> &param) {
 
 Ref<ModulatedParameter> MultiTapDelay::get_decay_parameter() const {
 	return get_parameter(PARAM_DECAY);
+}
+
+void MultiTapDelay::set_decay_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_decay_parameter();
+	if (param.is_valid()) {
+		param->set_base_value(p_value);
+	}
+}
+
+float MultiTapDelay::get_decay_base_value() const {
+	Ref<ModulatedParameter> param = get_decay_parameter();
+	if (param.is_valid()) {
+		return param->get_base_value();
+	}
+	return 0.0f;
 }
 
 } // namespace godot

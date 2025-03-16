@@ -52,21 +52,33 @@ public:
 	// Parameter accessors
 	void set_base_delay_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_base_delay_parameter() const;
+	void set_base_delay_base_value(float p_value);
+	float get_base_delay_base_value() const;
 
 	void set_feedback_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_feedback_parameter() const;
+	void set_feedback_base_value(float p_value);
+	float get_feedback_base_value() const;
 
 	void set_mix_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_mix_parameter() const;
+	void set_mix_base_value(float p_value);
+	float get_mix_base_value() const;
 
 	void set_spread_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_spread_parameter() const;
+	void set_spread_base_value(float p_value);
+	float get_spread_base_value() const;
 
 	void set_taps_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_taps_parameter() const;
+	void set_taps_base_value(float p_value);
+	float get_taps_base_value() const;
 
 	void set_decay_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_decay_parameter() const;
+	void set_decay_base_value(float p_value);
+	float get_decay_base_value() const;
 
 	// Update the taps based on current parameters
 	void update_taps(float base_delay, float spread, int num_taps, float decay);

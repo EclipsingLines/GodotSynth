@@ -57,6 +57,21 @@ public:
 
 	void set_offset_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_offset_parameter() const;
+
+	void set_delay_time_base_value(float p_value);
+	float get_delay_time_base_value() const;
+
+	void set_feedback_base_value(float p_value);
+	float get_feedback_base_value() const;
+
+	void set_mix_base_value(float p_value);
+	float get_mix_base_value() const;
+
+	void set_cross_feedback_base_value(float p_value);
+	float get_cross_feedback_base_value() const;
+
+	void set_offset_base_value(float p_value);
+	float get_offset_base_value() const;
 };
 
 } // namespace godot
