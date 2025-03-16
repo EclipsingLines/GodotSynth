@@ -19,9 +19,6 @@ private:
 	float bp = 0.0f;
 	float lp = 0.0f;
 
-	// Nonlinearity amount (0.0 = clean, 1.0 = heavily saturated)
-	float drive = 0.0f;
-
 	// Tanh approximation for saturation
 	float fast_tanh(float x) const;
 
@@ -35,9 +32,11 @@ public:
 	float process_sample(float sample, const Ref<SynthNoteContext> &context) override;
 	void reset() override;
 
-	// Drive parameter
-	void set_drive(float p_drive);
-	float get_drive() const;
+	// Drive parameter accessors
+	void set_drive_parameter(const Ref<ModulatedParameter> &param);
+	Ref<ModulatedParameter> get_drive_parameter() const;
+	void set_drive_base_value(float p_value);
+	float get_drive_base_value() const;
 
 	Ref<SynthAudioEffect> duplicate() const override;
 };

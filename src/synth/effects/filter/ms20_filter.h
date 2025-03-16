@@ -24,9 +24,6 @@ private:
 	float b1 = 0.0f;
 	float b2 = 0.0f;
 
-	// Saturation amount
-	float saturation = 0.5f;
-
 	// Saturation function
 	float saturate(float x, float p_saturation) const;
 
@@ -40,9 +37,11 @@ public:
 	float process_sample(float sample, const Ref<SynthNoteContext> &context) override;
 	void reset() override;
 
-	// Saturation parameter
-	void set_saturation(float p_saturation);
-	float get_saturation() const;
+	// Saturation parameter accessors
+	void set_saturation_parameter(const Ref<ModulatedParameter> &param);
+	Ref<ModulatedParameter> get_saturation_parameter() const;
+	void set_saturation_base_value(float p_value);
+	float get_saturation_base_value() const;
 
 	Ref<SynthAudioEffect> duplicate() const override;
 };

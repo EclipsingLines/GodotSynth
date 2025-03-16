@@ -7,6 +7,8 @@ namespace godot {
 
 void NotchFilter::_bind_methods() {
 	// Bind methods and properties specific to NotchFilter
+	ClassDB::bind_method(D_METHOD("set_bandwidth_base_value", "value"), &NotchFilter::set_bandwidth_base_value);
+	ClassDB::bind_method(D_METHOD("get_bandwidth_base_value"), &NotchFilter::get_bandwidth_base_value);
 
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "bandwidth", PROPERTY_HINT_RANGE, "0,1,0.01"),
 			"set_bandwidth_base_value", "get_bandwidth_base_value");
@@ -94,8 +96,6 @@ void NotchFilter::reset() {
 	// Reset filter state
 	z1 = 0.0f;
 	z2 = 0.0f;
-
-	UtilityFunctions::print("NotchFilter: Reset called - filter state cleared");
 }
 
 Ref<SynthAudioEffect> NotchFilter::duplicate() const {
@@ -124,6 +124,18 @@ void NotchFilter::set_bandwidth_parameter(const Ref<ModulatedParameter> &param) 
 
 Ref<ModulatedParameter> NotchFilter::get_bandwidth_parameter() const {
 	return get_parameter(PARAM_BANDWIDTH);
+}
+
+void NotchFilter::set_bandwidth_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_BANDWIDTH);
+	if (param.is_valid()) {
+		param->set_base_value(Math::clamp(p_value, 0.0f, 1.0f));
+	}
+}
+
+float NotchFilter::get_bandwidth_base_value() const {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_BANDWIDTH);
+	return param.is_valid() ? param->get_base_value() : 0.5f;
 }
 
 } // namespace godot

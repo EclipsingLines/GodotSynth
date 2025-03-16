@@ -25,6 +25,8 @@ public:
 	// Parameter accessors
 	void set_bandwidth_parameter(const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_bandwidth_parameter() const;
+	void set_bandwidth_base_value(float p_value);
+	float get_bandwidth_base_value() const;
 
 	Ref<SynthAudioEffect> duplicate() const override;
 };

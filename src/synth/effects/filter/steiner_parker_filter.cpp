@@ -1,26 +1,29 @@
 #include "steiner_parker_filter.h"
+#include <cmath>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/math.hpp>
-
-#include <cmath>
-#include <godot_cpp/variant/utility_functions.hpp>
 
 namespace godot {
 const char *SteinerParkerFilter::PARAM_DRIVE = "drive";
 
 void SteinerParkerFilter::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("set_drive", "drive"), &SteinerParkerFilter::set_drive);
-	ClassDB::bind_method(D_METHOD("get_drive"), &SteinerParkerFilter::get_drive);
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "drive", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"),
-			"set_drive", "get_drive");
+	ClassDB::bind_method(D_METHOD("set_drive_parameter", "param"), &SteinerParkerFilter::set_drive_parameter);
+	ClassDB::bind_method(D_METHOD("get_drive_parameter"), &SteinerParkerFilter::get_drive_parameter);
+	ClassDB::bind_method(D_METHOD("set_drive_base_value", "value"), &SteinerParkerFilter::set_drive_base_value);
+	ClassDB::bind_method(D_METHOD("get_drive_base_value"), &SteinerParkerFilter::get_drive_base_value);
+
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "drive_base_value", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"),
+			"set_drive_base_value", "get_drive_base_value");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "drive_parameter", PROPERTY_HINT_RESOURCE_TYPE, "ModulatedParameter"),
+			"set_drive_parameter", "get_drive_parameter");
 }
 
 SteinerParkerFilter::SteinerParkerFilter() {
 	Ref<ModulatedParameter> drive_mp = memnew(ModulatedParameter);
 	drive_mp->set_base_value(0.0f);
-	add_parameter(PARAM_DRIVE, drive_mp);
-	// Set filter type to low pass by default
-	set_filter_type(FilterType::LOWPASS);
+	drive_mp->set_mod_min(0.0f);
+	drive_mp->set_mod_max(1.0f);
+	set_parameter(PARAM_DRIVE, drive_mp);
 }
 
 SteinerParkerFilter::~SteinerParkerFilter() {
@@ -37,14 +40,13 @@ float SteinerParkerFilter::process_sample(float sample, const Ref<SynthNoteConte
 	if (!context.is_valid())
 		return sample;
 
+	// Get modulated drive value
 	Ref<ModulatedParameter> drive_param = get_parameter(PARAM_DRIVE);
-	float drive_value = 0.0f;
-	if (drive_param.is_valid())
-		drive_value = drive_param->get_value(context);
+	float drive_value = drive_param.is_valid() ? drive_param->get_value(context) : 0.0f;
 
 	// Get modulated parameter values
-	float cutoff_freq = 1000.0f; // Default to 1000 Hz
-	float resonance = 0.5f; // Default resonance
+	float cutoff_freq = 1000.0f;
+	float resonance = 0.5f;
 
 	Ref<ModulatedParameter> cutoff_param = get_parameter(PARAM_CUTOFF);
 	if (cutoff_param.is_valid()) {
@@ -59,11 +61,11 @@ float SteinerParkerFilter::process_sample(float sample, const Ref<SynthNoteConte
 	}
 
 	// Get sample rate from context or use default
-	float sample_rate = 44100.0f; // TODO: Get from context
+	float sample_rate = 44100.0f;
 
 	// Calculate filter coefficients
 	float f = 2.0f * Math::sin(Math_PI * cutoff_freq / sample_rate);
-	float q = resonance * 10.0f; // Scale resonance for more dramatic effect
+	float q = resonance * 10.0f;
 	float scale = Math::sqrt(q) * 0.1f;
 
 	// Apply input drive/saturation
@@ -103,7 +105,7 @@ float SteinerParkerFilter::process_sample(float sample, const Ref<SynthNoteConte
 			output = sample - bp * scale;
 			break;
 		default:
-			output = lp; // Default to lowpass
+			output = lp;
 	}
 
 	return output;
@@ -113,35 +115,41 @@ void SteinerParkerFilter::reset() {
 	hp1 = bp1 = lp1 = hp = bp = lp = 0.0f;
 }
 
-void SteinerParkerFilter::set_drive(float p_drive) {
-	Ref<ModulatedParameter> drive_mp = get_parameter(PARAM_DRIVE);
-	if (drive_mp.is_valid())
-		drive_mp->set_base_value(Math::clamp(p_drive, 0.0f, 1.0f));
+void SteinerParkerFilter::set_drive_parameter(const Ref<ModulatedParameter> &param) {
+	set_parameter(PARAM_DRIVE, param);
 }
 
-float SteinerParkerFilter::get_drive() const {
-	Ref<ModulatedParameter> drive_mp = get_parameter(PARAM_DRIVE);
-	return drive_mp.is_valid() ? drive_mp->get_base_value() : 0.0f;
+Ref<ModulatedParameter> SteinerParkerFilter::get_drive_parameter() const {
+	return get_parameter(PARAM_DRIVE);
+}
+
+void SteinerParkerFilter::set_drive_base_value(float p_value) {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_DRIVE);
+	if (param.is_valid()) {
+		param->set_base_value(Math::clamp(p_value, 0.0f, 1.0f));
+	}
+}
+
+float SteinerParkerFilter::get_drive_base_value() const {
+	Ref<ModulatedParameter> param = get_parameter(PARAM_DRIVE);
+	return param.is_valid() ? param->get_base_value() : 0.0f;
 }
 
 Ref<SynthAudioEffect> SteinerParkerFilter::duplicate() const {
-    Ref<SteinerParkerFilter> new_filter = memnew(SteinerParkerFilter);
-    
-    // Copy filter type
-    new_filter->set_filter_type(get_filter_type());
-    
-    // Copy parameters
-    Dictionary params = get_parameters();
-    Array param_names = params.keys();
-    for (int i = 0; i < param_names.size(); i++) {
-        String name = param_names[i];
-        Ref<ModulatedParameter> param = params[name];
-        if (param.is_valid()) {
-            new_filter->set_parameter(name, param->duplicate());
-        }
-    }
-    
-    return new_filter;
+	Ref<SteinerParkerFilter> new_filter = memnew(SteinerParkerFilter);
+	new_filter->set_filter_type(get_filter_type());
+
+	Dictionary params = get_parameters();
+	Array param_names = params.keys();
+	for (int i = 0; i < param_names.size(); i++) {
+		String name = param_names[i];
+		Ref<ModulatedParameter> param = params[name];
+		if (param.is_valid()) {
+			new_filter->set_parameter(name, param->duplicate());
+		}
+	}
+
+	return new_filter;
 }
 
 } // namespace godot
