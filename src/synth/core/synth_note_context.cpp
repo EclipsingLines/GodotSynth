@@ -33,6 +33,9 @@ void SynthNoteContext::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_velocity", "velocity"), &SynthNoteContext::set_velocity);
 	ClassDB::bind_method(D_METHOD("get_velocity"), &SynthNoteContext::get_velocity);
 
+	ClassDB::bind_method(D_METHOD("set_articulation", "articulation"), &SynthNoteContext::set_articulation);
+	ClassDB::bind_method(D_METHOD("get_articulation"), &SynthNoteContext::get_articulation);
+
 	ClassDB::bind_method(D_METHOD("set_note_active", "on"), &SynthNoteContext::set_note_active);
 	ClassDB::bind_method(D_METHOD("is_note_on"), &SynthNoteContext::get_is_note_on);
 	ClassDB::bind_method(D_METHOD("is_note_triggered"), &SynthNoteContext::get_is_note_triggered);
@@ -70,6 +73,7 @@ void SynthNoteContext::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "note_time"), "set_note_time", "get_note_time");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "note"), "set_note", "get_note");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "velocity"), "set_velocity", "get_velocity");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "articulation"), "set_articulation", "get_articulation");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "note_active"), "set_note_active", "is_note_on");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "note_on_time"), "set_note_on_time", "get_note_on_time");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "note_off_time"), "set_note_off_time", "get_note_off_time");
@@ -120,6 +124,14 @@ void SynthNoteContext::set_velocity(float p_velocity) {
 
 float SynthNoteContext::get_velocity() const {
 	return velocity;
+}
+
+void SynthNoteContext::set_articulation(float p_articulation) {
+	articulation = p_articulation;
+}
+
+float SynthNoteContext::get_articulation() const {
+	return articulation;
 }
 
 void SynthNoteContext::set_note_active(bool p_on) {

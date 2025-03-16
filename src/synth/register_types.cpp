@@ -21,6 +21,7 @@
 #include "mod/adsr/adsr.h"
 #include "mod/lfo/lfo.h"
 // Include our new modulation sources
+#include "mod/articulation/articulation_mod_source.h"
 #include "mod/duration/note_duration_mod_source.h"
 #include "mod/keyboard/keyboard_tracking_mod_source.h"
 #include "mod/velocity/velocity_mod_source.h"
@@ -147,6 +148,7 @@ void register_modulation_sources() {
 	GDREGISTER_CLASS(VelocityModSource);
 	GDREGISTER_CLASS(KeyboardTrackingModSource);
 	GDREGISTER_CLASS(NoteDurationModSource);
+	GDREGISTER_CLASS(ArticulationModSource);
 }
 
 void register_va_classes() {

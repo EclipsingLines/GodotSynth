@@ -15,9 +15,10 @@ The Godot Synth Engine features a powerful modulation system that allows you to 
 - **LFOs**: Low Frequency Oscillators for cyclic modulation
 ![image](./assets/img/lfo.png)
 
-- **Velocity Tracking**: Modulate parameters based on note velocity
+- **Velocity Tracking**: Modulate parameters based on note velocity (hardcoded to amplitude)
 - **Keyboard Tracking**: Modulate parameters based on note position
 - **Note Duration**: Modulate parameters based on how long a note has been playing
+- **Articulation**: Freely assignable parameter.
 
 ## Modulation Types
 

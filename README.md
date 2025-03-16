@@ -2,7 +2,6 @@
 ](https://github.com/EclipsingLines/GodotSynth/releases)
  [![Website](https://img.shields.io/website?url=https%3A%2F%2Feclipsinglines.github.io%2FGodotSynth%2F&style=for-the-badge)](https://eclipsinglines.github.io/GodotSynth/)
 
-
 # Godot Synth Engine
 
 A powerful and flexible synthesizer engine for Godot 4, providing virtual analog synthesis with extensive modulation capabilities and audio effects.
@@ -26,8 +25,8 @@ The main player node that handles audio playback and voice allocation.
 @export var sound:SynthConfiguration
 var synth
 func initialize_synth() -> void:
-	synth = AudioSynthPlayer.new()
-	synth.configuration = sound
+ synth = AudioSynthPlayer.new()
+ synth.configuration = sound
 ```
 
 ### SynthNoteContext
@@ -87,13 +86,19 @@ Attack-Delay-Sustain-Release Envelope
 ![image](https://github.com/user-attachments/assets/d964e48c-e3d6-4541-9976-4066ef8938d0)
 
 - Multiple attack, decay and release shapes
-	- Linear
-	- Logarithmic
-	- Exponential
+ 	- Linear
+ 	- Logarithmic
+ 	- Exponential
 
 #### Velocity
 
-Velocity is controlled from the note context, this allows for controlling modulation parameters from GDScript
+Velocity is controlled from the note context, this allows for controlling modulation parameters from GDScript.
+
+Velocity is hardcoded to amplitude on all patches.
+
+#### Articulation
+
+Articulation is a freely assignable parameter that allows controlling any modulated parameter directly from GDScript.
 
 #### Keyboard Tracking
 
@@ -127,8 +132,10 @@ The synth engine includes a variety of audio effects:
 - BitcrushDistortion, OverdriveDistortion, FuzzDistortion, RectifierDistortion
 
 ### Spatial
+>
 > [!WARNING]
 > The reverb is currently not enabled due to CPU issues.
+
 - ~~Reverb~~
 
 ## Presets
