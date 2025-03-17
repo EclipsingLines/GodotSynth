@@ -72,6 +72,8 @@
 // Include wave helper
 #include "core/wave_helper.h"
 
+#include "time/bpm_manager.h"
+
 using namespace godot;
 
 void register_core_classes() {
@@ -188,6 +190,11 @@ void register_chord_classes() {
 	GDREGISTER_CLASS(ChordDefaultPreset);
 }
 
+void register_sequencer() {
+	GDREGISTER_CLASS(BPMManager);
+	GDREGISTER_CLASS(BPMEvent);
+}
+
 void initialize_gdextension_types(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) {
 		// Register core classes
@@ -205,6 +212,8 @@ void initialize_gdextension_types(ModuleInitializationLevel p_level) {
 		// Register Chord synth classes
 		// TODO: fix chord engine
 		// register_chord_classes();
+
+		register_sequencer();
 	}
 }
 
