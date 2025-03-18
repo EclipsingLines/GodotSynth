@@ -12,9 +12,9 @@ project_links:
     - url: https://github.com/EclipsingLines/GodotSynth
       icon: fab fa-github
       label: Source
-    - url: https://godotengine.org/
+    - url: https://godotengine.org/asset-library/asset/3839
       icon: fas fa-gamepad
-      label: Godot
+      label: Plugin
 ---
 
 {% include kofi-widget.html %}
