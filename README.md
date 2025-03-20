@@ -1,6 +1,6 @@
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/O5O21BTCOZ) [![GitHub Release](https://img.shields.io/github/v/release/eclipsinglines/godotsynth?style=for-the-badge&logo=godotengine&logoColor=white)
 ](https://github.com/EclipsingLines/GodotSynth/releases)
- [![Website](https://img.shields.io/website?url=https%3A%2F%2Feclipsinglines.github.io%2FGodotSynth%2F&style=for-the-badge)](https://eclipsinglines.github.io/GodotSynth/) ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/eclipsinglines/godotsynth/total?style=for-the-badge)
+ [![Website](https://img.shields.io/website?url=https%3A%2F%2Feclipsinglines.github.io%2FGodotSynth%2F&style=for-the-badge)](https://eclipsinglines.github.io/GodotSynth/) ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/eclipsinglines/godotsynth/total?style=for-the-badge) ![GitHub Sponsors](https://img.shields.io/github/sponsors/eclipsinglines?style=for-the-badge&color=red)
 
 
 # Godot Synth Engine
