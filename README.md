@@ -37,7 +37,9 @@ The main player node that handles audio playback and voice allocation.
 
 ```gdscript
 @export var sound:SynthConfiguration
-var synth
+#SOUND SETUP INSTRUCTIONS: either in the file system or inspector create a new SynthConfiguration resource
+
+var synth : AudioSynthPlayer
 func initialize_synth() -> void:
  synth = AudioSynthPlayer.new()
  synth.configuration = sound
@@ -48,7 +50,7 @@ func initialize_synth() -> void:
 Represents a playing note and provides control over its lifecycle.
 
 ```gdscript
-var context = synth.get_context()
+var context : SynthNoteContext = synth.get_context()
 context.note_on(note, velocity)  # Start a note
 context.note_off(time)           # Release a note
 context = null                   # Release the context object from memory
