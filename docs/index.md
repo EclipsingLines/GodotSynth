@@ -38,10 +38,11 @@ A powerful and flexible synthesizer engine for Godot 4, providing virtual analog
 extends Node
 
 @export var sound: VASynthConfiguration
+#SOUND SETUP INSTRUCTIONS: either in the file system or inspector create a new SynthConfiguration resource
 
 func _ready():
     # Create a synth player
-    var synth = AudioSynthPlayer.new()
+    var synth := AudioSynthPlayer.new()
     synth.configuration = sound
     add_child(synth)
     
