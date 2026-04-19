@@ -8,8 +8,8 @@ compatibility_minimum = "4.4"
 windows.debug.x86_64 = "res://addons/godot_synth/bin/libgodot_synth.windows.debug.x86_64.dll"
 windows.release.x86_64 = "res://addons/godot_synth/bin/libgodot_synth.windows.release.x86_64.dll"
 
-macos.debug = "res://addons/godot_synth/bin/libgodot_synth.macos.debug.framework/libgodot_synth.macos.debug"
-macos.release = "res://addons/godot_synth/bin/libgodot_synth.macos.release.framework/libgodot_synth.macos.release"
+macos.debug = "res://addons/godot_synth/bin/macos.framework/libgodot_synth.macos.debug"
+macos.release = "res://addons/godot_synth/bin/macos.framework/libgodot_synth.macos.release"
 
 ios.debug = "res://addons/godot_synth/bin/ios.framework/libgodot_synth.ios.debug"
 ios.release = "res://addons/godot_synth/bin/ios.framework/libgodot_synth.ios.release"
