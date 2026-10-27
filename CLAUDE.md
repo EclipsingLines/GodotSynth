@@ -28,6 +28,15 @@ A GDExtension (C++, godot-cpp) that adds a modular synthesizer to Godot 4.7+ (bu
 - `docs/` is the Jekyll GitHub Pages site (eclipsinglines.github.io/GodotSynth). Anything added there is published.
 - `design/` holds internal design notes that are not published: the QOA/preload plan migrated from cline. `custom_inspector_implementation.md` at the root is an older design note.
 
+## Headless checks in Godot 4.7
+
+Use the console exe (`C:\Godot\4.7\Godot_v4.7-stable_win64_console.exe`), which prints to stdout. Build the DLL first. Run these from the repo root:
+- Parse-check one script: `--headless --path project --check-only --script res://addons/godot_synth/<file>.gd`. Exit code 0 means it parsed.
+- Scripted run: `--headless --audio-driver Dummy --path project -s <path\to\script.gd>`, where the script `extends SceneTree`. Keep it in the scratchpad, not in `project/`. For a smoke test, load `res://addons/godot_synth/keyboard/piano_keyboard.tscn`, add it to `root`, and call `play_note`/`stop_note` on its `CenterContainer` node (the `SynthPlayer` script) for a few frames. Then return `true` from `_process` to quit. Don't let a script error loop forever, because it floods stdout.
+- Add `--verbose` to see which addon scripts and resources load and to get details on leaked instances.
+- Known noise: the editor prints about 148 `Instantiated ModulatedParameter used as default value for <Effect>'s "<x>_parameter" property` warnings. The VA engine also prints `Fast Pitch`/`Regular Exp`/`Virtual Analog took ...` lines on every audio block.
+- A `-s` script that calls `ResourceSaver.save` drops the `uid=` fields from `.tscn`/`.tres` files, so resave scenes in the real editor instead.
+
 ## Conventions
 
 - Format with the repo's `.clang-format`: LLVM base, **tabs**, indent width 4, no column limit.
