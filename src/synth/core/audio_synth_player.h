@@ -23,10 +23,13 @@ private:
 	int polyphony = 8; // Default polyphony
 	Vector<Ref<SynthVoice>> voice_pool;
 	int next_voice_index = 0; // For round-robin allocation
+	int64_t next_voice_id = 1; // Unique, monotonically increasing note/voice id
 
 	// Helper methods for voice pool
 	void initialize_voice_pool();
 	Ref<SynthVoice> allocate_voice();
+	bool ensure_playback();
+	bool queue_context_event(const Ref<SynthNoteContext> &p_context, int p_type, float p_note, float p_velocity);
 
 protected:
 	static void _bind_methods();
@@ -46,6 +49,8 @@ public:
 	int get_polyphony() const;
 
 	Ref<SynthNoteContext> get_context();
+	void play_note_on_context(const Ref<SynthNoteContext> &p_context, float p_note, float p_velocity);
+	void play_note_off_context(const Ref<SynthNoteContext> &p_context);
 	void stop_all_notes();
 
 	void set_parameter(const String &p_name, float p_value);
