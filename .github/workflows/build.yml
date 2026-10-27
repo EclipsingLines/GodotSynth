@@ -103,15 +103,16 @@ jobs:
           TARGET: ${{ matrix.target }}
           MIN_BYTES: 204800
         run: |
-          set -euo pipefail
-          mapfile -t libs < <(find project/addons/godot_synth/bin -type f -name "libgodot_synth.*.${TARGET}*")
-          if [ "${#libs[@]}" -eq 0 ]; then
+          # Portable to macOS's bash 3.2 (no mapfile).
+          set -eu
+          libs=$(find project/addons/godot_synth/bin -type f -name "libgodot_synth.*.${TARGET}*")
+          if [ -z "$libs" ]; then
             echo "::error::No ${TARGET} library found in project/addons/godot_synth/bin"
             exit 1
           fi
           status=0
-          for lib in "${libs[@]}"; do
-            size=$(wc -c < "$lib")
+          while IFS= read -r lib; do
+            size=$(wc -c < "$lib" | tr -d ' ')
             hits=$(LC_ALL=C grep -c -a synth_library_init "$lib" || true)
             echo "$lib: $size bytes, synth_library_init matches: $hits"
             if [ "$size" -lt "$MIN_BYTES" ]; then
@@ -125,7 +126,9 @@ jobs:
             if command -v nm >/dev/null && file "$lib" | grep -q 'ELF.*x86-64'; then
               nm -D --defined-only "$lib" | grep -w synth_library_init || { echo "::error file=$lib::synth_library_init is not an exported dynamic symbol"; status=1; }
             fi
-          done
+          done <<EOF
+          $libs
+          EOF
           exit $status
 
       - name: Include Files
