@@ -33,7 +33,7 @@ A GDExtension (C++, godot-cpp) that adds a modular synthesizer to Godot 4.4+: an
 ## Conventions
 
 - Format with the repo's `.clang-format`: LLVM base, **tabs**, indent width 4, no column limit.
-- Source files use **CRLF** line endings. Keep them CRLF when editing.
+- Source files use **LF** line endings (the index and working tree are both LF, and there's no `.gitattributes`). Keep them LF when editing.
 - Headers use `#ifndef NAME_H` include guards. Everything goes in `namespace godot { … }`. Classes use `GDCLASS(Name, Base)` with `static void _bind_methods()` in `protected:`. Parameters are prefixed `p_`, and there are `set_x`/`get_x` pairs exposed with `ClassDB::bind_method(D_METHOD(...))` plus `ADD_PROPERTY`.
 - Modulation sources implement `get_value(const Ref<SynthNoteContext>&) const`, `reset()` and `duplicate()`.
 - Effect parameters should be `ModulatedParameter`s so they can take modulation.
