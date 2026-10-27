@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Step sequencer
 - Gold braided cable emulation
 
+### Changed
+
+- Windows binaries are now built with MSVC on `windows-latest` instead of MinGW cross-compiled on Ubuntu, and CI pins SCons 4.11.1
+
 ## [v0.95] - 2025-03-16
 
 ### Added

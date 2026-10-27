@@ -169,6 +169,18 @@ Check the synth_player node for more information on a how to play notes.
 - [ ] Gold braided cable end simulation
 - [ ] Warmer tone slider
 
+## Building from source
+
+GodotSynth is built with SCons. CI and local builds use the same pinned version, **SCons 4.11.1**:
+
+```sh
+git submodule update --init
+python -m pip install scons==4.11.1
+python -m SCons target=template_debug   # or target=template_release
+```
+
+On Windows, SCons finds MSVC (Visual Studio 2022 or its Build Tools) on its own; run it from PowerShell or cmd, not Git Bash. CI builds Windows with MSVC on `windows-latest`. The library is installed into `project/addons/godot_synth/bin/`.
+
 ## Contributing
 
 This project is open for contributions, if you are knowledgable in sound design, audio processing, SIMD operations or any other related field please consider contributing to the project.
