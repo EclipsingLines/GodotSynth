@@ -70,30 +70,35 @@ func _ready() -> void:
 	synth.polyphony = 8
 	self.add_child(synth)
 
-	###########################################
-	#  This only works with the timer delay!  #
-	###########################################
-	
-	#await get_tree().create_timer(0.0).timeout
+	# Issue #1: before the fix only the last note of each chord was heard.
+	# Both chords below are started within a single frame, with no timer workaround.
 	play_notes()
-	###########################################
+	await get_tree().create_timer(2.0).timeout
+	play_notes_queued()
 
+# Chord 1: plain get_context() + note_on(), all in the same frame.
 func play_notes():
-	print("Play Note: 62 at " + String.num(Time.get_ticks_usec()))
-	play_note(62)
-	#call_deferred("play_note",62)
-	#await get_tree().create_timer(0.0).timeout
-	print("Play Note: 65 at " + String.num(Time.get_ticks_usec()))
-	#play_note(65)
-	#call_deferred("play_note",65)
-	#await get_tree().create_timer(0.0).timeout
-	print("Play Note: 67 at " + String.num(Time.get_ticks_usec()))
-	#play_note(67)
-	#call_deferred("play_note", 67)
+	var contexts := []
+	for note in [62, 65, 69]:
+		print("Play Note: %d at %d" % [note, Time.get_ticks_usec()])
+		contexts.append(play_note(note))
+	await get_tree().create_timer(1.0).timeout
+	for context in contexts:
+		context.note_off(context.absolute_time)
 
-func play_note(note):
+# Chord 2: queued API (play_note_on_context / play_note_off_context).
+func play_notes_queued():
+	var contexts := []
+	for note in [60, 64, 67]:
+		print("Queue Note: %d at %d" % [note, Time.get_ticks_usec()])
+		var context: SynthNoteContext = synth.get_context()
+		synth.play_note_on_context(context, note, 1.0)
+		contexts.append(context)
+	await get_tree().create_timer(1.0).timeout
+	for context in contexts:
+		synth.play_note_off_context(context)
+
+func play_note(note) -> SynthNoteContext:
 	var context: SynthNoteContext = synth.get_context()
-	print("Await context: " + String.num(note) + " at " + String.num(Time.get_ticks_usec()))
-	print("Note On: " + String.num(note) + " at " + String.num(Time.get_ticks_usec()))
 	context.note_on(note, 1.0)
-	#context.call_deferred("note_on", note, 1.0)
+	return context

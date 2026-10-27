@@ -18,6 +18,8 @@ void AudioSynthPlayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_configuration"), &AudioSynthPlayer::get_configuration);
 
 	ClassDB::bind_method(D_METHOD("get_context"), &AudioSynthPlayer::get_context);
+	ClassDB::bind_method(D_METHOD("play_note_on_context", "context", "note", "velocity"), &AudioSynthPlayer::play_note_on_context);
+	ClassDB::bind_method(D_METHOD("play_note_off_context", "context"), &AudioSynthPlayer::play_note_off_context);
 	ClassDB::bind_method(D_METHOD("stop_all_notes"), &AudioSynthPlayer::stop_all_notes);
 
 	ClassDB::bind_method(D_METHOD("set_parameter", "name", "value"), &AudioSynthPlayer::set_parameter);
@@ -60,10 +62,8 @@ void AudioSynthPlayer::_ready() {
 	play();
 
 	// Get the playback interface after starting playback
-	Ref<AudioStreamPlayback> stream_playback = get_stream_playback();
-	if (stream_playback.is_valid()) {
-		playback = static_cast<Ref<SynthAudioStreamPlayback>>(stream_playback.ptr());
-	}
+	playback.unref();
+	ensure_playback();
 
 	// Initialize the voice pool
 	initialize_voice_pool();
@@ -71,10 +71,10 @@ void AudioSynthPlayer::_ready() {
 
 void AudioSynthPlayer::_process(double delta) {
 	// Try to get the playback interface if it's not already set
-	if (!playback.is_valid()) {
+	if (!playback.is_valid() && is_playing()) {
 		Ref<AudioStreamPlayback> stream_playback = get_stream_playback();
 		if (stream_playback.is_valid()) {
-			playback = static_cast<Ref<SynthAudioStreamPlayback>>(stream_playback.ptr());
+			playback = Ref<SynthAudioStreamPlayback>(Object::cast_to<SynthAudioStreamPlayback>(stream_playback.ptr()));
 		}
 	}
 }
@@ -146,28 +146,51 @@ Ref<SynthVoice> AudioSynthPlayer::allocate_voice() {
 		initialize_voice_pool();
 	}
 
-	// Find the next available voice using round-robin
-	int start_index = next_voice_index;
-	bool found_inactive = false;
+	const int pool_size = voice_pool.size();
+	if (next_voice_index >= pool_size) {
+		next_voice_index = 0;
+	}
 
-	do {
+	// Find the next free voice using round-robin. A voice counts as busy from
+	// the moment it is reserved here, so several get_context() calls in the
+	// same frame (before the audio thread has started any of them) each get
+	// a different voice.
+	for (int n = 0; n < pool_size; n++) {
 		Ref<SynthVoice> voice = voice_pool[next_voice_index];
+		next_voice_index = (next_voice_index + 1) % pool_size;
 
-		// Move to next voice for next allocation
-		next_voice_index = (next_voice_index + 1) % polyphony;
-
-		// If voice is not active, use it
 		if (!voice->is_active()) {
-			found_inactive = true;
+			voice->reserve();
 			return voice;
 		}
+	}
 
-	} while (next_voice_index != start_index);
-
+	// All voices are busy: steal the next one in round-robin order. The audio
+	// thread swaps its context when it applies the START_VOICE event, so the
+	// voice is not touched here while it may still be mixing.
 	Ref<SynthVoice> voice = voice_pool[next_voice_index];
-	voice->reset(); // Reset the voice before reusing it
-	next_voice_index = (next_voice_index + 1) % polyphony;
+	next_voice_index = (next_voice_index + 1) % pool_size;
+	voice->reserve();
 	return voice;
+}
+
+bool AudioSynthPlayer::ensure_playback() {
+	// AudioStreamPlayer::play() creates a new playback, so re-fetch it after
+	// (re)starting the stream.
+	if (!is_playing()) {
+		set_volume_db(0.0); // Ensure volume is at 0 dB (full volume)
+		play();
+		playback.unref();
+	}
+
+	if (!playback.is_valid()) {
+		Ref<AudioStreamPlayback> stream_playback = get_stream_playback();
+		if (stream_playback.is_valid()) {
+			playback = Ref<SynthAudioStreamPlayback>(Object::cast_to<SynthAudioStreamPlayback>(stream_playback.ptr()));
+		}
+	}
+
+	return playback.is_valid();
 }
 
 Ref<SynthNoteContext> AudioSynthPlayer::get_context() {
@@ -175,31 +198,16 @@ Ref<SynthNoteContext> AudioSynthPlayer::get_context() {
 		return nullptr;
 	}
 
-	// Try to get the playback interface if it's not already set
-	if (!playback.is_valid()) {
-		Ref<AudioStreamPlayback> stream_playback = get_stream_playback();
-		if (stream_playback.is_valid()) {
-			playback = static_cast<Ref<SynthAudioStreamPlayback>>(stream_playback.ptr());
-			if (!playback.is_valid()) {
-				return nullptr;
-			}
-		}
-	}
-
-	if (!playback.is_valid()) {
+	if (!ensure_playback()) {
 		return nullptr;
-	}
-
-	// Make sure we're playing with proper volume
-	if (!is_playing()) {
-		set_volume_db(0.0); // Ensure volume is at 0 dB (full volume)
-		play();
 	}
 
 	// Get a voice from the pool
 	Ref<SynthVoice> voice = allocate_voice();
 
-	// If the voice doesn't have an engine (or it's invalid), create one
+	// If the voice doesn't have an engine (or it's invalid), create one.
+	// Safe here: a voice without an engine never produces sound, so the audio
+	// thread does not use its engine.
 	if (!voice->get_engine().is_valid()) {
 		Ref<AudioStreamGeneratorEngine> engine = EngineFactory::create_engine_from_config(configuration);
 		if (engine.is_valid()) {
@@ -210,26 +218,57 @@ Ref<SynthNoteContext> AudioSynthPlayer::get_context() {
 		}
 	}
 
-	// Get the context from the voice - this will create a fresh context
-	Ref<SynthNoteContext> context = voice->get_context();
+	// Every note gets a fresh context. The audio thread attaches it to the
+	// voice (START_VOICE event), so the caller can configure it and call
+	// note_on() right away without racing the mixer.
+	Ref<SynthNoteContext> context;
+	context.instantiate();
 
-	// Get the current playback time instead of system time
 	double current_time = playback->get_current_time();
 	context->set_absolute_time(current_time);
 	context->set_note_time(0.0);
 	context->set_note_on_time(current_time);
-
-	// Make sure the context is in the READY state
 	context->set_note_state(SynthNoteContext::NOTE_STATE_READY);
 
-	// Generate a unique ID for this voice
-	int64_t voice_id = Time::get_singleton()->get_ticks_msec();
+	// Unique per note. This used to be Time::get_ticks_msec(), which gave
+	// every note started in the same millisecond the same id, and the voice
+	// map then kept only the last of them (issue #1).
+	context->set_voice_id(next_voice_id++);
+	context->set_player_id(get_instance_id());
 
-	// Add to active voices in the playback
-	playback->add_voice(voice_id, voice);
-	context->set_voice_id(voice_id);
+	if (!playback->add_voice(voice, context)) {
+		UtilityFunctions::push_warning("AudioSynthPlayer: note event queue is full, note dropped.");
+		return nullptr;
+	}
 
 	return context;
+}
+
+bool AudioSynthPlayer::queue_context_event(const Ref<SynthNoteContext> &p_context, int p_type, float p_note, float p_velocity) {
+	ERR_FAIL_COND_V_MSG(p_context.is_null(), false, "AudioSynthPlayer: context is null.");
+	if (!ensure_playback()) {
+		return false;
+	}
+
+	SynthNoteEvent event;
+	event.type = (SynthNoteEvent::Type)p_type;
+	event.context = p_context;
+	event.note = p_note;
+	event.velocity = p_velocity;
+
+	if (!playback->push_event(event)) {
+		UtilityFunctions::push_warning("AudioSynthPlayer: note event queue is full, event dropped.");
+		return false;
+	}
+	return true;
+}
+
+void AudioSynthPlayer::play_note_on_context(const Ref<SynthNoteContext> &p_context, float p_note, float p_velocity) {
+	queue_context_event(p_context, SynthNoteEvent::NOTE_ON, p_note, p_velocity);
+}
+
+void AudioSynthPlayer::play_note_off_context(const Ref<SynthNoteContext> &p_context) {
+	queue_context_event(p_context, SynthNoteEvent::NOTE_OFF, 0.0f, 0.0f);
 }
 
 void AudioSynthPlayer::stop_all_notes() {
