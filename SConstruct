@@ -33,7 +33,7 @@ Run the following command to download godot-cpp:
     git submodule update --init --recursive""")
     sys.exit(1)
 
-env = SConscript("godot-cpp/SConstruct", {"env": env, "customs": customs})
+env = SConscript("godot-cpp/SConstruct", {"env": env, "customs": customs, "api_version": "4.7"})
 
 # Add debug symbols and optimization settings
 if env["target"] == "template_debug":     # Debug symbols in binary

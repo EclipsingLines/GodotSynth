@@ -62,7 +62,7 @@ float NotchFilter::process_sample(float sample, const Ref<SynthNoteContext> &con
 	float sample_rate = 44100.0f; // TODO: Get from context
 
 	// Convert normalized cutoff to angular frequency (0 to pi)
-	float omega = Math_PI * cutoff;
+	float omega = Math::PI * cutoff;
 
 	// Calculate filter coefficients
 	float alpha = Math::sin(omega) * bandwidth;

@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Step sequencer
 - Gold braided cable emulation
 
+### Changed
+
+- Upgraded godot-cpp from `godot-4.4-stable` to `10.0.0-stable` and set the build to target the Godot 4.7 API (`api_version` 4.7). Builds now require Godot 4.7 or later.
+
 ## [v0.95] - 2025-03-16
 
 ### Added
