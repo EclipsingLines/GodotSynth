@@ -70,7 +70,7 @@ float MS20Filter::process_sample(float sample, const Ref<SynthNoteContext> &cont
 	float sample_rate = 44100.0f; // TODO: Get from context
 
 	// Calculate filter coefficients
-	float w0 = 2.0f * Math_PI * cutoff_freq / sample_rate;
+	float w0 = 2.0f * Math::PI * cutoff_freq / sample_rate;
 	float alpha = Math::sin(w0) / (2.0f * q);
 
 	// Update coefficients

@@ -24,7 +24,8 @@ runs:
       if: inputs.platform == 'android'
       uses: nttld/setup-ndk@v1
       with:
-        ndk-version: r23c
+        # godot-cpp 10 expects NDK 28.1.13356709 (r28b)
+        ndk-version: r28b
         link-to-sdk: true
 
     - name: Setup Web Dependencies

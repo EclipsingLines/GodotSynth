@@ -158,7 +158,7 @@ float WaveShaperDistortion::process_sample(float sample, const Ref<SynthNoteCont
 		// Sine-like shape (softer)
 		// y = sin(x * π/2)
 		float shape_factor = shape * 3.0f; // 0 to 1 within this range
-		float sine_shape = std::sin(x * Math_PI * 0.5f);
+		float sine_shape = std::sin(x * Math::PI * 0.5f);
 		float cubic_shape = 1.5f * x - 0.5f * x * x * x;
 		distorted = sine_shape * (1.0f - shape_factor) + cubic_shape * shape_factor;
 	} else if (shape < 0.66f) {
@@ -166,13 +166,13 @@ float WaveShaperDistortion::process_sample(float sample, const Ref<SynthNoteCont
 		// y = 1.5x - 0.5x³
 		float shape_factor = (shape - 0.33f) * 3.0f; // 0 to 1 within this range
 		float cubic_shape = 1.5f * x - 0.5f * x * x * x;
-		float arctan_shape = (2.0f / Math_PI) * std::atan(x * Math_PI * 0.5f);
+		float arctan_shape = (2.0f / Math::PI) * std::atan(x * Math::PI * 0.5f);
 		distorted = cubic_shape * (1.0f - shape_factor) + arctan_shape * shape_factor;
 	} else {
 		// Arctangent shape (harder)
 		// y = (2/π) * atan(x * π/2)
 		float shape_factor = (shape - 0.66f) * 3.0f; // 0 to 1 within this range
-		float arctan_shape = (2.0f / Math_PI) * std::atan(x * Math_PI * 0.5f);
+		float arctan_shape = (2.0f / Math::PI) * std::atan(x * Math::PI * 0.5f);
 		float hard_shape = x / (std::abs(x) + 0.2f); // More aggressive shape
 		distorted = arctan_shape * (1.0f - shape_factor) + hard_shape * shape_factor;
 	}
