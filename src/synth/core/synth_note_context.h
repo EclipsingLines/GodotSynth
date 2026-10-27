@@ -36,7 +36,7 @@ private:
 	int64_t voice_id; ///< Unique identifier for the voice playing this note
 	double absolute_time = 0.0; ///< Current absolute time in seconds
 	double note_time = 0.0; ///< Time in seconds since note_on was called
-	int note = 60; ///< MIDI note number (0-127)
+	float note = 60.0; ///< MIDI note number (0-127)
 	float velocity = 1.0f; ///< Note velocity (0.0-1.0)
 	float articulation = 1.0f; ///< Note articulation (freely assignable)
 	bool is_note_active = false; ///< Whether the note is currently active (not released)
@@ -119,13 +119,13 @@ public:
 	 * @brief Sets the MIDI note number.
 	 * @param p_note The MIDI note number (0-127).
 	 */
-	void set_note(int p_note);
+	void set_note(float p_note);
 
 	/**
 	 * @brief Gets the MIDI note number.
 	 * @return The MIDI note number.
 	 */
-	int get_note() const;
+	float get_note() const;
 
 	/**
 	 * @brief Sets the note velocity.
@@ -216,7 +216,7 @@ public:
 	 * @param p_note The MIDI note number (0-127).
 	 * @param p_velocity The velocity (0.0-1.0).
 	 */
-	void note_on(int p_note, float p_velocity);
+	void note_on(float p_note, float p_velocity);
 
 	/**
 	 * @brief Releases a note at the specified time.

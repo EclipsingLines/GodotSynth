@@ -71,7 +71,7 @@ void SynthNoteContext::_bind_methods() {
 
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "absolute_time"), "set_absolute_time", "get_absolute_time");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "note_time"), "set_note_time", "get_note_time");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "note"), "set_note", "get_note");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "note"), "set_note", "get_note");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "velocity"), "set_velocity", "get_velocity");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "articulation"), "set_articulation", "get_articulation");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "note_active"), "set_note_active", "is_note_on");
@@ -110,11 +110,11 @@ double SynthNoteContext::get_note_time() const {
 	return note_time;
 }
 
-void SynthNoteContext::set_note(int p_note) {
+void SynthNoteContext::set_note(float p_note) {
 	note = p_note;
 }
 
-int SynthNoteContext::get_note() const {
+float SynthNoteContext::get_note() const {
 	return note;
 }
 
@@ -162,7 +162,7 @@ double SynthNoteContext::get_note_off_time() const {
 	return note_off_time;
 }
 
-void SynthNoteContext::note_on(int p_note, float p_velocity) {
+void SynthNoteContext::note_on(float p_note, float p_velocity) {
 	reset();
 	note = p_note;
 	velocity = p_velocity;

@@ -15,9 +15,13 @@ void SynthConfiguration::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_output_bus", "bus"), &SynthConfiguration::set_output_bus);
 	ClassDB::bind_method(D_METHOD("get_output_bus"), &SynthConfiguration::get_output_bus);
 
+	ClassDB::bind_method(D_METHOD("set_mod_update_rate", "rate"), &SynthConfiguration::set_mod_update_rate);
+	ClassDB::bind_method(D_METHOD("get_mod_update_rate"), &SynthConfiguration::get_mod_update_rate);
+
 	ClassDB::bind_method(D_METHOD("create_engine"), &SynthConfiguration::create_engine);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "output_bus", PROPERTY_HINT_ENUM, ""), "set_output_bus", "get_output_bus");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "mod_update_rate", PROPERTY_HINT_ENUM, "1,2,4,8,16"), "set_mod_update_rate", "get_mod_update_rate");
 
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "parameters", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE), "", "get_parameters");
 }
@@ -66,6 +70,14 @@ void SynthConfiguration::set_output_bus(const String &p_bus) {
 
 String SynthConfiguration::get_output_bus() const {
 	return output_bus;
+}
+
+void SynthConfiguration::set_mod_update_rate(int p_rate) {
+	mod_update_rate = p_rate;
+}
+
+int SynthConfiguration::get_mod_update_rate() const {
+	return mod_update_rate;
 }
 
 Ref<AudioStreamGeneratorEngine> SynthConfiguration::create_engine() const {

@@ -90,7 +90,8 @@ PackedFloat32Array SynthVoice::process_block(int buffer_size, double p_time) {
 	context->set_has_active_tail(has_tail);
 
 	// Process audio through the engine and get the output buffer
-	output_buffer = engine->process_block(buffer_size, context);
+	output_buffer = engine->process_block(buffer_size, context, fast);
+	fast = !fast;
 
 	// Check if we should deactivate the voice
 	if (context->is_note_finished()) {

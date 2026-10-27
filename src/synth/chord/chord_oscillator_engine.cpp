@@ -17,7 +17,7 @@ void ChordOscillatorEngine::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_parameter", "name", "param"), &ChordOscillatorEngine::set_parameter);
 	ClassDB::bind_method(D_METHOD("get_parameter", "name"), &ChordOscillatorEngine::get_parameter);
 	ClassDB::bind_method(D_METHOD("get_parameters"), &ChordOscillatorEngine::get_parameters);
-	
+
 	ClassDB::bind_method(D_METHOD("set_root_note_only", "enabled"), &ChordOscillatorEngine::set_root_note_only);
 	ClassDB::bind_method(D_METHOD("get_root_note_only"), &ChordOscillatorEngine::get_root_note_only);
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "root_note_only"), "set_root_note_only", "get_root_note_only");
@@ -184,7 +184,7 @@ Dictionary ChordOscillatorEngine::get_parameters() const {
 	return parameters;
 }
 
-PackedFloat32Array ChordOscillatorEngine::process_block(int buffer_size, const Ref<SynthNoteContext> &context) {
+PackedFloat32Array ChordOscillatorEngine::process_block(int buffer_size, const Ref<SynthNoteContext> &context, const bool &use_fast_pitch) {
 	// Create output buffer
 	PackedFloat32Array output_buffer;
 	output_buffer.resize(buffer_size);
@@ -268,13 +268,13 @@ PackedFloat32Array ChordOscillatorEngine::process_block(int buffer_size, const R
 	// Debug output for chord type
 	static int chord_debug_counter = 0;
 	if (chord_debug_counter++ % 100 == 0) {
-		UtilityFunctions::print("Chord type value: " + String::num(chord_type_value) + 
+		UtilityFunctions::print("Chord type value: " + String::num(chord_type_value) +
 				", index: " + String::num(chord_type_index));
 	}
 
 	// Get chord intervals
 	std::vector<int> intervals;
-	
+
 	if (root_note_only) {
 		// If root_note_only is enabled, only use the root note (0 semitones)
 		intervals.push_back(0);
@@ -334,14 +334,14 @@ PackedFloat32Array ChordOscillatorEngine::process_block(int buffer_size, const R
 			freq_debug += String::num(chord_notes[i]) + " ";
 		}
 		UtilityFunctions::print(freq_debug);
-		
+
 		freq_debug = "Frequencies: ";
 		for (size_t i = 0; i < frequencies.size(); i++) {
 			freq_debug += String::num(frequencies[i]) + " Hz, ";
 		}
 		UtilityFunctions::print(freq_debug);
-		
-		UtilityFunctions::print("Chord type: " + String::num(chord_type_index) + 
+
+		UtilityFunctions::print("Chord type: " + String::num(chord_type_index) +
 				", Inversion: " + String::num(inversion_index));
 	}
 
@@ -394,7 +394,7 @@ PackedFloat32Array ChordOscillatorEngine::process_block(int buffer_size, const R
 
 		// Debug the first few samples of the first buffer
 		bool debug_samples = (chord_debug_counter <= 1 && i < 5);
-		
+
 		if (debug_samples) {
 			UtilityFunctions::print("--- Sample " + String::num(i) + " ---");
 		}
@@ -408,17 +408,23 @@ PackedFloat32Array ChordOscillatorEngine::process_block(int buffer_size, const R
 
 			// Use a different waveform for each note in the chord to prevent cancellation
 			WaveHelper::WaveType note_waveform = waveform;
-			
+
 			// For sine waves, use different waveforms for each note to prevent cancellation
 			if (waveform == WaveHelper::SINE) {
 				// Use a different waveform for each note in the chord
 				switch (j % 3) {
-					case 0: note_waveform = WaveHelper::SINE; break;
-					case 1: note_waveform = WaveHelper::TRIANGLE; break;
-					case 2: note_waveform = WaveHelper::SINE; break;
+					case 0:
+						note_waveform = WaveHelper::SINE;
+						break;
+					case 1:
+						note_waveform = WaveHelper::TRIANGLE;
+						break;
+					case 2:
+						note_waveform = WaveHelper::SINE;
+						break;
 				}
 			}
-			
+
 			// Get sample for this note
 			float note_sample;
 			if (cache) {
@@ -426,24 +432,24 @@ PackedFloat32Array ChordOscillatorEngine::process_block(int buffer_size, const R
 			} else {
 				note_sample = WaveHelper::get_wave_sample(phases[j], note_waveform, cached_pulse_width);
 			}
-			
+
 			// Debug waveform type occasionally
 			if (i == 0 && j == 0 && chord_debug_counter % 100 == 0) {
-				UtilityFunctions::print("Using waveform types: " + String::num_int64(waveform) + 
+				UtilityFunctions::print("Using waveform types: " + String::num_int64(waveform) +
 						" (base) and " + String::num_int64(note_waveform) + " (note " + String::num(j) + ")");
 			}
 
 			// Add to mix with proper scaling to avoid clipping
 			mixed_sample += note_sample * scale_factor;
-			
+
 			if (debug_samples) {
-				UtilityFunctions::print("  Note " + String::num(j) + ": phase=" + 
+				UtilityFunctions::print("  Note " + String::num(j) + ": phase=" +
 						String::num(phases[j]) + ", sample=" + String::num(note_sample));
 			}
 		}
-		
+
 		if (debug_samples) {
-			UtilityFunctions::print("  Mixed sample: " + String::num(mixed_sample) + 
+			UtilityFunctions::print("  Mixed sample: " + String::num(mixed_sample) +
 					", Amplitude: " + String::num(cached_amplitude));
 		}
 
@@ -497,7 +503,7 @@ Ref<AudioStreamGeneratorEngine> ChordOscillatorEngine::duplicate() const {
 
 	// Copy waveform setting
 	new_engine->set_waveform(waveform);
-	
+
 	// Copy root_note_only setting
 	new_engine->set_root_note_only(root_note_only);
 

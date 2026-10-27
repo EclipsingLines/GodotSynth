@@ -124,6 +124,9 @@ Ref<AudioStreamGeneratorEngine> VASynthConfiguration::create_engine() const {
 		engine->set_effect_chain(get_effect_chain()->duplicate());
 	}
 
+	// Set the modulation update rate
+	engine->set_mod_update_rate(get_mod_update_rate());
+
 	return engine;
 }
 
