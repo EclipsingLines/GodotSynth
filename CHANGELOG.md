@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Step sequencer
 - Gold braided cable emulation
 
+### Changed
+
+- Windows binaries are now built with MSVC on `windows-latest` instead of MinGW cross-compiled on Ubuntu, and CI pins SCons 4.11.1
+
 ### Fixed
 
 - Build: sources are now collected recursively from `src/synth/`, and the build stops with an error if none are found, instead of linking an empty library. CI now fails any job whose library is under 200 KB or lacks the `synth_library_init` entry symbol, and only publishes a GitHub release for tag pushes (#20)

@@ -29,7 +29,8 @@ jobs:
           - identifier: windows
             platform: windows
             name: 🪟 Windows
-            runner: ubuntu-22.04
+            # Native MSVC build, like godot-cpp-template. SCons finds MSVC on its own.
+            runner: windows-latest
             flags: arch=x86_64
 
           - identifier: macos
@@ -84,14 +85,23 @@ jobs:
             TARGET: 'template_${{ matrix.target }}'
         shell: sh
         run: |
-            scons target=$TARGET platform='${{ matrix.platform }}' ${{ matrix.flags }} debug_symbols=no -j2
+            python -m SCons target=$TARGET platform='${{ matrix.platform }}' ${{ matrix.flags }} debug_symbols=no -j2
 
-      - name: Strip Libraries (Windows/Linux)
-        if: ${{ matrix.platform == 'windows' || matrix.platform == 'linux' }}
+      # MSVC output isn't stripped: debug_symbols=no already leaves out the PDB.
+      - name: Strip Libraries (Linux)
+        if: ${{ matrix.platform == 'linux' }}
         shell: sh
         run: |
           ls -l project/addons/godot_synth/bin/
           strip project/addons/godot_synth/bin/libgodot_synth.*
+          ls -l project/addons/godot_synth/bin/
+
+      # Like godot-cpp-template: drop MSVC link by-products so only the DLL ships.
+      - name: Delete Compilation Files (Windows)
+        if: ${{ matrix.platform == 'windows' }}
+        shell: sh
+        run: |
+          rm -f project/addons/godot_synth/bin/*.exp project/addons/godot_synth/bin/*.lib project/addons/godot_synth/bin/*.pdb
           ls -l project/addons/godot_synth/bin/
 
       # Guard against stub libraries (#20): fail if the library for this job is
@@ -134,7 +144,7 @@ jobs:
       - name: Include Files
         shell: sh
         run: |
-          cp '${{ github.workspace }}/README.md' '${{ github.workspace }}/LICENSE' ${{ github.workspace }}/project/addons/godot_synth/
+          cp README.md LICENSE project/addons/godot_synth/
 
       - name: Upload Package
         uses: actions/upload-artifact@v4
