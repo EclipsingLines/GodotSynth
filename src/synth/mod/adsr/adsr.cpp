@@ -137,7 +137,6 @@ float ADSR::get_value(const Ref<SynthNoteContext> &context) const {
 	}
 
 	// Calculate value based on current stage
-	float prev_level = current_level;
 
 	switch (current_stage) {
 		case ADSR::ATTACK: {
@@ -206,16 +205,6 @@ float ADSR::get_value(const Ref<SynthNoteContext> &context) const {
 			break;
 	}
 
-	// Debug output if level changed significantly
-	if (ABS(current_level - prev_level) > 0.05f) {
-		UtilityFunctions::print(vformat("ADSR | Stage: %s | Level: %.2f",
-				current_stage == ADSR::ATTACK ? "ATTACK" : current_stage == ADSR::DECAY ? "DECAY"
-						: current_stage == ADSR::SUSTAIN								? "SUSTAIN"
-						: current_stage == ADSR::RELEASE								? "RELEASE"
-																						: "OFF",
-				current_level));
-	}
-
 	context->update_amplitude(current_level);
 	return current_level;
 }
@@ -225,7 +214,6 @@ void ADSR::reset() {
 	current_level = 0.0f;
 	current_stage = OFF;
 	stage_start_time = 0.0;
-	UtilityFunctions::print("ADSR | Reset called - Stage: OFF | Level: 0.00");
 }
 
 void ADSR::set_attack(float p_attack) {
