@@ -40,10 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed the macOS library paths in `godot_synth.gdextension`, which now point to `bin/macos.framework/` where the build puts them (thanks to @speelbarrow, #6).
 - `VASynthConfiguration` created outside the editor (in a running game, or loaded from a scene saved with the default waveforms) no longer starts with uninitialized bottom, middle and top waveforms. They now default to sine, triangle and noise, the same as the editor's default preset.
-
-### Fixed
-
 - Build: sources are now collected recursively from `src/synth/`, and the build stops with an error if none are found, instead of linking an empty library. CI now fails any job whose library is under 200 KB or lacks the `synth_library_init` entry symbol, and only publishes a GitHub release for tag pushes (#20)
+- Removed per-block debug prints (VA engine timing, ADSR level changes, chord engine silence) from the audio thread
 
 ## [v0.95] - 2025-03-16
 
