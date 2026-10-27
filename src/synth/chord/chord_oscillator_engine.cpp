@@ -192,15 +192,12 @@ PackedFloat32Array ChordOscillatorEngine::process_block(int buffer_size, const R
 	if (!context.is_valid()) {
 		// Fill buffer with silence
 		std::fill(output_buffer.ptrw(), output_buffer.ptrw() + buffer_size, 0.0f);
-		UtilityFunctions::print("Silence buffer - No Context");
 		return output_buffer;
 	}
 
 	// If no note is playing, return silence
 	if (context->get_note() < 0 || context->get_velocity() <= 0.0f) {
 		std::fill(output_buffer.ptrw(), output_buffer.ptrw() + buffer_size, 0.0f);
-		UtilityFunctions::print("Silence buffer - note: " + String::num(context->get_note()) +
-				" velocity: " + String::num(context->get_velocity()));
 		return output_buffer;
 	}
 

@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Step sequencer
 - Gold braided cable emulation
 
+### Fixed
+
+- Removed per-block debug prints (VA engine timing, ADSR level changes, chord engine silence) from the audio thread
+
 ## [v0.95] - 2025-03-16
 
 ### Added
