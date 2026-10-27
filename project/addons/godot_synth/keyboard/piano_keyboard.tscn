@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://cyndffxmsa4rn"]
+[gd_scene format=3 uid="uid://cyndffxmsa4rn"]
 
 [ext_resource type="Script" uid="uid://n0quo1dyvxfv" path="res://addons/godot_synth/keyboard/synth_keyboard_player.gd" id="1_25ggw"]
 [ext_resource type="Script" uid="uid://cwv0buggdocub" path="res://addons/godot_synth/keyboard/key_note.gd" id="3_d7j1h"]
