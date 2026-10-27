@@ -36,7 +36,7 @@ AudioStreamGeneratorEngine::AudioStreamGeneratorEngine() {
 AudioStreamGeneratorEngine::~AudioStreamGeneratorEngine() {
 }
 
-PackedFloat32Array AudioStreamGeneratorEngine::process_block(int buffer_size, const Ref<SynthNoteContext> &context) {
+PackedFloat32Array AudioStreamGeneratorEngine::process_block(int buffer_size, const Ref<SynthNoteContext> &context, const bool &use_fast_pitch) {
 	// Create a new buffer filled with silence
 	PackedFloat32Array output_buffer;
 	output_buffer.resize(buffer_size);

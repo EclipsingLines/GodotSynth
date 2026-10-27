@@ -12,6 +12,7 @@ class SynthVoice : public Resource {
 
 private:
 	bool active;
+	bool fast;
 	Ref<AudioStreamGeneratorEngine> engine;
 	Ref<SynthNoteContext> context;
 
@@ -41,12 +42,12 @@ public:
 		active = true;
 		return context;
 	}
-	
+
 	// Get the context without resetting it
 	Ref<SynthNoteContext> get_current_context() const {
 		return context;
 	}
-	
+
 	// Clear the context reference
 	void clear_context() {
 		context.unref();

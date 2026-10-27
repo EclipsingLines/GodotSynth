@@ -15,6 +15,7 @@ private:
 	Dictionary parameters;
 	Ref<EffectChain> effect_chain;
 	String output_bus = "Master";
+	int mod_update_rate = 8; // Default to 8 - controls how often modulation values are updated
 
 protected:
 	static void _bind_methods();
@@ -33,6 +34,9 @@ public:
 
 	void set_output_bus(const String &p_bus);
 	String get_output_bus() const;
+
+	void set_mod_update_rate(int p_rate);
+	int get_mod_update_rate() const;
 
 	virtual Ref<AudioStreamGeneratorEngine> create_engine() const;
 };

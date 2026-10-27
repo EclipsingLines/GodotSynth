@@ -1,9 +1,11 @@
 #include "va_oscillator_engine.h"
 #include "../core/modulated_parameter.h"
+#include "../core/pitch_helper.h"
 #include "../core/synth_note_context.h"
 #include "../core/wave_helper_cache.h"
 #include "va_synth_configuration.h"
 #include <cmath>
+#include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/templates/pair.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -20,6 +22,9 @@ void VAOscillatorEngine::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_top_waveform", "type"), &VAOscillatorEngine::set_top_waveform);
 	ClassDB::bind_method(D_METHOD("get_top_waveform"), &VAOscillatorEngine::get_top_waveform);
 
+	ClassDB::bind_method(D_METHOD("set_mod_update_rate", "rate"), &VAOscillatorEngine::set_mod_update_rate);
+	ClassDB::bind_method(D_METHOD("get_mod_update_rate"), &VAOscillatorEngine::get_mod_update_rate);
+
 	ClassDB::bind_method(D_METHOD("set_parameter", "name", "param"), &VAOscillatorEngine::set_parameter);
 	ClassDB::bind_method(D_METHOD("get_parameter", "name"), &VAOscillatorEngine::get_parameter);
 	ClassDB::bind_method(D_METHOD("get_parameters"), &VAOscillatorEngine::get_parameters);
@@ -34,13 +39,15 @@ VAOscillatorEngine::VAOscillatorEngine() :
 		cached_amplitude(0.0f),
 		cached_pulse_width(0.5f),
 		cached_output_gain(1.0f),
-		use_cached_values(false) {
+		use_cached_values(false),
+		mod_update_rate(8) {
+	sample_rate_inv = 1 / sample_rate;
 }
 
 VAOscillatorEngine::~VAOscillatorEngine() {
 }
 
-float VAOscillatorEngine::get_frequency_for_note(int note) const {
+float VAOscillatorEngine::get_frequency_for_note(float note) const {
 	// A4 = 440Hz = MIDI note 69
 	return 440.0f * std::pow(2.0f, (note - 69) / 12.0f);
 }
@@ -48,7 +55,7 @@ float VAOscillatorEngine::get_frequency_for_note(int note) const {
 float VAOscillatorEngine::get_morphed_sample(float p_phase, float morph_position, float pulse_width) const {
 	// Get samples from each waveform using the cache if available
 	float bottom_sample, middle_sample, top_sample;
-	
+
 	WaveHelperCache *cache = WaveHelperCache::get_singleton();
 	if (cache) {
 		bottom_sample = cache->get_sample(p_phase, bottom_waveform, pulse_width);
@@ -88,8 +95,10 @@ Dictionary VAOscillatorEngine::get_parameters() const {
 	return parameters;
 }
 
-PackedFloat32Array VAOscillatorEngine::process_block(int buffer_size, const Ref<SynthNoteContext> &context) {
+PackedFloat32Array VAOscillatorEngine::process_block(int buffer_size, const Ref<SynthNoteContext> &context, const bool &use_fast_pitch) {
 	// Create output buffer
+	uint64_t begin = Time::get_singleton()->get_ticks_usec();
+
 	PackedFloat32Array output_buffer;
 	output_buffer.resize(buffer_size);
 
@@ -120,10 +129,10 @@ PackedFloat32Array VAOscillatorEngine::process_block(int buffer_size, const Ref<
 		}
 	}
 
-	float phase_increment = frequency / sample_rate;
+	float phase_increment = frequency * sample_rate_inv;
 
 	// Calculate time increment per sample
-	double time_increment = 1.0 / sample_rate;
+	double time_increment = 1.0 * sample_rate_inv;
 	double current_time = context->get_absolute_time();
 
 	// Pre-fetch parameter values for the first sample
@@ -151,15 +160,15 @@ PackedFloat32Array VAOscillatorEngine::process_block(int buffer_size, const Ref<
 			pulse_width = pw_param->get_value(context);
 		}
 	}
-	
+
 	// Store these values in the cache
 	cached_morph_position = morph_position;
 	cached_amplitude = amplitude;
 	cached_pulse_width = pulse_width;
-	
+
 	// How often to update modulation values (every N samples)
-	const int mod_update_rate = 8; // Update every 8 samples
-	
+	// Using the member variable set from the configuration
+
 	// Generate audio samples
 	for (int i = 0; i < buffer_size; i++) {
 		// Update context time for this sample
@@ -212,6 +221,9 @@ PackedFloat32Array VAOscillatorEngine::process_block(int buffer_size, const Ref<
 		current_time += time_increment;
 	}
 
+	uint64_t end = Time::get_singleton()->get_ticks_usec();
+	print_line(use_fast_pitch ? "Fast Pitch" : "Regular Exp");
+	print_line(vformat("Virtual Analog took %d microseconds for ", end - begin));
 	return output_buffer;
 }
 
@@ -278,6 +290,14 @@ void VAOscillatorEngine::set_top_waveform(WaveHelper::WaveType p_type) {
 
 WaveHelper::WaveType VAOscillatorEngine::get_top_waveform() const {
 	return top_waveform;
+}
+
+void VAOscillatorEngine::set_mod_update_rate(int p_rate) {
+	mod_update_rate = p_rate;
+}
+
+int VAOscillatorEngine::get_mod_update_rate() const {
+	return mod_update_rate;
 }
 
 } // namespace godot

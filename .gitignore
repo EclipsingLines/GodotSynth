@@ -42,3 +42,10 @@ bin/
 
 # Aider files
 .aider*
+
+# Claude Code (settings.json and CLAUDE.md are shared; local overrides are not)
+.claude/settings.local.json
+
+# Legacy cline notes (migrated to design/)
+.cline_brain/
+__pycache__/

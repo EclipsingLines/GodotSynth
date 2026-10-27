@@ -11,6 +11,7 @@
 #include "core/engine_factory.h"
 #include "core/modulated_parameter.h"
 #include "core/modulation_source.h"
+#include "core/pitch_helper.h"
 #include "core/synth_audio_stream.h"
 #include "core/synth_configuration.h"
 #include "core/synth_note_context.h"
@@ -79,6 +80,7 @@ using namespace godot;
 void register_core_classes() {
 	// Register core classes
 	GDREGISTER_CLASS(WaveHelperCache);
+	GDREGISTER_CLASS(PitchHelper);
 	GDREGISTER_CLASS(SynthNoteContext);
 	GDREGISTER_ABSTRACT_CLASS(ModulationSource);
 	GDREGISTER_CLASS(ModulatedParameter);

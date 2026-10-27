@@ -1,41 +1,39 @@
 [gd_scene load_steps=10 format=3 uid="uid://cyndffxmsa4rn"]
 
-[ext_resource type="Script" uid="uid://n0quo1dyvxfv" path="res://addons/godot_synth/keyboard/synth_keyboard_player.gd" id="1_n5yr4"]
+[ext_resource type="Script" uid="uid://n0quo1dyvxfv" path="res://addons/godot_synth/keyboard/synth_keyboard_player.gd" id="1_25ggw"]
 [ext_resource type="Script" uid="uid://cwv0buggdocub" path="res://addons/godot_synth/keyboard/key_note.gd" id="3_d7j1h"]
 [ext_resource type="Theme" uid="uid://dmft0dpsjewks" path="res://addons/godot_synth/keyboard/piano_key_theme.tres" id="4_110ew"]
 
-[sub_resource type="ADSR" id="ADSR_25ggw"]
-
-[sub_resource type="ModulatedParameter" id="ModulatedParameter_atbcq"]
-mod_amount = 1.0
-source = SubResource("ADSR_25ggw")
-mod_type = 2
+[sub_resource type="ADSR" id="ADSR_atbcq"]
 
 [sub_resource type="ModulatedParameter" id="ModulatedParameter_0fark"]
-base_value = 0.5
+mod_amount = 1.0
+source = SubResource("ADSR_atbcq")
+mod_type = 2
 
 [sub_resource type="ModulatedParameter" id="ModulatedParameter_ef4au"]
+base_value = 0.5
+
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_egihy"]
 mod_min = -24.0
 mod_max = 24.0
 
-[sub_resource type="ModulatedParameter" id="ModulatedParameter_egihy"]
+[sub_resource type="ModulatedParameter" id="ModulatedParameter_wcv74"]
 base_value = 0.5
 
-[sub_resource type="VASynthConfiguration" id="VASynthConfiguration_wcv74"]
-waveform_modulation = SubResource("ModulatedParameter_0fark")
-amplitude_modulation = SubResource("ModulatedParameter_atbcq")
-pitch_modulation = SubResource("ModulatedParameter_ef4au")
-pulse_width_modulation = SubResource("ModulatedParameter_egihy")
+[sub_resource type="VASynthConfiguration" id="VASynthConfiguration_o1xsp"]
+waveform_modulation = SubResource("ModulatedParameter_ef4au")
+amplitude_modulation = SubResource("ModulatedParameter_0fark")
+pitch_modulation = SubResource("ModulatedParameter_egihy")
+pulse_width_modulation = SubResource("ModulatedParameter_wcv74")
 parameters = {
-"amplitude": SubResource("ModulatedParameter_atbcq"),
-"pitch": SubResource("ModulatedParameter_ef4au"),
-"pulse_width": SubResource("ModulatedParameter_egihy"),
-"waveform": SubResource("ModulatedParameter_0fark")
+"amplitude": SubResource("ModulatedParameter_0fark"),
+"pitch": SubResource("ModulatedParameter_egihy"),
+"pulse_width": SubResource("ModulatedParameter_wcv74"),
+"waveform": SubResource("ModulatedParameter_ef4au")
 }
 
 [node name="Control" type="CanvasLayer"]
-script = ExtResource("1_n5yr4")
-sound = SubResource("VASynthConfiguration_wcv74")
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 anchors_preset = 15
@@ -43,6 +41,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_25ggw")
+sound = SubResource("VASynthConfiguration_o1xsp")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer"]
 unique_name_in_owner = true
