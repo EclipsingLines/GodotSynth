@@ -151,8 +151,8 @@ float OverdriveDistortion::process_sample(float sample, const Ref<SynthNoteConte
 	float lp_freq = 1000.0f + tone * 15000.0f; // 1kHz to 16kHz
 	float hp_freq = 20.0f + (1.0f - tone) * 980.0f; // 20Hz to 1kHz
 
-	float lp_coeff = std::exp(-2.0f * Math_PI * lp_freq / sample_rate);
-	float hp_coeff = std::exp(-2.0f * Math_PI * hp_freq / sample_rate);
+	float lp_coeff = std::exp(-2.0f * Math::PI * lp_freq / sample_rate);
+	float hp_coeff = std::exp(-2.0f * Math::PI * hp_freq / sample_rate);
 
 	float input = sample;
 

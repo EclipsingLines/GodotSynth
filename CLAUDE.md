@@ -1,6 +1,6 @@
 # GodotSynth
 
-A GDExtension (C++, godot-cpp) that adds a modular synthesizer to Godot 4.4+: an engine for virtual analog, chord and future synths, modulation sources, modulated effects, and a GDScript editor addon. It's a public MIT project (github.com/EclipsingLines/GodotSynth). It's in beta, currently v0.95. See README.md for the user-facing API and CHANGELOG.md for releases.
+A GDExtension (C++, godot-cpp) that adds a modular synthesizer to Godot 4.7+ (built against the 4.7 API): an engine for virtual analog, chord and future synths, modulation sources, modulated effects, and a GDScript editor addon. It's a public MIT project (github.com/EclipsingLines/GodotSynth). It's in beta, currently v0.95. See README.md for the user-facing API and CHANGELOG.md for releases.
 
 ## Build
 
@@ -10,7 +10,7 @@ A GDExtension (C++, godot-cpp) that adds a modular synthesizer to Godot 4.4+: an
 - Use `target=template_release` for release. The VS Code `build` task runs plain `scons`. CI (`.github/workflows/`) pins SCons 4.4.0 and cross-compiles Windows with MinGW on Ubuntu.
 - SCons globs every `.cpp` under `src/synth/` up to 4 levels deep, so new files need no build-script edits.
 - Output goes to `godot_synth/bin/` and is installed into `project/addons/godot_synth/bin/`. On Windows the output is `libgodot_synth.windows.{debug|release}.x86_64.dll`, and its name must match `project/addons/godot_synth/godot_synth.gdextension` (entry symbol `synth_library_init`). Godot must be closed or the DLL is locked.
-- `godot-cpp/` is a git submodule (github.com/godotengine/godot-cpp), pinned to `godot-4.4-stable`. After cloning, run `git submodule update --init`. To change versions, `git -C godot-cpp checkout <tag>` and then `git add godot-cpp`. A clean build takes about 7 minutes locally, most of it compiling godot-cpp.
+- `godot-cpp/` is a git submodule (github.com/godotengine/godot-cpp), pinned to `10.0.0-stable`. godot-cpp is now versioned independently of Godot and v10 supports Godot 4.3–4.7; the target engine API is picked with `api_version`. `SConstruct` passes `"api_version": "4.7"` to `SConscript("godot-cpp/SConstruct", ...)` (the way godot-cpp's README documents), and `api_version=4.x` on the command line overrides it. A build that targets 4.7 won't load in older Godot. After cloning, run `git submodule update --init`. To change versions, `git -C godot-cpp fetch --tags origin`, `git -C godot-cpp checkout <tag>` and then `git add godot-cpp`. A clean build takes about 7 minutes locally, most of it compiling godot-cpp.
 - The committed release binaries in `project/addons/godot_synth/bin/` (~3–16 KB) look like empty stubs from a broken CI run. Don't trust them.
 - Known pitfall: `LNK4042` on `src/gen/doc_data.gen.*.obj` (the object is specified twice) is treated as an error. Clean the stale `.obj` before relinking.
 - There are no automated tests. To verify, build, open `project/` in Godot and play `addons/godot_synth/keyboard/piano_keyboard.tscn`. `project/issue_1.gd` is a repro scene script.

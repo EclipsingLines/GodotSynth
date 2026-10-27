@@ -40,7 +40,7 @@ float StateVariableFilter::process_sample(float sample, const Ref<SynthNoteConte
 	float sample_rate = 44100.0f; // TODO: Get from context
 
 	// Calculate filter coefficients (State Variable Filter)
-	float f = 2.0f * Math::sin(Math_PI * cutoff_freq / sample_rate);
+	float f = 2.0f * Math::sin(Math::PI * cutoff_freq / sample_rate);
 	float q_factor = 1.0f / q;
 
 	// State variable filter algorithm

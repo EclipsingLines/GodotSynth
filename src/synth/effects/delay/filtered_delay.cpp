@@ -179,8 +179,8 @@ float FilteredDelay::process_sample(float sample, const Ref<SynthNoteContext> &c
 	float hp_cutoff = 20.0f + hp_freq * 1980.0f; // 20Hz to 2kHz
 
 	// Calculate filter coefficients
-	float lp_coeff = std::exp(-2.0f * Math_PI * lp_cutoff / sample_rate);
-	float hp_coeff = std::exp(-2.0f * Math_PI * hp_cutoff / sample_rate);
+	float lp_coeff = std::exp(-2.0f * Math::PI * lp_cutoff / sample_rate);
+	float hp_coeff = std::exp(-2.0f * Math::PI * hp_cutoff / sample_rate);
 
 	// Resonance factor (1.0 to 4.0)
 	float res_factor = 1.0f + resonance * 3.0f;

@@ -64,7 +64,7 @@ float SteinerParkerFilter::process_sample(float sample, const Ref<SynthNoteConte
 	float sample_rate = 44100.0f;
 
 	// Calculate filter coefficients
-	float f = 2.0f * Math::sin(Math_PI * cutoff_freq / sample_rate);
+	float f = 2.0f * Math::sin(Math::PI * cutoff_freq / sample_rate);
 	float q = resonance * 10.0f;
 	float scale = Math::sqrt(q) * 0.1f;
 
