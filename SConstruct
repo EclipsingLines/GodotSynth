@@ -39,7 +39,22 @@ env = SConscript("godot-cpp/SConstruct", {"env": env, "customs": customs})
 if env["target"] == "template_debug":     # Debug symbols in binary
     env.Append(CPPDEFINES=["DEBUG_ENABLED"])
 
-sources =  Glob("src/synth/*.cpp") + Glob("src/synth/**/*.cpp") + Glob("src/synth/**/**/*.cpp") + Glob("src/synth/**/**/**/*.cpp")
+# Collect every .cpp under src/synth/, at any depth. SCons' Glob() treats "**"
+# like "*" (one directory level, not recursive), so walk the tree instead.
+# A source list that silently matched nothing is what produced the 3-16 KB
+# "stub" libraries of early 2025 (issue #20), so an empty list is fatal.
+source_root = "src/synth"
+sources = []
+for dirpath, dirnames, filenames in os.walk(source_root):
+    dirnames.sort()
+    for filename in sorted(filenames):
+        if filename.endswith(".cpp"):
+            sources.append(File(os.path.join(dirpath, filename)))
+
+if not sources:
+    print_error("No .cpp sources found under '{}'. Refusing to build an empty library.".format(source_root))
+    Exit(1)
+print("godot_synth: compiling {} source files from {}/ (target={})".format(len(sources), source_root, env["target"]))
 
 if env["target"] in ["editor", "template_debug"]:
     try:
