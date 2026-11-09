@@ -114,7 +114,7 @@ float BitcrushDistortion::process_sample(float sample, const Ref<SynthNoteContex
 	float mix = 1.0f; // Default: 100% wet
 	float output_gain = 0.7f; // Default: 70% output gain
 	float bit_depth = 0.5f; // Default: 8 bits
-	float sample_rate = 0.5f; // Default: half sample rate
+	float rate_amount = 0.5f; // Default: half sample rate (PARAM_SAMPLE_RATE, 0-1)
 
 	Ref<ModulatedParameter> drive_param = get_parameter(PARAM_DRIVE);
 	if (drive_param.is_valid()) {
@@ -138,7 +138,7 @@ float BitcrushDistortion::process_sample(float sample, const Ref<SynthNoteContex
 
 	Ref<ModulatedParameter> sample_rate_param = get_parameter(PARAM_SAMPLE_RATE);
 	if (sample_rate_param.is_valid()) {
-		sample_rate = sample_rate_param->get_value(context);
+		rate_amount = sample_rate_param->get_value(context);
 	}
 
 	// Scale drive to get more extreme effect at higher values
@@ -150,10 +150,9 @@ float BitcrushDistortion::process_sample(float sample, const Ref<SynthNoteContex
 	// Calculate the number of possible values
 	float steps = powf(2.0f, bit_depth_value) - 1.0f;
 
-	// Apply sample rate reduction (sample_rate is 0-1, where 0 is extreme reduction)
-	// Map sample_rate to a meaningful range (1-44100/2)
-	float base_sample_rate = 44100.0f; // Assuming 44.1kHz
-	float rate_reduction = 1.0f + sample_rate * sample_rate * (base_sample_rate / 2.0f - 1.0f);
+	// Apply sample rate reduction (rate_amount is 0-1, where 0 is extreme reduction)
+	// Map rate_amount to a hold length of 1 to sample_rate / 2 samples
+	float rate_reduction = 1.0f + rate_amount * rate_amount * (sample_rate / 2.0f - 1.0f);
 
 	float input = sample;
 
@@ -199,20 +198,12 @@ Ref<SynthAudioEffect> BitcrushDistortion::duplicate() const {
 		String name = param_names[i];
 		Ref<ModulatedParameter> param = params[name];
 		if (param.is_valid()) {
-			Ref<ModulatedParameter> new_param = memnew(ModulatedParameter);
-			new_param->set_base_value(param->get_base_value());
-			new_param->set_mod_min(param->get_mod_min());
-			new_param->set_mod_max(param->get_mod_max());
-
-			// Copy modulation source if available
-			Ref<ModulationSource> mod_source = param->get_mod_source();
-			if (mod_source.is_valid()) {
-				new_param->set_mod_source(mod_source);
-			}
-
+			Ref<ModulatedParameter> new_param = param->duplicate();
 			new_effect->set_parameter(name, new_param);
 		}
 	}
+
+	new_effect->set_sample_rate(sample_rate);
 
 	return new_effect;
 }

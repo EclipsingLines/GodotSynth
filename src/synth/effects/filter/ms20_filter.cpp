@@ -66,9 +66,6 @@ float MS20Filter::process_sample(float sample, const Ref<SynthNoteContext> &cont
 		saturation = Math::clamp(saturation, 0.0f, 1.0f);
 	}
 
-	// Get sample rate from context or use default
-	float sample_rate = 44100.0f; // TODO: Get from context
-
 	// Calculate filter coefficients
 	float w0 = 2.0f * Math::PI * cutoff_freq / sample_rate;
 	float alpha = Math::sin(w0) / (2.0f * q);
@@ -135,6 +132,8 @@ Ref<SynthAudioEffect> MS20Filter::duplicate() const {
 			new_filter->set_parameter(name, param->duplicate());
 		}
 	}
+
+	new_filter->set_sample_rate(sample_rate);
 
 	return new_filter;
 }

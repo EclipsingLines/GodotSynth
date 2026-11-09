@@ -40,6 +40,11 @@ void WaveHelperCache::initialize(int p_resolution, float p_pulse_width_step) {
 }
 
 void WaveHelperCache::generate_waveform(WaveHelper::WaveType type, float pulse_width) {
+	// Noise is random by definition; a table would repeat the same cycle.
+	if (type == WaveHelper::NOISE) {
+		return;
+	}
+
 	int pw_key = get_pulse_width_key(pulse_width);
 
 	// Check if this waveform is already cached
@@ -66,6 +71,11 @@ float WaveHelperCache::get_sample(float phase, WaveHelper::WaveType type, float 
 	phase = fmod(phase, 1.0f);
 	if (phase < 0.0f)
 		phase += 1.0f;
+
+	// Noise is never cached (see generate_waveform).
+	if (type == WaveHelper::NOISE) {
+		return WaveHelper::get_wave_sample(phase, type, pulse_width);
+	}
 
 	int pw_key = get_pulse_width_key(pulse_width);
 

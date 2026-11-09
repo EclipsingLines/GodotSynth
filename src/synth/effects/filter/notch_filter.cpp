@@ -58,9 +58,6 @@ float NotchFilter::process_sample(float sample, const Ref<SynthNoteContext> &con
 		bandwidth = bandwidth_param->get_value(context);
 	}
 
-	// Get sample rate from context or use default
-	float sample_rate = 44100.0f; // TODO: Get from context
-
 	// Convert normalized cutoff to angular frequency (0 to pi)
 	float omega = Math::PI * cutoff;
 
@@ -111,6 +108,8 @@ Ref<SynthAudioEffect> NotchFilter::duplicate() const {
 			new_filter->set_parameter(name, param->duplicate());
 		}
 	}
+
+	new_filter->set_sample_rate(sample_rate);
 
 	return new_filter;
 }

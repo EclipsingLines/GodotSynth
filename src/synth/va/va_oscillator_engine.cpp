@@ -2,7 +2,6 @@
 #include "../core/modulated_parameter.h"
 #include "../core/pitch_helper.h"
 #include "../core/synth_note_context.h"
-#include "../core/wave_helper_cache.h"
 #include "va_synth_configuration.h"
 #include <cmath>
 #include <godot_cpp/core/class_db.hpp>
@@ -40,7 +39,8 @@ VAOscillatorEngine::VAOscillatorEngine() :
 		cached_output_gain(1.0f),
 		use_cached_values(false),
 		mod_update_rate(8) {
-	sample_rate_inv = 1 / sample_rate;
+	sample_rate_inv = 1.0f / sample_rate;
+	reset_phases();
 }
 
 VAOscillatorEngine::~VAOscillatorEngine() {
@@ -51,21 +51,46 @@ float VAOscillatorEngine::get_frequency_for_note(float note) const {
 	return 440.0f * std::pow(2.0f, (note - 69) / 12.0f);
 }
 
-float VAOscillatorEngine::get_morphed_sample(float p_phase, float morph_position, float pulse_width) const {
-	// Get samples from each waveform using the cache if available
-	float bottom_sample, middle_sample, top_sample;
-
-	WaveHelperCache *cache = WaveHelperCache::get_singleton();
-	if (cache) {
-		bottom_sample = cache->get_sample(p_phase, bottom_waveform, pulse_width);
-		middle_sample = cache->get_sample(p_phase, middle_waveform, pulse_width);
-		top_sample = cache->get_sample(p_phase, top_waveform, pulse_width);
-	} else {
-		// Fallback to direct calculation if cache is not available
-		bottom_sample = WaveHelper::get_wave_sample(p_phase, bottom_waveform, pulse_width);
-		middle_sample = WaveHelper::get_wave_sample(p_phase, middle_waveform, pulse_width);
-		top_sample = WaveHelper::get_wave_sample(p_phase, top_waveform, pulse_width);
+void VAOscillatorEngine::reset_phases() {
+	phase = 0.0f;
+	sub_phase = 0.0f;
+	for (int i = 0; i < WaveHelper::SUPER_SAW_VOICES; i++) {
+		super_phases[i] = WaveHelper::get_super_saw_start_phase(i);
 	}
+}
+
+void VAOscillatorEngine::advance_phases(float phase_increment) {
+	phase += phase_increment;
+	if (phase >= 1.0f) {
+		phase -= 1.0f;
+	}
+	sub_phase += phase_increment * 0.5f;
+	if (sub_phase >= 1.0f) {
+		sub_phase -= 1.0f;
+	}
+	for (int i = 0; i < WaveHelper::SUPER_SAW_VOICES; i++) {
+		super_phases[i] += phase_increment * WaveHelper::get_super_saw_ratio(i);
+		if (super_phases[i] >= 1.0f) {
+			super_phases[i] -= 1.0f;
+		}
+	}
+}
+
+float VAOscillatorEngine::get_wave_sample(WaveHelper::WaveType type, float pulse_width) const {
+	switch (type) {
+		case WaveHelper::SUB_SQUARE:
+			return WaveHelper::get_wave_sample(sub_phase, WaveHelper::SUB_SQUARE, pulse_width);
+		case WaveHelper::SUPER_SAW:
+			return WaveHelper::get_super_saw_sample(super_phases, pulse_width);
+		default:
+			return WaveHelper::get_wave_sample(phase, type, pulse_width);
+	}
+}
+
+float VAOscillatorEngine::get_morphed_sample(float morph_position, float pulse_width) const {
+	float bottom_sample = get_wave_sample(bottom_waveform, pulse_width);
+	float middle_sample = get_wave_sample(middle_waveform, pulse_width);
+	float top_sample = get_wave_sample(top_waveform, pulse_width);
 
 	// Morph between the waveforms based on position
 	if (morph_position <= 0.5f) {
@@ -112,20 +137,20 @@ PackedFloat32Array VAOscillatorEngine::process_block(int buffer_size, const Ref<
 		return output_buffer;
 	}
 
-	// Calculate frequency for the current note
-	float frequency = get_frequency_for_note(context->get_note());
+	// The sample rate can change after construction (set_sample_rate).
+	sample_rate_inv = 1.0f / sample_rate;
 
-	// Apply pitch modulation if available
+	// Note plus pitch modulation, in semitones relative to A4 (MIDI 69).
+	float semitones = context->get_note() - 69.0f;
 	if (parameters.has(VASynthConfiguration::PARAM_PITCH)) {
 		Ref<ModulatedParameter> pitch_param = parameters[VASynthConfiguration::PARAM_PITCH];
 		if (pitch_param.is_valid()) {
-			float pitch_offset = pitch_param->get_value(context);
-			// Convert semitone offset to frequency multiplier
-			// Each semitone is a factor of 2^(1/12)
-			float pitch_multiplier = std::pow(2.0f, pitch_offset / 12.0f);
-			frequency *= pitch_multiplier;
+			semitones += pitch_param->get_value(context);
 		}
 	}
+	float frequency = use_fast_pitch
+			? 440.0f * PitchHelper::fast_pitch_extended(semitones)
+			: 440.0f * std::pow(2.0f, semitones / 12.0f);
 
 	float phase_increment = frequency * sample_rate_inv;
 
@@ -200,7 +225,7 @@ PackedFloat32Array VAOscillatorEngine::process_block(int buffer_size, const Ref<
 		}
 
 		// Get the morphed waveform sample using cached values
-		float sample = get_morphed_sample(phase, cached_morph_position, cached_pulse_width);
+		float sample = get_morphed_sample(cached_morph_position, cached_pulse_width);
 		// Apply amplitude (including ADSR envelope)
 		float output_sample = sample * cached_amplitude * context->get_velocity();
 		// Apply effects if available
@@ -209,11 +234,7 @@ PackedFloat32Array VAOscillatorEngine::process_block(int buffer_size, const Ref<
 		}
 		output_buffer[i] = output_sample;
 
-		// Increment phase
-		phase += phase_increment;
-		if (phase >= 1.0f) {
-			phase -= 1.0f;
-		}
+		advance_phases(phase_increment);
 
 		// Increment time for next sample
 		current_time += time_increment;
@@ -223,7 +244,7 @@ PackedFloat32Array VAOscillatorEngine::process_block(int buffer_size, const Ref<
 }
 
 void VAOscillatorEngine::reset() {
-	phase = 0.0f;
+	reset_phases();
 	// No need to reset modulation sources - handled by ModulationContext
 
 	// Reset the effect chain
@@ -237,6 +258,7 @@ Ref<AudioStreamGeneratorEngine> VAOscillatorEngine::duplicate() const {
 	new_engine->set_bottom_waveform(bottom_waveform);
 	new_engine->set_middle_waveform(middle_waveform);
 	new_engine->set_top_waveform(top_waveform);
+	new_engine->set_mod_update_rate(mod_update_rate);
 
 	// Copy sample rate
 	new_engine->set_sample_rate(get_sample_rate());
@@ -288,7 +310,8 @@ WaveHelper::WaveType VAOscillatorEngine::get_top_waveform() const {
 }
 
 void VAOscillatorEngine::set_mod_update_rate(int p_rate) {
-	mod_update_rate = p_rate;
+	// Used as a modulus in process_block, so it must be at least 1.
+	mod_update_rate = MAX(1, p_rate);
 }
 
 int VAOscillatorEngine::get_mod_update_rate() const {

@@ -60,9 +60,6 @@ float SteinerParkerFilter::process_sample(float sample, const Ref<SynthNoteConte
 		resonance = Math::clamp(resonance, 0.0f, 1.0f);
 	}
 
-	// Get sample rate from context or use default
-	float sample_rate = 44100.0f;
-
 	// Calculate filter coefficients
 	float f = 2.0f * Math::sin(Math::PI * cutoff_freq / sample_rate);
 	float q = resonance * 10.0f;
@@ -148,6 +145,8 @@ Ref<SynthAudioEffect> SteinerParkerFilter::duplicate() const {
 			new_filter->set_parameter(name, param->duplicate());
 		}
 	}
+
+	new_filter->set_sample_rate(sample_rate);
 
 	return new_filter;
 }

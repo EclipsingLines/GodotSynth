@@ -50,15 +50,15 @@ FormantFilter::FormantFilter() {
 		bands[i].x1 = bands[i].x2 = bands[i].y1 = bands[i].y2 = 0.0f;
 	}
 
-	// Initialize with default sample rate
-	update_coefficients(44100.0f);
+	// Initialize with the current (default) sample rate
+	update_coefficients();
 }
 
 FormantFilter::~FormantFilter() {
 	// Clean up resources
 }
 
-void FormantFilter::update_coefficients(float sample_rate) {
+void FormantFilter::update_coefficients() {
 	// Get current vowel position
 	float vowel_pos = 0.0f;
 	Ref<ModulatedParameter> vowel_param = get_parameter(PARAM_VOWEL_POSITION);
@@ -109,7 +109,7 @@ float FormantFilter::process_sample(float sample, const Ref<SynthNoteContext> &c
 
 		// Update coefficients if vowel position changed
 		if (vowel_pos != vowel_param->get_base_value()) {
-			update_coefficients(44100.0f); // TODO: Get sample rate from context
+			update_coefficients();
 		}
 	}
 
@@ -143,6 +143,12 @@ void FormantFilter::reset() {
 	for (int i = 0; i < 3; i++) {
 		bands[i].x1 = bands[i].x2 = bands[i].y1 = bands[i].y2 = 0.0f;
 	}
+}
+
+void FormantFilter::set_sample_rate(float p_sample_rate) {
+	FilterEffect::set_sample_rate(p_sample_rate);
+	update_coefficients();
+	reset();
 }
 
 void FormantFilter::set_vowel_position_parameter(const Ref<ModulatedParameter> &param) {
@@ -180,6 +186,9 @@ Ref<SynthAudioEffect> FormantFilter::duplicate() const {
 			new_filter->set_parameter(name, param->duplicate());
 		}
 	}
+
+	// Also recomputes the coefficients from the copied vowel position
+	new_filter->set_sample_rate(sample_rate);
 
 	return new_filter;
 }

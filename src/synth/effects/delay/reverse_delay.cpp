@@ -24,8 +24,8 @@ void ReverseDelay::_bind_methods() {
 }
 
 ReverseDelay::ReverseDelay() {
-	// Initialize with a default buffer size (2 seconds at 44.1kHz)
-	buffer_size = 88200;
+	// Initialize with a default buffer size (MAX_DELAY_SECONDS at the current sample rate)
+	buffer_size = static_cast<int>(MAX_DELAY_SECONDS * sample_rate);
 	reverse_buffer.resize(buffer_size, 0.0f);
 	write_position = 0;
 	read_position = 0;
@@ -91,10 +91,13 @@ float ReverseDelay::process_sample(float sample, const Ref<SynthNoteContext> &co
 		crossfade = crossfade_param->get_value(context);
 	}
 
-	// Calculate delay in samples (assuming 44.1kHz sample rate)
-	int delay_samples = static_cast<int>(delay_time * 44100.0f);
+	// Calculate delay in samples at the current sample rate
+	int delay_samples = static_cast<int>(delay_time * sample_rate);
 	if (delay_samples >= buffer_size) {
 		delay_samples = buffer_size - 1;
+	}
+	if (delay_samples < 1) {
+		delay_samples = 1; // Keeps read_position >= 0 after wraparound
 	}
 
 	// Calculate crossfade samples
@@ -157,6 +160,17 @@ void ReverseDelay::reset() {
 	is_recording = true;
 }
 
+void ReverseDelay::set_sample_rate(float p_sample_rate) {
+	DelayEffect::set_sample_rate(p_sample_rate);
+
+	// Main thread only, before playback: reallocating here is allowed
+	buffer_size = static_cast<int>(MAX_DELAY_SECONDS * sample_rate);
+	reverse_buffer.assign(buffer_size, 0.0f);
+	write_position = 0;
+	read_position = 0;
+	is_recording = true;
+}
+
 Ref<SynthAudioEffect> ReverseDelay::duplicate() const {
 	Ref<ReverseDelay> new_delay = memnew(ReverseDelay);
 
@@ -171,6 +185,8 @@ Ref<SynthAudioEffect> ReverseDelay::duplicate() const {
 			new_delay->set_parameter(name, new_param);
 		}
 	}
+
+	new_delay->set_sample_rate(sample_rate);
 
 	return new_delay;
 }

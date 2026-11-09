@@ -48,8 +48,8 @@ void TapeDelay::_bind_methods() {
 }
 
 TapeDelay::TapeDelay() {
-	// Initialize delay buffer (2 seconds at 44.1kHz)
-	delay_buffer.resize(88200, 0.0f);
+	// Initialize delay buffer (MAX_DELAY_SECONDS at the current sample rate)
+	delay_buffer.resize(static_cast<size_t>(MAX_DELAY_SECONDS * sample_rate), 0.0f);
 	write_position = 0;
 	read_position = 0.0f;
 	last_delay_time = 0.5f;
@@ -145,9 +145,6 @@ float TapeDelay::process_sample(float sample, const Ref<SynthNoteContext> &conte
 		filtering = filter_param->get_value(context);
 	}
 
-	// Calculate sample rate (assuming 44.1kHz)
-	const float sample_rate = 44100.0f;
-
 	// Calculate time change rate for pitch shifting effect
 	float time_change_rate = (delay_time - last_delay_time) / sample_rate;
 	last_delay_time = delay_time;
@@ -165,8 +162,15 @@ float TapeDelay::process_sample(float sample, const Ref<SynthNoteContext> &conte
 	float wow_mod = wow_amount * 0.005f * std::sin(wow_phase); // +/- 0.5% variation
 	float current_delay_time = delay_time * (1.0f + wow_mod);
 
-	// Calculate delay in samples
+	// Calculate delay in samples at the current sample rate, kept inside the buffer
 	float delay_samples = current_delay_time * sample_rate;
+	const float max_delay_samples = static_cast<float>(delay_buffer.size() - 1);
+	if (delay_samples > max_delay_samples) {
+		delay_samples = max_delay_samples;
+	}
+	if (delay_samples < 0.0f) {
+		delay_samples = 0.0f;
+	}
 
 	// Calculate read position with wraparound
 	float read_pos = write_position - delay_samples;
@@ -176,6 +180,9 @@ float TapeDelay::process_sample(float sample, const Ref<SynthNoteContext> &conte
 
 	// Fractional read with linear interpolation
 	int read_pos_int = static_cast<int>(read_pos);
+	if (read_pos_int >= static_cast<int>(delay_buffer.size())) {
+		read_pos_int = 0; // Float rounding can land exactly on size()
+	}
 	float frac = read_pos - read_pos_int;
 	int read_pos_next = (read_pos_int + 1) % delay_buffer.size();
 
@@ -224,6 +231,17 @@ void TapeDelay::reset() {
 	wow_phase = 0.0f;
 }
 
+void TapeDelay::set_sample_rate(float p_sample_rate) {
+	SynthAudioEffect::set_sample_rate(p_sample_rate);
+
+	// Main thread only, before playback: reallocating here is allowed
+	delay_buffer.assign(static_cast<size_t>(MAX_DELAY_SECONDS * sample_rate), 0.0f);
+	write_position = 0;
+	read_position = 0.0f;
+	lp_state = 0.0f;
+	hp_state = 0.0f;
+}
+
 float TapeDelay::get_tail_length() const {
 	// Get the delay time parameter
 	float delay_time = 0.5f; // Default: 500ms
@@ -270,20 +288,12 @@ Ref<SynthAudioEffect> TapeDelay::duplicate() const {
 		String name = param_names[i];
 		Ref<ModulatedParameter> param = params[name];
 		if (param.is_valid()) {
-			Ref<ModulatedParameter> new_param = memnew(ModulatedParameter);
-			new_param->set_base_value(param->get_base_value());
-			new_param->set_mod_min(param->get_mod_min());
-			new_param->set_mod_max(param->get_mod_max());
-
-			// Copy modulation source if available
-			Ref<ModulationSource> mod_source = param->get_mod_source();
-			if (mod_source.is_valid()) {
-				new_param->set_mod_source(mod_source);
-			}
-
+			Ref<ModulatedParameter> new_param = param->duplicate();
 			new_delay->set_parameter(name, new_param);
 		}
 	}
+
+	new_delay->set_sample_rate(sample_rate);
 
 	return new_delay;
 }

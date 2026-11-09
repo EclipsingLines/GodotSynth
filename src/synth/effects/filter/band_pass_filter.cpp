@@ -29,6 +29,8 @@ Ref<SynthAudioEffect> BandPassFilter::duplicate() const {
         }
     }
     
+    new_filter->set_sample_rate(sample_rate);
+
     return new_filter;
 }
 

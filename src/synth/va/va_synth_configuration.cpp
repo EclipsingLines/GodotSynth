@@ -98,10 +98,8 @@ VASynthConfiguration::~VASynthConfiguration() {
 
 Ref<AudioStreamGeneratorEngine> VASynthConfiguration::create_engine() const {
 	// Create a VA engine instance
+	// The caller sets the real sample rate (AudioServer mix rate) afterwards.
 	Ref<VAOscillatorEngine> engine = memnew(VAOscillatorEngine);
-
-	// Set the sample rate
-	engine->set_sample_rate(44100.0f); // Use a default sample rate
 
 	// Configure the engine with our parameters
 	engine->set_bottom_waveform(bottom_waveform);
@@ -113,9 +111,9 @@ Ref<AudioStreamGeneratorEngine> VASynthConfiguration::create_engine() const {
 	Array param_names = params.keys();
 	for (int i = 0; i < param_names.size(); i++) {
 		String name = param_names[i];
-		Ref<ModulatedParameter> param = static_cast<Ref<ModulatedParameter>>(params[name])->duplicate();
+		Ref<ModulatedParameter> param = params[name];
 		if (param.is_valid()) {
-			engine->set_parameter(name, param);
+			engine->set_parameter(name, param->duplicate());
 		}
 	}
 

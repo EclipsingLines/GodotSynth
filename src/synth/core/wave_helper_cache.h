@@ -10,6 +10,9 @@
 
 namespace godot {
 
+// Lookup-table helper kept for scripts that use it directly. The synth engines
+// and LFOs do not use it: lookups here can allocate (lazy table generation),
+// which the audio thread must never do.
 class WaveHelperCache : public RefCounted {
     GDCLASS(WaveHelperCache, RefCounted);
 

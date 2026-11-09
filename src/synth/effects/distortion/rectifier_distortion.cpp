@@ -208,6 +208,8 @@ Ref<SynthAudioEffect> RectifierDistortion::duplicate() const {
 		}
 	}
 
+	copy->set_sample_rate(sample_rate);
+
 	return copy;
 }
 

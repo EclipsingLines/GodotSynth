@@ -2,7 +2,6 @@
 #include "../effects/effect_chain.h"
 #include "modulated_parameter.h"
 #include "synth_note_context.h"
-#include "wave_helper_cache.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -25,12 +24,6 @@ void AudioStreamGeneratorEngine::_bind_methods() {
 
 AudioStreamGeneratorEngine::AudioStreamGeneratorEngine() {
 	effect_chain = Ref<EffectChain>();
-
-	// Initialize the waveform cache if it doesn't exist
-	if (!WaveHelperCache::get_singleton()) {
-		Ref<WaveHelperCache> cache = memnew(WaveHelperCache);
-		cache->initialize();
-	}
 }
 
 AudioStreamGeneratorEngine::~AudioStreamGeneratorEngine() {
@@ -51,6 +44,7 @@ void AudioStreamGeneratorEngine::set_effect_chain(const Ref<EffectChain> &p_chai
 
 	// Reset the effect chain when it's set
 	if (effect_chain.is_valid()) {
+		effect_chain->set_sample_rate(sample_rate);
 		effect_chain->reset();
 	}
 }
@@ -66,12 +60,16 @@ void AudioStreamGeneratorEngine::reset() {
 	if (effect_chain.is_valid()) {
 		effect_chain->reset();
 	}
-
-	// Note: We don't reset the waveform cache as it's shared across all engines
 }
 
 void AudioStreamGeneratorEngine::set_sample_rate(float p_sample_rate) {
+	if (p_sample_rate <= 0.0f) {
+		return;
+	}
 	sample_rate = p_sample_rate;
+	if (effect_chain.is_valid()) {
+		effect_chain->set_sample_rate(sample_rate);
+	}
 }
 
 float AudioStreamGeneratorEngine::get_sample_rate() const {

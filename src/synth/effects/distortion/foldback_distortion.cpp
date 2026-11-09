@@ -191,20 +191,12 @@ Ref<SynthAudioEffect> FoldbackDistortion::duplicate() const {
 		String name = param_names[i];
 		Ref<ModulatedParameter> param = params[name];
 		if (param.is_valid()) {
-			Ref<ModulatedParameter> new_param = memnew(ModulatedParameter);
-			new_param->set_base_value(param->get_base_value());
-			new_param->set_mod_min(param->get_mod_min());
-			new_param->set_mod_max(param->get_mod_max());
-
-			// Copy modulation source if available
-			Ref<ModulationSource> mod_source = param->get_mod_source();
-			if (mod_source.is_valid()) {
-				new_param->set_mod_source(mod_source);
-			}
-
+			Ref<ModulatedParameter> new_param = param->duplicate();
 			new_effect->set_parameter(name, new_param);
 		}
 	}
+
+	new_effect->set_sample_rate(sample_rate);
 
 	return new_effect;
 }

@@ -383,7 +383,6 @@ PackedFloat32Array ChordOscillatorEngine::process_block(int buffer_size, const R
 
 		// Mix all notes in the chord
 		float mixed_sample = 0.0f;
-		WaveHelperCache *cache = WaveHelperCache::get_singleton();
 
 		// Scale factor to prevent clipping - reduce volume as more notes are added
 		// Use a fixed scale factor to ensure consistent volume
@@ -423,12 +422,7 @@ PackedFloat32Array ChordOscillatorEngine::process_block(int buffer_size, const R
 			}
 
 			// Get sample for this note
-			float note_sample;
-			if (cache) {
-				note_sample = cache->get_sample(phases[j], note_waveform, cached_pulse_width);
-			} else {
-				note_sample = WaveHelper::get_wave_sample(phases[j], note_waveform, cached_pulse_width);
-			}
+			float note_sample = WaveHelper::get_wave_sample(phases[j], note_waveform, cached_pulse_width);
 
 			// Debug waveform type occasionally
 			if (i == 0 && j == 0 && chord_debug_counter % 100 == 0) {

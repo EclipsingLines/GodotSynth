@@ -38,9 +38,6 @@ float ShelfFilter::process_sample(float sample, const Ref<SynthNoteContext> &con
         gain_db = gain_param->get_value(context);
     }
 
-    // Get sample rate from context or use default
-    float sample_rate = 44100.0f; // TODO: Get from context
-
     // Convert dB gain to linear gain
     float A = Math::db_to_linear(gain_db);
     
@@ -127,6 +124,8 @@ Ref<SynthAudioEffect> ShelfFilter::duplicate() const {
         }
     }
     
+    new_filter->set_sample_rate(sample_rate);
+
     return new_filter;
 }
 

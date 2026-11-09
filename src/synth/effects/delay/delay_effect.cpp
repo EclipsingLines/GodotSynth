@@ -48,8 +48,8 @@ void DelayEffect::_bind_methods() {
 }
 
 DelayEffect::DelayEffect() {
-	// Initialize delay buffer (2 seconds at 44.1kHz)
-	delay_buffer.resize(88200, 0.0f);
+	// Initialize delay buffer (MAX_DELAY_SECONDS at the current sample rate)
+	delay_buffer.resize(static_cast<size_t>(MAX_DELAY_SECONDS * sample_rate), 0.0f);
 	buffer_position = 0;
 
 	// Create default parameters
@@ -100,8 +100,8 @@ float DelayEffect::process_sample(float sample, const Ref<SynthNoteContext> &con
 		mix = mix_param->get_value(context);
 	}
 
-	// Calculate delay in samples (assuming 44.1kHz sample rate)
-	int delay_samples = int(delay_time * 44100.0f);
+	// Calculate delay in samples at the current sample rate
+	int delay_samples = int(delay_time * sample_rate);
 	if (delay_samples >= delay_buffer.size()) {
 		delay_samples = delay_buffer.size() - 1;
 	}
@@ -131,6 +131,14 @@ void DelayEffect::reset() {
 	buffer_position = 0;
 
 	// Log that the delay effect has been reset
+}
+
+void DelayEffect::set_sample_rate(float p_sample_rate) {
+	SynthAudioEffect::set_sample_rate(p_sample_rate);
+
+	// Main thread only, before playback: reallocating here is allowed
+	delay_buffer.assign(static_cast<size_t>(MAX_DELAY_SECONDS * sample_rate), 0.0f);
+	buffer_position = 0;
 }
 
 float DelayEffect::get_tail_length() const {
@@ -184,6 +192,8 @@ Ref<SynthAudioEffect> DelayEffect::duplicate() const {
 			new_delay->set_parameter(name, new_param);
 		}
 	}
+
+	new_delay->set_sample_rate(sample_rate);
 
 	return new_delay;
 }

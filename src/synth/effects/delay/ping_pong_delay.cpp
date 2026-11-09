@@ -42,9 +42,9 @@ void PingPongDelay::_bind_methods() {
 }
 
 PingPongDelay::PingPongDelay() {
-    // Initialize delay buffers (2 seconds at 44.1kHz)
-    delay_buffer_1.resize(88200, 0.0f);
-    delay_buffer_2.resize(88200, 0.0f);
+    // Initialize delay buffers (MAX_DELAY_SECONDS at the current sample rate)
+    delay_buffer_1.resize(static_cast<size_t>(MAX_DELAY_SECONDS * sample_rate), 0.0f);
+    delay_buffer_2.resize(static_cast<size_t>(MAX_DELAY_SECONDS * sample_rate), 0.0f);
     buffer_position_1 = 0;
     buffer_position_2 = 0;
     
@@ -120,10 +120,7 @@ float PingPongDelay::process_sample(float sample, const Ref<SynthNoteContext> &c
         offset = offset_param->get_value(context);
     }
     
-    // Calculate sample rate (assuming 44.1kHz)
-    const float sample_rate = 44100.0f;
-    
-    // Calculate delay in samples
+    // Calculate delay in samples at the current sample rate
     int delay_samples_1 = static_cast<int>(delay_time * sample_rate);
     if (delay_samples_1 >= delay_buffer_1.size()) {
         delay_samples_1 = delay_buffer_1.size() - 1;
@@ -172,7 +169,17 @@ void PingPongDelay::reset() {
     std::fill(delay_buffer_2.begin(), delay_buffer_2.end(), 0.0f);
     buffer_position_1 = 0;
     buffer_position_2 = 0;
-    
+
+}
+
+void PingPongDelay::set_sample_rate(float p_sample_rate) {
+    SynthAudioEffect::set_sample_rate(p_sample_rate);
+
+    // Main thread only, before playback: reallocating here is allowed
+    delay_buffer_1.assign(static_cast<size_t>(MAX_DELAY_SECONDS * sample_rate), 0.0f);
+    delay_buffer_2.assign(static_cast<size_t>(MAX_DELAY_SECONDS * sample_rate), 0.0f);
+    buffer_position_1 = 0;
+    buffer_position_2 = 0;
 }
 
 float PingPongDelay::get_tail_length() const {
@@ -224,21 +231,13 @@ Ref<SynthAudioEffect> PingPongDelay::duplicate() const {
         String name = param_names[i];
         Ref<ModulatedParameter> param = params[name];
         if (param.is_valid()) {
-            Ref<ModulatedParameter> new_param = memnew(ModulatedParameter);
-            new_param->set_base_value(param->get_base_value());
-            new_param->set_mod_min(param->get_mod_min());
-            new_param->set_mod_max(param->get_mod_max());
-            
-            // Copy modulation source if available
-            Ref<ModulationSource> mod_source = param->get_mod_source();
-            if (mod_source.is_valid()) {
-                new_param->set_mod_source(mod_source);
-            }
-            
+            Ref<ModulatedParameter> new_param = param->duplicate();
             new_delay->set_parameter(name, new_param);
         }
     }
-    
+
+    new_delay->set_sample_rate(sample_rate);
+
     return new_delay;
 }
 
