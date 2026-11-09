@@ -1,6 +1,7 @@
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/O5O21BTCOZ) [![GitHub Release](https://img.shields.io/github/v/release/eclipsinglines/godotsynth?style=for-the-badge&logo=godotengine&logoColor=white)
 ](https://github.com/EclipsingLines/GodotSynth/releases)
- [![Website](https://img.shields.io/website?url=https%3A%2F%2Feclipsinglines.github.io%2FGodotSynth%2F&style=for-the-badge)](https://eclipsinglines.github.io/GodotSynth/)
+ [![Website](https://img.shields.io/website?url=https%3A%2F%2Feclipsinglines.github.io%2FGodotSynth%2F&style=for-the-badge)](https://eclipsinglines.github.io/GodotSynth/) ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/eclipsinglines/godotsynth/total?style=for-the-badge) ![GitHub Sponsors](https://img.shields.io/github/sponsors/eclipsinglines?style=for-the-badge&color=red)
+
 
 # Godot Synth Engine
 
@@ -9,6 +10,19 @@ A powerful and flexible synthesizer engine for Godot 4, providing virtual analog
 ## Requirements
 
 - **Godot 4.7 or later.** Earlier Godot versions are not supported (v0.95 and older targeted Godot 4.4).
+
+## Installation
+
+Download [latest zip](https://github.com/EclipsingLines/GodotSynth/releases) or directly from the [asset library](https://godotengine.org/asset-library/asset/3839).
+
+> ![image](https://github.com/user-attachments/assets/b28105ab-799c-41a4-8743-ff2c4f625541)
+
+
+Enable the plugin custom inspectors by navigating to:
+> Project / Project Settings... / Plugins
+and enable the plugin
+> ![image](https://github.com/user-attachments/assets/be7a46a8-eaeb-481f-9568-6e2f215265ae)
+
 
 ## Features
 
@@ -63,7 +77,7 @@ See [Playing Multiple Notes in the Same Frame](docs/multiple_notes.md).
 
 Configures the virtual analog synthesizer with oscillators, parameters, and effects.
 
-![image](https://github.com/user-attachments/assets/b2bb414f-5989-41b1-ac91-c19fddbe95d8)
+> ![image](https://github.com/user-attachments/assets/b2bb414f-5989-41b1-ac91-c19fddbe95d8)
 
 > [!TIP]
 > You can save your own variations of any of the included resources
@@ -73,7 +87,7 @@ Configures the virtual analog synthesizer with oscillators, parameters, and effe
 
 These are parameters that change automatically over time.
 
-![image](https://github.com/user-attachments/assets/c622c5d6-a32d-417c-be3c-180641391a6c)
+> ![image](https://github.com/user-attachments/assets/c622c5d6-a32d-417c-be3c-180641391a6c)
 
 - Multiple modulation sources
 - Visual approximation of the modulation range
@@ -85,7 +99,7 @@ These are parameters that change automatically over time.
 
 Low Frecuency Oscillator
 
-![image](https://github.com/user-attachments/assets/305be2c9-f1a3-487c-8317-294ce77f690c)
+> ![image](https://github.com/user-attachments/assets/305be2c9-f1a3-487c-8317-294ce77f690c)
 
 - Sine wave
 - Triangle wave
@@ -97,7 +111,7 @@ Low Frecuency Oscillator
 
 Attack-Delay-Sustain-Release Envelope
 
-![image](https://github.com/user-attachments/assets/d964e48c-e3d6-4541-9976-4066ef8938d0)
+> ![image](https://github.com/user-attachments/assets/d964e48c-e3d6-4541-9976-4066ef8938d0)
 
 - Multiple attack, decay and release shapes
  	- Linear
