@@ -39,12 +39,33 @@ PackedFloat32Array AudioStreamGeneratorEngine::process_block(int buffer_size, co
 	return output_buffer;
 }
 
+void AudioStreamGeneratorEngine::render(float *out, int frames, const Ref<SynthNoteContext> &context, bool use_fast_pitch) {
+	PackedFloat32Array block = process_block(frames, context, use_fast_pitch);
+	const float *src = block.ptr();
+	const int count = MIN(frames, (int)block.size());
+	for (int i = 0; i < count; i++) {
+		out[i] = src[i];
+	}
+	for (int i = count; i < frames; i++) {
+		out[i] = 0.0f;
+	}
+}
+
 void AudioStreamGeneratorEngine::set_effect_chain(const Ref<EffectChain> &p_chain) {
 	effect_chain = p_chain;
 
 	// Reset the effect chain when it's set
 	if (effect_chain.is_valid()) {
 		effect_chain->set_sample_rate(sample_rate);
+
+		// Main thread: run one silent sample and the tail query so each
+		// effect's first parameter lookups (which allocate once) happen here
+		// and not on the audio thread, then clear what that sample left behind.
+		Ref<SynthNoteContext> warmup;
+		warmup.instantiate();
+		effect_chain->process_sample(0.0f, warmup);
+		effect_chain->get_max_tail_length();
+
 		effect_chain->reset();
 	}
 }

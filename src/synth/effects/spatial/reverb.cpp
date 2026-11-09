@@ -2,6 +2,7 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/core/math.hpp>
+#include <cmath>
 
 namespace godot {
 
@@ -121,144 +122,155 @@ Reverb::~Reverb() {
     // Cleanup if needed
 }
 
+Reverb::Settings Reverb::read_settings(const Ref<SynthNoteContext> &context) const {
+    Settings s;
+
+    Ref<ModulatedParameter> room_size_param = get_parameter(PARAM_ROOM_SIZE);
+    if (room_size_param.is_valid()) {
+        s.room_size = room_size_param->get_value(context);
+    }
+
+    Ref<ModulatedParameter> damping_param = get_parameter(PARAM_DAMPING);
+    if (damping_param.is_valid()) {
+        s.damping = damping_param->get_value(context);
+    }
+
+    Ref<ModulatedParameter> width_param = get_parameter(PARAM_WIDTH);
+    if (width_param.is_valid()) {
+        s.width = width_param->get_value(context);
+    }
+
+    Ref<ModulatedParameter> mix_param = get_parameter(PARAM_MIX);
+    if (mix_param.is_valid()) {
+        s.mix = mix_param->get_value(context);
+    }
+
+    Ref<ModulatedParameter> pre_delay_param = get_parameter(PARAM_PRE_DELAY);
+    if (pre_delay_param.is_valid()) {
+        s.pre_delay = pre_delay_param->get_value(context);
+    }
+
+    Ref<ModulatedParameter> diffusion_param = get_parameter(PARAM_DIFFUSION);
+    if (diffusion_param.is_valid()) {
+        s.diffusion = diffusion_param->get_value(context);
+    }
+
+    return s;
+}
+
+void Reverb::process_wet(float input, const Settings &s, float &wet_left, float &wet_right) {
+    // Feedback of the late network, from room size. Loop gain never exceeds
+    // this (see below), so the network always decays.
+    const float feedback = 0.7f + Math::clamp(s.room_size, 0.0f, 1.0f) * 0.25f;
+
+    // Damping coefficients
+    const float lp_coeff = s.damping * 0.4f + 0.2f; // Low-pass coefficient (0.2 to 0.6)
+    const float hp_coeff = 0.01f + s.damping * 0.05f; // High-pass coefficient (0.01 to 0.06)
+
+    // Share of each line's feedback taken from the other three lines
+    const float diffusion_amount = Math::clamp(s.diffusion * 0.5f, 0.0f, 0.5f);
+
+    // Early reflections: even lines feed the left side, odd lines the right.
+    float early_left = 0.0f;
+    float early_right = 0.0f;
+    for (int j = 0; j < 8; j++) {
+        float delayed = early_delay_lines[j][early_positions[j]];
+
+        // Diffusion: blend in the previous line
+        if (j > 0) {
+            delayed += early_delay_lines[j - 1][early_positions[j - 1]] * diffusion_amount;
+        }
+
+        early_delay_lines[j][early_positions[j]] = input * (0.7f - j * 0.08f); // Later reflections are quieter
+        early_positions[j] = (early_positions[j] + 1) % early_delay_lines[j].size();
+
+        const float tap = delayed * (1.0f - j * 0.1f);
+        if (j % 2 == 0) {
+            early_left += tap;
+        } else {
+            early_right += tap;
+        }
+    }
+    // Same overall level as the old mono sum (sum * 0.25) when averaged.
+    early_left *= 0.5f;
+    early_right *= 0.5f;
+
+    // Late reverb input. With a pre-delay, the late network is fed from the
+    // early reflections (which start 14 ms or more later) instead of the dry input.
+    const float late_input = (s.pre_delay > 0.0f) ? 0.5f * (early_left + early_right) : input;
+
+    // Feedback delay network: read and damp every line first...
+    float damped[4];
+    float hp_out[4];
+    float damped_sum = 0.0f;
+    for (int j = 0; j < 4; j++) {
+        const float delayed = late_delay_lines[j][late_positions[j]];
+
+        lp_states[j] = lp_states[j] * lp_coeff + delayed * (1.0f - lp_coeff);
+        damped[j] = lp_states[j];
+        damped_sum += damped[j];
+
+        // High-pass on the output to remove DC
+        hp_out[j] = delayed - hp_states[j];
+        hp_states[j] = hp_states[j] * (1.0f - hp_coeff) + delayed * hp_coeff;
+    }
+
+    // ...then write each line back with a convex blend of its own damped
+    // output and the mean of the other three, scaled by `feedback`. The blend
+    // has gain <= 1, so the loop gain is <= feedback < 1. (The old version
+    // added the cross terms on top of the full feedback, which gave a loop
+    // gain above 1 at the default settings, so it could blow up.)
+    for (int j = 0; j < 4; j++) {
+        const float others = (damped_sum - damped[j]) * (1.0f / 3.0f);
+        const float blended = damped[j] * (1.0f - diffusion_amount) + others * diffusion_amount;
+        late_delay_lines[j][late_positions[j]] = late_input + blended * feedback;
+        late_positions[j] = (late_positions[j] + 1) % late_delay_lines[j].size();
+    }
+
+    // Lines 0 and 2 on the left, 1 and 3 on the right
+    const float late_left = (hp_out[0] + hp_out[2]) * 0.5f;
+    const float late_right = (hp_out[1] + hp_out[3]) * 0.5f;
+
+    const float room = Math::clamp(s.room_size, 0.0f, 1.0f);
+    wet_left = early_left * (1.0f - room) + late_left * room;
+    wet_right = early_right * (1.0f - room) + late_right * room;
+}
+
 float Reverb::process_sample(float sample, const Ref<SynthNoteContext> &context) {
     if (!context.is_valid())
         return sample; // Return original sample if context is invalid
-    
-    // Get parameter values
-    float room_size = 0.5f;  // Default: medium room
-    float damping = 0.5f;    // Default: medium damping
-    float width = 0.7f;      // Default: 70% stereo width
-    float mix = 0.3f;        // Default: 30% wet/dry
-    float pre_delay = 0.02f; // Default: 20ms pre-delay
-    float diffusion = 0.6f;  // Default: 60% diffusion
-    
-    Ref<ModulatedParameter> room_size_param = get_parameter(PARAM_ROOM_SIZE);
-    if (room_size_param.is_valid()) {
-        room_size = room_size_param->get_value(context);
+
+    const Settings s = read_settings(context);
+    float wet_left;
+    float wet_right;
+    process_wet(sample, s, wet_left, wet_right);
+
+    // Mono: the mid of the stereo output (width does not apply).
+    const float wet = 0.5f * (wet_left + wet_right);
+    return sample * (1.0f - s.mix) + wet * s.mix;
+}
+
+bool Reverb::is_stereo() const {
+    return true;
+}
+
+void Reverb::process_stereo(float &left, float &right, const Ref<SynthNoteContext> &context) {
+    if (!context.is_valid()) {
+        return;
     }
-    
-    Ref<ModulatedParameter> damping_param = get_parameter(PARAM_DAMPING);
-    if (damping_param.is_valid()) {
-        damping = damping_param->get_value(context);
-    }
-    
-    Ref<ModulatedParameter> width_param = get_parameter(PARAM_WIDTH);
-    if (width_param.is_valid()) {
-        width = width_param->get_value(context);
-    }
-    
-    Ref<ModulatedParameter> mix_param = get_parameter(PARAM_MIX);
-    if (mix_param.is_valid()) {
-        mix = mix_param->get_value(context);
-    }
-    
-    Ref<ModulatedParameter> pre_delay_param = get_parameter(PARAM_PRE_DELAY);
-    if (pre_delay_param.is_valid()) {
-        pre_delay = pre_delay_param->get_value(context);
-    }
-    
-    Ref<ModulatedParameter> diffusion_param = get_parameter(PARAM_DIFFUSION);
-    if (diffusion_param.is_valid()) {
-        diffusion = diffusion_param->get_value(context);
-    }
-    
-    // Calculate pre-delay in samples at the current sample rate. It is only used
-    // as a read offset taken modulo each late line's size, so it just must not be negative
-    int pre_delay_samples = static_cast<int>(pre_delay * sample_rate);
-    if (pre_delay_samples < 0) {
-        pre_delay_samples = 0;
-    }
-    
-    // Calculate feedback amount based on room size
-    float feedback = 0.7f + room_size * 0.25f;
-    
-    // Calculate damping coefficients
-    float lp_coeff = damping * 0.4f + 0.2f; // Low-pass coefficient (0.2 to 0.6)
-    float hp_coeff = 0.01f + damping * 0.05f; // High-pass coefficient (0.01 to 0.06)
-    
-    // Calculate diffusion amount
-    float diffusion_amount = diffusion * 0.5f;
-    
-    float input = sample;
-    float early_sum = 0.0f;
-    float late_sum = 0.0f;
-    
-    // Process early reflections
-    for (int j = 0; j < 8; j++) {
-        // Read from delay line
-        float delayed = early_delay_lines[j][early_positions[j]];
-        
-        // Apply diffusion (cross-feedback between delay lines)
-        if (j > 0) {
-            delayed += early_delay_lines[j-1][early_positions[j-1]] * diffusion_amount;
-        }
-        
-        // Write to delay line
-        early_delay_lines[j][early_positions[j]] = input * (0.7f - j * 0.08f); // Decreasing gain for later reflections
-        
-        // Increment position with wraparound
-        early_positions[j] = (early_positions[j] + 1) % early_delay_lines[j].size();
-        
-        // Add to output sum
-        early_sum += delayed * (1.0f - j * 0.1f); // Decreasing gain for later reflections
-    }
-    
-    // Scale early reflections
-    early_sum *= 0.25f;
-    
-    // Process late reverb (with pre-delay)
-    float late_input = input;
-    
-    // Apply pre-delay (use early reflection as pre-delay source)
-    if (pre_delay_samples > 0) {
-        late_input = early_sum;
-    }
-    
-    // Process through feedback delay network
-    for (int j = 0; j < 4; j++) {
-        // Read from delay line
-        float delayed = late_delay_lines[j][late_positions[j]];
-        
-        // Apply damping (simple low-pass filter)
-        lp_states[j] = lp_states[j] * lp_coeff + delayed * (1.0f - lp_coeff);
-        
-        // Apply high-pass filter to remove DC offset
-        float hp_out = delayed - hp_states[j];
-        hp_states[j] = hp_states[j] * (1.0f - hp_coeff) + delayed * hp_coeff;
-        
-        // Calculate feedback input
-        float fb_input = late_input;
-        
-        // Add cross-feedback from other delay lines
-        for (int k = 0; k < 4; k++) {
-            if (k != j) {
-                int pos = (late_positions[k] + pre_delay_samples) % late_delay_lines[k].size();
-                fb_input += late_delay_lines[k][pos] * diffusion_amount * 0.25f;
-            }
-        }
-        
-        // Write to delay line with feedback
-        late_delay_lines[j][late_positions[j]] = fb_input + lp_states[j] * feedback;
-        
-        // Increment position with wraparound
-        late_positions[j] = (late_positions[j] + 1) % late_delay_lines[j].size();
-        
-        // Add to output sum
-        late_sum += hp_out;
-    }
-    
-    // Scale late reverb
-    late_sum *= 0.25f;
-    
-    // Combine early reflections and late reverb
-    float reverb_out = early_sum * (1.0f - room_size) + late_sum * room_size;
-    
-    // Apply stereo width (for mono input, this doesn't do much but is ready for stereo implementation)
-    float stereo_out = reverb_out * width;
-    
-    // Mix dry and wet signals
-    return input * (1.0f - mix) + stereo_out * mix;
+
+    const Settings s = read_settings(context);
+    float wet_left;
+    float wet_right;
+    process_wet(0.5f * (left + right), s, wet_left, wet_right);
+
+    // Width scales the side signal: 0 is mono, 1 keeps the full spread.
+    const float width = Math::clamp(s.width, 0.0f, 1.0f);
+    const float mid = 0.5f * (wet_left + wet_right);
+    const float side = 0.5f * (wet_left - wet_right) * width;
+
+    left = left * (1.0f - s.mix) + (mid + side) * s.mix;
+    right = right * (1.0f - s.mix) + (mid - side) * s.mix;
 }
 
 void Reverb::reset() {
@@ -278,8 +290,6 @@ void Reverb::reset() {
     // Reset filter states
     std::fill(lp_states.begin(), lp_states.end(), 0.0f);
     std::fill(hp_states.begin(), hp_states.end(), 0.0f);
-    
-    UtilityFunctions::print("Reverb: Reset called - all buffers cleared");
 }
 
 void Reverb::set_sample_rate(float p_sample_rate) {
@@ -290,15 +300,20 @@ void Reverb::set_sample_rate(float p_sample_rate) {
 }
 
 float Reverb::get_tail_length() const {
-    // Return a tail length based on room size (up to 3 seconds)
     float room_size = 0.5f; // Default value
-    
+
     Ref<ModulatedParameter> room_size_param = get_parameter(PARAM_ROOM_SIZE);
     if (room_size_param.is_valid()) {
         room_size = room_size_param->get_base_value();
     }
-    
-    return 1.0f + room_size * 2.0f; // 1 to 3 seconds based on room size
+
+    // Time for the late network to decay by 60 dB: passes through an average
+    // late line (about 38 ms) until feedback^passes reaches 0.001, plus the
+    // longest early reflection.
+    const float feedback = 0.7f + Math::clamp(room_size, 0.0f, 1.0f) * 0.25f;
+    const float average_late_seconds = 1666.0f / DELAY_TUNING_RATE;
+    const float passes = std::log(0.001f) / std::log(feedback);
+    return passes * average_late_seconds + 1327.0f / DELAY_TUNING_RATE;
 }
 
 Ref<SynthAudioEffect> Reverb::duplicate() const {

@@ -77,13 +77,14 @@ void VAOscillatorEngine::advance_phases(float phase_increment) {
 }
 
 float VAOscillatorEngine::get_wave_sample(WaveHelper::WaveType type, float pulse_width) const {
+	// Band-limited (PolyBLEP) on the waveforms with hard steps.
 	switch (type) {
 		case WaveHelper::SUB_SQUARE:
-			return WaveHelper::get_wave_sample(sub_phase, WaveHelper::SUB_SQUARE, pulse_width);
+			return WaveHelper::get_wave_sample_bl(sub_phase, WaveHelper::SUB_SQUARE, pulse_width, phase_dt * 0.5f);
 		case WaveHelper::SUPER_SAW:
-			return WaveHelper::get_super_saw_sample(super_phases, pulse_width);
+			return WaveHelper::get_super_saw_sample_bl(super_phases, pulse_width, phase_dt);
 		default:
-			return WaveHelper::get_wave_sample(phase, type, pulse_width);
+			return WaveHelper::get_wave_sample_bl(phase, type, pulse_width, phase_dt);
 	}
 }
 
@@ -106,6 +107,17 @@ float VAOscillatorEngine::get_morphed_sample(float morph_position, float pulse_w
 
 void VAOscillatorEngine::set_parameter(const String &name, const Ref<ModulatedParameter> &param) {
 	parameters[name] = param;
+
+	ModulatedParameter *ptr = param.is_valid() ? param.ptr() : nullptr;
+	if (name == VASynthConfiguration::PARAM_WAVEFORM) {
+		param_waveform = ptr;
+	} else if (name == VASynthConfiguration::PARAM_AMPLITUDE) {
+		param_amplitude = ptr;
+	} else if (name == VASynthConfiguration::PARAM_PITCH) {
+		param_pitch = ptr;
+	} else if (name == VASynthConfiguration::PARAM_PULSE_WIDTH) {
+		param_pulse_width = ptr;
+	}
 }
 
 Ref<ModulatedParameter> VAOscillatorEngine::get_parameter(const String &name) const {
@@ -120,127 +132,82 @@ Dictionary VAOscillatorEngine::get_parameters() const {
 }
 
 PackedFloat32Array VAOscillatorEngine::process_block(int buffer_size, const Ref<SynthNoteContext> &context, const bool &use_fast_pitch) {
-	// Create output buffer
-
+	// Scripting entry point. The mixer calls render() directly and doesn't allocate.
 	PackedFloat32Array output_buffer;
+	if (buffer_size <= 0) {
+		return output_buffer;
+	}
 	output_buffer.resize(buffer_size);
+	render(output_buffer.ptrw(), buffer_size, context, use_fast_pitch);
+	return output_buffer;
+}
 
-	if (!context.is_valid()) {
-		// Fill buffer with silence
-		std::fill(output_buffer.ptrw(), output_buffer.ptrw() + buffer_size, 0.0f);
-		return output_buffer;
+void VAOscillatorEngine::render(float *out, int buffer_size, const Ref<SynthNoteContext> &context, bool use_fast_pitch) {
+	// No note playing (or no context): silence.
+	if (!context.is_valid() || context->get_note() < 0 || context->get_velocity() <= 0.0f) {
+		std::fill(out, out + buffer_size, 0.0f);
+		return;
 	}
-
-	// If no note is playing, return silence
-	if (context->get_note() < 0 || context->get_velocity() <= 0.0f) {
-		std::fill(output_buffer.ptrw(), output_buffer.ptrw() + buffer_size, 0.0f);
-		return output_buffer;
-	}
+	SynthNoteContext *ctx = context.ptr();
 
 	// The sample rate can change after construction (set_sample_rate).
 	sample_rate_inv = 1.0f / sample_rate;
 
 	// Note plus pitch modulation, in semitones relative to A4 (MIDI 69).
-	float semitones = context->get_note() - 69.0f;
-	if (parameters.has(VASynthConfiguration::PARAM_PITCH)) {
-		Ref<ModulatedParameter> pitch_param = parameters[VASynthConfiguration::PARAM_PITCH];
-		if (pitch_param.is_valid()) {
-			semitones += pitch_param->get_value(context);
-		}
+	float semitones = ctx->get_note() - 69.0f;
+	if (param_pitch) {
+		semitones += param_pitch->get_value(context);
 	}
 	float frequency = use_fast_pitch
 			? 440.0f * PitchHelper::fast_pitch_extended(semitones)
 			: 440.0f * std::pow(2.0f, semitones / 12.0f);
 
 	float phase_increment = frequency * sample_rate_inv;
+	phase_dt = phase_increment;
 
 	// Calculate time increment per sample
 	double time_increment = 1.0 * sample_rate_inv;
-	double current_time = context->get_absolute_time();
+	double current_time = ctx->get_absolute_time();
 
-	// Pre-fetch parameter values for the first sample
-	// We'll update these periodically rather than every sample
-	float morph_position = 0.5f; // Default to middle
-	if (parameters.has(VASynthConfiguration::PARAM_WAVEFORM)) {
-		Ref<ModulatedParameter> waveform_param = parameters[VASynthConfiguration::PARAM_WAVEFORM];
-		if (waveform_param.is_valid()) {
-			morph_position = waveform_param->get_value(context);
-		}
-	}
+	// Parameter values for the first sample. They are then updated every
+	// mod_update_rate samples rather than every sample.
+	cached_morph_position = param_waveform ? param_waveform->get_value(context) : 0.5f;
+	cached_amplitude = param_amplitude ? param_amplitude->get_value(context) : 0.0f;
+	cached_pulse_width = param_pulse_width ? param_pulse_width->get_value(context) : 0.5f;
 
-	float amplitude = 0.0f;
-	if (parameters.has(VASynthConfiguration::PARAM_AMPLITUDE)) {
-		Ref<ModulatedParameter> amp_param = parameters[VASynthConfiguration::PARAM_AMPLITUDE];
-		if (amp_param.is_valid()) {
-			amplitude = amp_param->get_value(context);
-		}
-	}
+	EffectChain *chain = effect_chain.is_valid() ? effect_chain.ptr() : nullptr;
+	const float velocity = ctx->get_velocity();
 
-	float pulse_width = 0.5f; // Default to 50% duty cycle
-	if (parameters.has(VASynthConfiguration::PARAM_PULSE_WIDTH)) {
-		Ref<ModulatedParameter> pw_param = parameters[VASynthConfiguration::PARAM_PULSE_WIDTH];
-		if (pw_param.is_valid()) {
-			pulse_width = pw_param->get_value(context);
-		}
-	}
-
-	// Store these values in the cache
-	cached_morph_position = morph_position;
-	cached_amplitude = amplitude;
-	cached_pulse_width = pulse_width;
-
-	// How often to update modulation values (every N samples)
-	// Using the member variable set from the configuration
-
-	// Generate audio samples
 	for (int i = 0; i < buffer_size; i++) {
 		// Update context time for this sample
-		context->update_time(current_time);
+		ctx->update_time(current_time);
 
 		// Only update modulation values periodically to save CPU
 		if (i % mod_update_rate == 0) {
-			// Get the waveform morph parameter from the parameters dictionary
-			if (parameters.has(VASynthConfiguration::PARAM_WAVEFORM)) {
-				Ref<ModulatedParameter> waveform_param = parameters[VASynthConfiguration::PARAM_WAVEFORM];
-				if (waveform_param.is_valid()) {
-					cached_morph_position = waveform_param->get_value(context);
-				}
+			if (param_waveform) {
+				cached_morph_position = param_waveform->get_value(context);
 			}
-
-			// Get the amplitude parameter (controlled by ADSR)
-			if (parameters.has(VASynthConfiguration::PARAM_AMPLITUDE)) {
-				Ref<ModulatedParameter> amp_param = parameters[VASynthConfiguration::PARAM_AMPLITUDE];
-				if (amp_param.is_valid()) {
-					cached_amplitude = amp_param->get_value(context);
-				}
+			if (param_amplitude) {
+				cached_amplitude = param_amplitude->get_value(context); // ADSR
 			}
-
-			// Get the pulse width parameter
-			if (parameters.has(VASynthConfiguration::PARAM_PULSE_WIDTH)) {
-				Ref<ModulatedParameter> pw_param = parameters[VASynthConfiguration::PARAM_PULSE_WIDTH];
-				if (pw_param.is_valid()) {
-					cached_pulse_width = pw_param->get_value(context);
-				}
+			if (param_pulse_width) {
+				cached_pulse_width = param_pulse_width->get_value(context);
 			}
 		}
 
-		// Get the morphed waveform sample using cached values
 		float sample = get_morphed_sample(cached_morph_position, cached_pulse_width);
 		// Apply amplitude (including ADSR envelope)
-		float output_sample = sample * cached_amplitude * context->get_velocity();
-		// Apply effects if available
-		if (effect_chain.is_valid()) {
-			output_sample = effect_chain->process_sample(output_sample, context);
+		float output_sample = sample * cached_amplitude * velocity;
+		if (chain) {
+			output_sample = chain->process_sample(output_sample, context);
 		}
-		output_buffer[i] = output_sample;
+		out[i] = output_sample;
 
 		advance_phases(phase_increment);
 
 		// Increment time for next sample
 		current_time += time_increment;
 	}
-
-	return output_buffer;
 }
 
 void VAOscillatorEngine::reset() {

@@ -134,8 +134,9 @@ void register_distortion_effects() {
 }
 
 void register_spatial_effects() {
-	// TODO: Fix reverb
-	//GDREGISTER_CLASS(Reverb);
+	// Meant for SynthConfiguration.master_effect_chain (runs once on the mix);
+	// in a per-voice effect chain every voice runs its own copy.
+	GDREGISTER_CLASS(Reverb);
 }
 
 void register_effects() {

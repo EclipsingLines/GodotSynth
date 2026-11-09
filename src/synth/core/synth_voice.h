@@ -82,6 +82,10 @@ public:
 	}
 
 	PackedFloat32Array process_block(int buffer_size, double p_time);
+
+	// Audio thread: renders `frames` samples into `out` without allocating
+	// (process_block() is the scripting wrapper around it).
+	void render(float *out, int frames, double p_time);
 };
 
 } // namespace godot

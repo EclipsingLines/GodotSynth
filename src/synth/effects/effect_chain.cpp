@@ -21,15 +21,28 @@ void EffectChain::_bind_methods() {
 }
 
 EffectChain::EffectChain() {
-	// Initialize effect chain
 }
 
 EffectChain::~EffectChain() {
-	// Clean up resources
+}
+
+void EffectChain::rebuild_effect_ptrs() {
+	effect_ptrs.clear();
+	for (int i = 0; i < effects.size(); i++) {
+		Ref<SynthAudioEffect> effect = effects[i];
+		if (effect.is_valid()) {
+			effect_ptrs.push_back(effect.ptr());
+		}
+	}
+	// The right-channel copies follow effect_ptrs; redo them if they existed.
+	if (stereo_prepared) {
+		prepare_stereo();
+	}
 }
 
 void EffectChain::set_effects(const TypedArray<SynthAudioEffect> &p_effects) {
 	effects = p_effects;
+	rebuild_effect_ptrs();
 }
 
 void EffectChain::set_sample_rate(float p_sample_rate) {
@@ -43,6 +56,7 @@ void EffectChain::set_sample_rate(float p_sample_rate) {
 			effect->set_sample_rate(sample_rate);
 		}
 	}
+	rebuild_effect_ptrs();
 }
 
 float EffectChain::get_sample_rate() const {
@@ -56,20 +70,16 @@ TypedArray<SynthAudioEffect> EffectChain::get_effects() const {
 void EffectChain::add_effect(const Ref<SynthAudioEffect> &effect) {
 	if (effect.is_valid()) {
 		effects.push_back(effect);
+		rebuild_effect_ptrs();
 	}
 }
 
 float EffectChain::get_max_tail_length() const {
+	// Called from the audio thread (voice tail checks): no Variant access.
 	float max_tail_length = 0.0f;
-
-	// Find the maximum tail length from all effects
-	for (int i = 0; i < effects.size(); i++) {
-		Ref<SynthAudioEffect> effect = effects[i];
-		if (effect.is_valid()) {
-			max_tail_length = MAX(max_tail_length, effect->get_tail_length());
-		}
+	for (SynthAudioEffect *effect : effect_ptrs) {
+		max_tail_length = MAX(max_tail_length, effect->get_tail_length());
 	}
-
 	return max_tail_length;
 }
 
@@ -92,26 +102,57 @@ Ref<EffectChain> EffectChain::duplicate() const {
 }
 
 float EffectChain::process_sample(const float &sample, const Ref<SynthNoteContext> &context) {
-	// Start with the original buffer
 	float processed_sample = sample;
-
-	// Process the buffer through each effect in the chain
-	for (int i = 0; i < effects.size(); i++) {
-		Ref<SynthAudioEffect> effect = effects[i];
-		if (effect.is_valid()) {
-			processed_sample = effect->process_sample(processed_sample, context);
-		}
+	for (SynthAudioEffect *effect : effect_ptrs) {
+		processed_sample = effect->process_sample(processed_sample, context);
 	}
-
 	return processed_sample;
 }
 
+void EffectChain::prepare_stereo() {
+	stereo_prepared = true;
+	right_copies.clear();
+	right_copies.resize(effect_ptrs.size());
+	for (size_t i = 0; i < effect_ptrs.size(); i++) {
+		SynthAudioEffect *effect = effect_ptrs[i];
+		if (!effect->is_stereo()) {
+			Ref<SynthAudioEffect> copy = effect->duplicate();
+			if (copy.is_valid()) {
+				copy->set_sample_rate(sample_rate);
+				copy->reset();
+			}
+			right_copies[i] = copy;
+		}
+	}
+}
+
+void EffectChain::process_stereo(float &left, float &right, const Ref<SynthNoteContext> &context) {
+	for (size_t i = 0; i < effect_ptrs.size(); i++) {
+		SynthAudioEffect *effect = effect_ptrs[i];
+		if (effect->is_stereo()) {
+			effect->process_stereo(left, right, context);
+			continue;
+		}
+		left = effect->process_sample(left, context);
+		if (i < right_copies.size() && right_copies[i].is_valid()) {
+			right = right_copies[i]->process_sample(right, context);
+		} else {
+			// No copy (the effect can't duplicate itself): use the left result.
+			right = left;
+		}
+	}
+}
+
 void EffectChain::reset() {
-	// Reset all effects in the chain
 	for (int i = 0; i < effects.size(); i++) {
 		Ref<SynthAudioEffect> effect = effects[i];
 		if (effect.is_valid()) {
 			effect->reset();
+		}
+	}
+	for (Ref<SynthAudioEffect> &copy : right_copies) {
+		if (copy.is_valid()) {
+			copy->reset();
 		}
 	}
 }

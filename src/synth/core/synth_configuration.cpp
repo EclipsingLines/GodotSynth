@@ -20,6 +20,10 @@ void SynthConfiguration::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("create_engine"), &SynthConfiguration::create_engine);
 
+	ClassDB::bind_method(D_METHOD("set_master_effect_chain", "chain"), &SynthConfiguration::set_master_effect_chain);
+	ClassDB::bind_method(D_METHOD("get_master_effect_chain"), &SynthConfiguration::get_master_effect_chain);
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "master_effect_chain", PROPERTY_HINT_RESOURCE_TYPE, "EffectChain"), "set_master_effect_chain", "get_master_effect_chain");
+
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "output_bus", PROPERTY_HINT_ENUM, ""), "set_output_bus", "get_output_bus");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "mod_update_rate", PROPERTY_HINT_ENUM, "1,2,4,8,16"), "set_mod_update_rate", "get_mod_update_rate");
 
@@ -61,6 +65,15 @@ void SynthConfiguration::set_effect_chain(const Ref<EffectChain> &p_chain) {
 
 Ref<EffectChain> SynthConfiguration::get_effect_chain() const {
 	return effect_chain;
+}
+
+void SynthConfiguration::set_master_effect_chain(const Ref<EffectChain> &p_chain) {
+	master_effect_chain = p_chain;
+	emit_changed();
+}
+
+Ref<EffectChain> SynthConfiguration::get_master_effect_chain() const {
+	return master_effect_chain;
 }
 
 void SynthConfiguration::set_output_bus(const String &p_bus) {

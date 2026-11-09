@@ -144,7 +144,15 @@ Uses the total duration of the note for modulation.
 > These effects all accept modulation parameters, which also makes them more CPU intensive than the Godot counterparts.
 > If you don't need modulation on the effects please consider using the Godot audio effects in your audio bus instead.
 
-The synth engine includes a variety of audio effects:
+The synth engine includes a variety of audio effects.
+
+A configuration has two chains. `effect_chain` runs separately on every voice, so effects there can follow each note's modulation (a filter envelope, for example). `master_effect_chain` is optional and runs once on the stereo mix of all voices, which is cheaper and the right place for delays and reverb. `PingPongDelay` and `Reverb` are true stereo in the master chain.
+
+```gdscript
+var master := EffectChain.new()
+master.add_effect(Reverb.new())
+config.master_effect_chain = master
+```
 
 ### Filters
 
@@ -162,11 +170,8 @@ The synth engine includes a variety of audio effects:
 - BitcrushDistortion, OverdriveDistortion, FuzzDistortion, RectifierDistortion
 
 ### Spatial
->
-> [!WARNING]
-> The reverb is currently not enabled due to CPU issues.
 
-- ~~Reverb~~
+- Reverb (use it in `master_effect_chain`; one reverb per voice is expensive)
 
 ## Presets
 

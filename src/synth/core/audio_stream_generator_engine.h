@@ -23,6 +23,12 @@ public:
 	virtual ~AudioStreamGeneratorEngine();
 
 	virtual PackedFloat32Array process_block(int buffer_size, const Ref<SynthNoteContext> &context, const bool &use_fast_pitch = true);
+
+	// Audio thread: writes `frames` samples into `out`. This is what the mixer
+	// calls. Engines should override it and not allocate. The default calls
+	// process_block() and copies, which allocates, for engines that only
+	// implement process_block().
+	virtual void render(float *out, int frames, const Ref<SynthNoteContext> &context, bool use_fast_pitch);
 	virtual void reset();
 
 	void set_sample_rate(float p_sample_rate);

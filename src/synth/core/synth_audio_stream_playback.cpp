@@ -8,8 +8,6 @@ void SynthAudioStreamPlayback::_bind_methods() {
 }
 
 SynthAudioStreamPlayback::SynthAudioStreamPlayback() {
-	// Initialize mix buffer with a reasonable size
-	mix_buffer.resize(1024);
 }
 
 SynthAudioStreamPlayback::~SynthAudioStreamPlayback() {
@@ -86,6 +84,10 @@ void SynthAudioStreamPlayback::process_events() {
 					event.parameter->set_base_value(event.value);
 				}
 				break;
+			case SynthNoteEvent::SET_MASTER_CHAIN:
+				// Leaves the previous chain in event.chain (see SynthNoteEvent::chain).
+				master_bus.swap_chain(event.chain, event.value, sample_rate);
+				break;
 		}
 
 		// Drop the slot's references so the slot holds nothing between uses.
@@ -135,44 +137,44 @@ int SynthAudioStreamPlayback::_mix(AudioFrame *p_buffer, float p_rate_scale, int
 	// Apply note events queued by the main thread since the last block.
 	process_events();
 
-	if (active_voice_count == 0) {
+	int done = 0;
+	while (done < p_frames) {
+		const int frames = MIN(MIX_CHUNK, p_frames - done);
+		mix_chunk(p_buffer + done, frames);
+		done += frames;
+	}
+	return p_frames;
+}
+
+void SynthAudioStreamPlayback::mix_chunk(AudioFrame *p_buffer, int p_frames) {
+	if (active_voice_count == 0 && !master_bus.is_ringing()) {
 		// Fill with silence
 		for (int i = 0; i < p_frames; i++) {
 			p_buffer[i] = AudioFrame(); // Default constructor creates a silent frame
 		}
-		return p_frames;
+		return;
 	}
 
-	// Ensure mix buffer is large enough
-	if (mix_buffer.size() < p_frames) {
-		mix_buffer.resize(p_frames);
-	}
-
-	// Clear the mix buffer
-	float *mix = mix_buffer.ptrw();
 	for (int i = 0; i < p_frames; i++) {
-		mix[i] = 0.0f;
+		mono_mix[i] = 0.0f;
 	}
 
 	// Update current time
-	double time_per_frame = 1.0 / sample_rate;
-	double now = current_time.load(std::memory_order_relaxed) + time_per_frame * p_frames;
+	const double time_per_frame = 1.0 / sample_rate;
+	const double start = current_time.load(std::memory_order_relaxed);
+	const double now = start + time_per_frame * p_frames;
 	current_time.store(now, std::memory_order_relaxed);
 
 	// Process each voice, removing the ones that are completely finished
+	const bool voices_playing = active_voice_count > 0;
 	int i = 0;
 	while (i < active_voice_count) {
 		const Ref<SynthVoice> &voice = active_voices[i];
 
 		if (voice.is_valid()) {
-			// Process the voice
-			PackedFloat32Array voice_buffer = voice->process_block(p_frames, now);
-
-			// Mix the voice into the output buffer
-			const float *src = voice_buffer.ptr();
-			const int count = MIN(p_frames, (int)voice_buffer.size());
-			for (int j = 0; j < count; j++) {
-				mix[j] += src[j];
+			voice->render(voice_buffer, p_frames, now);
+			for (int j = 0; j < p_frames; j++) {
+				mono_mix[j] += voice_buffer[j];
 			}
 
 			// Keep the voice while it is playing or has an effect tail
@@ -185,14 +187,12 @@ int SynthAudioStreamPlayback::_mix(AudioFrame *p_buffer, float p_rate_scale, int
 		remove_active_voice_at(i);
 	}
 
-	// Convert mono mix buffer to stereo output and apply limiting
+	// Master effect chain (or a plain copy to both sides), then limiting.
+	master_bus.process(mono_mix, out_left, out_right, p_frames, start, time_per_frame, voices_playing);
 	for (int j = 0; j < p_frames; j++) {
-		float sample = CLAMP(mix[j], -1.0f, 1.0f);
-		p_buffer[j].left = sample;
-		p_buffer[j].right = sample;
+		p_buffer[j].left = CLAMP(out_left[j], -1.0f, 1.0f);
+		p_buffer[j].right = CLAMP(out_right[j], -1.0f, 1.0f);
 	}
-
-	return p_frames;
 }
 
 bool SynthAudioStreamPlayback::_is_playing() const {
@@ -237,6 +237,15 @@ bool SynthAudioStreamPlayback::add_voice(const Ref<SynthVoice> &p_voice, const R
 bool SynthAudioStreamPlayback::release_all_voices() {
 	SynthNoteEvent event;
 	event.type = SynthNoteEvent::RELEASE_ALL;
+	return push_event(event);
+}
+
+bool SynthAudioStreamPlayback::set_master_effect_chain(const Ref<EffectChain> &p_source) {
+	SynthNoteEvent event;
+	event.type = SynthNoteEvent::SET_MASTER_CHAIN;
+	float tail_seconds = 0.0f;
+	event.chain = SynthMasterBus::prepare_chain(p_source, sample_rate, tail_seconds);
+	event.value = tail_seconds;
 	return push_event(event);
 }
 
