@@ -22,7 +22,7 @@ public:
 	AudioStreamGeneratorEngine();
 	virtual ~AudioStreamGeneratorEngine();
 
-	virtual PackedFloat32Array process_block(int buffer_size, const Ref<SynthNoteContext> &context);
+	virtual PackedFloat32Array process_block(int buffer_size, const Ref<SynthNoteContext> &context, const bool &use_fast_pitch = true);
 	virtual void reset();
 
 	void set_sample_rate(float p_sample_rate);
@@ -32,13 +32,13 @@ public:
 	virtual void set_parameter(const String &name, const Ref<ModulatedParameter> &param);
 	virtual Ref<ModulatedParameter> get_parameter(const String &name) const;
 	virtual Dictionary get_parameters() const;
-	
+
 	// Create a duplicate of this engine
 	virtual Ref<AudioStreamGeneratorEngine> duplicate() const;
-	
+
 	// Get the maximum tail length from all effects
 	float get_tail_length() const;
-	
+
 	// Check if this engine has an active tail
 	bool has_active_tail(const Ref<SynthNoteContext> &context) const;
 

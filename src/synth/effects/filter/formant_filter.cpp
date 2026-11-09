@@ -80,7 +80,7 @@ void FormantFilter::update_coefficients(float sample_rate) {
 		float bandwidth = formant_bandwidths[vowel_idx][i] * (1.0f - t) + formant_bandwidths[vowel_idx + 1][i] * t;
 
 		// Convert to angular frequency
-		float omega = 2.0f * Math_PI * freq / sample_rate;
+		float omega = 2.0f * Math::PI * freq / sample_rate;
 		float sin_omega = Math::sin(omega);
 		float cos_omega = Math::cos(omega);
 

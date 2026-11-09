@@ -14,7 +14,7 @@ private:
 	WaveHelper::WaveType top_waveform;
 	float phase;
 	Dictionary parameters;
-	
+
 	// Cache for frequently used values
 	float cached_morph_position;
 	float cached_amplitude;
@@ -22,11 +22,14 @@ private:
 	float cached_output_gain;
 	bool use_cached_values;
 
+	float sample_rate_inv;
+	int mod_update_rate;
+
 protected:
 	static void _bind_methods();
 
 	// Helper method to get the frequency for a MIDI note
-	float get_frequency_for_note(int note) const;
+	float get_frequency_for_note(float note) const;
 
 	// Helper method to get a sample from the morphed waveform
 	float get_morphed_sample(float phase, float morph_position, float pulse_width) const;
@@ -44,15 +47,18 @@ public:
 	void set_top_waveform(WaveHelper::WaveType p_type);
 	WaveHelper::WaveType get_top_waveform() const;
 
+	void set_mod_update_rate(int p_rate);
+	int get_mod_update_rate() const;
+
 	// Parameter management - using the base class implementation
 	virtual void set_parameter(const String &name, const Ref<ModulatedParameter> &param) override;
 	virtual Ref<ModulatedParameter> get_parameter(const String &name) const override;
 	virtual Dictionary get_parameters() const override;
 
 	// Override base methods
-	virtual PackedFloat32Array process_block(int buffer_size, const Ref<SynthNoteContext> &context) override;
+	virtual PackedFloat32Array process_block(int buffer_size, const Ref<SynthNoteContext> &context, const bool &use_fast_pitch = true) override;
 	virtual void reset() override;
-	
+
 	// Create a duplicate of this engine
 	virtual Ref<AudioStreamGeneratorEngine> duplicate() const override;
 };

@@ -42,10 +42,10 @@ float ShelfFilter::process_sample(float sample, const Ref<SynthNoteContext> &con
     float sample_rate = 44100.0f; // TODO: Get from context
 
     // Convert dB gain to linear gain
-    float A = Math::db2linear(gain_db);
+    float A = Math::db_to_linear(gain_db);
     
     // Calculate filter coefficients
-    float omega = 2.0f * Math_PI * cutoff_freq / sample_rate;
+    float omega = 2.0f * Math::PI * cutoff_freq / sample_rate;
     float sin_omega = Math::sin(omega);
     float cos_omega = Math::cos(omega);
     float alpha = sin_omega / 2.0f * Math::sqrt((A + 1.0f/A) * (1.0f/0.707f - 1.0f) + 2.0f);

@@ -33,10 +33,11 @@ public:
 	};
 
 private:
-	int64_t voice_id; ///< Unique identifier for the voice playing this note
+	int64_t voice_id = 0; ///< Unique identifier for the voice playing this note
+	uint64_t player_id = 0; ///< ObjectID of the AudioSynthPlayer that created this context (0 if none)
 	double absolute_time = 0.0; ///< Current absolute time in seconds
 	double note_time = 0.0; ///< Time in seconds since note_on was called
-	int note = 60; ///< MIDI note number (0-127)
+	float note = 60.0; ///< MIDI note number (0-127)
 	float velocity = 1.0f; ///< Note velocity (0.0-1.0)
 	float articulation = 1.0f; ///< Note articulation (freely assignable)
 	bool is_note_active = false; ///< Whether the note is currently active (not released)
@@ -119,13 +120,13 @@ public:
 	 * @brief Sets the MIDI note number.
 	 * @param p_note The MIDI note number (0-127).
 	 */
-	void set_note(int p_note);
+	void set_note(float p_note);
 
 	/**
 	 * @brief Gets the MIDI note number.
 	 * @return The MIDI note number.
 	 */
-	int get_note() const;
+	float get_note() const;
 
 	/**
 	 * @brief Sets the note velocity.
@@ -216,7 +217,30 @@ public:
 	 * @param p_note The MIDI note number (0-127).
 	 * @param p_velocity The velocity (0.0-1.0).
 	 */
-	void note_on(int p_note, float p_velocity);
+	void note_on(float p_note, float p_velocity);
+
+	/**
+	 * @brief Queues a note_on to be applied by the audio thread at the start of the next mixed block.
+	 *
+	 * Equivalent to AudioSynthPlayer.play_note_on_context(this, note, velocity).
+	 * Falls back to note_on() if this context was not created by an AudioSynthPlayer
+	 * (or that player no longer exists).
+	 * @param p_note The MIDI note number (0-127).
+	 * @param p_velocity The velocity (0.0-1.0).
+	 */
+	void note_on_deferred(float p_note, float p_velocity);
+
+	/**
+	 * @brief Queues a note_off to be applied by the audio thread, after any note_on queued before it.
+	 *
+	 * Equivalent to AudioSynthPlayer.play_note_off_context(this).
+	 */
+	void note_off_deferred();
+
+	/**
+	 * @brief Sets the ObjectID of the player that owns this context. Internal.
+	 */
+	void set_player_id(uint64_t p_player_id) { player_id = p_player_id; }
 
 	/**
 	 * @brief Releases a note at the specified time.

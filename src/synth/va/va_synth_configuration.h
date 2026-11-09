@@ -11,11 +11,12 @@ class VASynthConfiguration : public SynthConfiguration {
 	GDCLASS(VASynthConfiguration, SynthConfiguration);
 
 private:
-	// VA-specific properties
-	WaveHelper::WaveType bottom_waveform;
-	WaveHelper::WaveType middle_waveform;
-	WaveHelper::WaveType top_waveform;
-	float waveform_position;
+	// VA-specific properties. Defaults match VADefaultPreset, which the constructor
+	// only applies in the editor; without them these were uninitialized at runtime.
+	WaveHelper::WaveType bottom_waveform = WaveHelper::SINE;
+	WaveHelper::WaveType middle_waveform = WaveHelper::TRIANGLE;
+	WaveHelper::WaveType top_waveform = WaveHelper::NOISE;
+	float waveform_position = 0.5f;
 	Ref<VASynthPreset> preset;
 
 protected:

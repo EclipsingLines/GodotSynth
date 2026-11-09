@@ -1,7 +1,7 @@
 ---
 layout: landingpage
 title: Godot Synth Engine
-subtitle: Powerful and flexible audio synthesis engine collection for use with the Godot 4.4+ <br>SFX and procedural music. 
+subtitle: Powerful and flexible audio synthesis engine collection for use with Godot 4.7+ <br>SFX and procedural music. 
 header_type: splash
 header_img : "./assets/img/synth_main.webp"
 show_sociallinks  : true
@@ -23,6 +23,8 @@ project_links:
 
 A powerful and flexible synthesizer engine for Godot 4, providing virtual analog synthesis with extensive modulation capabilities and audio effects.
 
+**Requires Godot 4.7 or later.**
+
 ## Features
 
 - **Virtual Analog Synthesis**: High-quality oscillators with multiple waveform types
@@ -38,10 +40,11 @@ A powerful and flexible synthesizer engine for Godot 4, providing virtual analog
 extends Node
 
 @export var sound: VASynthConfiguration
+#SOUND SETUP INSTRUCTIONS: either in the file system or inspector create a new VASynthConfiguration resource
 
 func _ready():
     # Create a synth player
-    var synth = AudioSynthPlayer.new()
+    var synth := AudioSynthPlayer.new()
     synth.configuration = sound
     add_child(synth)
     
@@ -61,6 +64,7 @@ Most of the synth configuration can be done directly in the Godot Editor using t
 - [Synthesis Engines](engines.html)
 - [Modulation System](modulation.html)
 - [Effects](effects.html)
+- [Playing Multiple Notes in the Same Frame](multiple_notes.html)
 
 ## Roadmap
 
