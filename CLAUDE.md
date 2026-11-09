@@ -1,6 +1,6 @@
 # GodotSynth
 
-A GDExtension (C++, godot-cpp) that adds a modular synthesizer to Godot 4.7+ (built against the 4.7 API): an engine for virtual analog, chord and future synths, modulation sources, modulated effects, and a GDScript editor addon. It's a public MIT project (github.com/EclipsingLines/GodotSynth). It's in beta, currently v0.95. See README.md for the user-facing API and CHANGELOG.md for releases.
+A GDExtension (C++, godot-cpp) that adds a modular synthesizer to Godot 4.7+ (built against the 4.7 API): an engine for virtual analog, chord and future synths, modulation sources, modulated effects, and a GDScript editor addon. It's a public MIT project (github.com/EclipsingLines/GodotSynth). It's in beta, currently v0.96. See README.md for the user-facing API and CHANGELOG.md for releases.
 
 ## Build
 

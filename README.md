@@ -41,7 +41,7 @@ The main player node that handles audio playback and voice allocation.
 
 ```gdscript
 @export var sound:SynthConfiguration
-#SOUND SETUP INSTRUCTIONS: either in the file system or inspector create a new SynthConfiguration resource
+#SOUND SETUP INSTRUCTIONS: either in the file system or inspector create a new VASynthConfiguration resource
 
 var synth : AudioSynthPlayer
 func initialize_synth() -> void:
