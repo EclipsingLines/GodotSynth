@@ -29,6 +29,11 @@ private:
 	void initialize_voice_pool();
 	Ref<SynthVoice> allocate_voice();
 	bool ensure_playback();
+	// Sends the configuration's master effect chain (or none) to the playback.
+	// Called whenever the playback or the configuration changes.
+	void sync_master_chain();
+	// Takes a new playback from the stream after (re)starting it.
+	void acquire_playback();
 	bool queue_context_event(const Ref<SynthNoteContext> &p_context, int p_type, float p_note, float p_velocity);
 
 protected:

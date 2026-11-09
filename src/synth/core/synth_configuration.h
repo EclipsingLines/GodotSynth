@@ -14,6 +14,9 @@ class SynthConfiguration : public Resource {
 private:
 	Dictionary parameters;
 	Ref<EffectChain> effect_chain;
+	// Optional. Runs once on the stereo mix of all voices (after the per-voice
+	// effect_chain), so delays and reverb cost the same for 1 or 32 voices.
+	Ref<EffectChain> master_effect_chain;
 	String output_bus = "Master";
 	int mod_update_rate = 8; // Default to 8 - controls how often modulation values are updated
 
@@ -31,6 +34,9 @@ public:
 
 	void set_effect_chain(const Ref<EffectChain> &p_chain);
 	Ref<EffectChain> get_effect_chain() const;
+
+	void set_master_effect_chain(const Ref<EffectChain> &p_chain);
+	Ref<EffectChain> get_master_effect_chain() const;
 
 	void set_output_bus(const String &p_bus);
 	String get_output_bus() const;

@@ -84,83 +84,105 @@ PingPongDelay::~PingPongDelay() {
     // Clean up resources
 }
 
-float PingPongDelay::process_sample(float sample, const Ref<SynthNoteContext> &context) {
-    if (!context.is_valid())
-        return sample; // Return original sample if context is invalid
-    
-    // Get parameter values
-    float delay_time = 0.4f;     // Default: 400ms
-    float feedback = 0.4f;       // Default: 40%
-    float mix = 0.5f;            // Default: 50% wet/dry
-    float cross_feedback = 0.7f; // Default: 70% cross feedback
-    float offset = 0.5f;         // Default: 50% offset
-    
+PingPongDelay::Settings PingPongDelay::read_settings(const Ref<SynthNoteContext> &context) const {
+    Settings s;
+
     Ref<ModulatedParameter> delay_param = get_parameter(PARAM_DELAY_TIME);
     if (delay_param.is_valid()) {
-        delay_time = delay_param->get_value(context);
+        s.delay_time = delay_param->get_value(context);
     }
-    
+
     Ref<ModulatedParameter> fb_param = get_parameter(PARAM_FEEDBACK);
     if (fb_param.is_valid()) {
-        feedback = fb_param->get_value(context);
+        s.feedback = fb_param->get_value(context);
     }
-    
+
     Ref<ModulatedParameter> mix_param = get_parameter(PARAM_MIX);
     if (mix_param.is_valid()) {
-        mix = mix_param->get_value(context);
+        s.mix = mix_param->get_value(context);
     }
-    
+
     Ref<ModulatedParameter> cross_fb_param = get_parameter(PARAM_CROSS_FEEDBACK);
     if (cross_fb_param.is_valid()) {
-        cross_feedback = cross_fb_param->get_value(context);
+        s.cross_feedback = cross_fb_param->get_value(context);
     }
-    
+
     Ref<ModulatedParameter> offset_param = get_parameter(PARAM_OFFSET);
     if (offset_param.is_valid()) {
-        offset = offset_param->get_value(context);
+        s.offset = offset_param->get_value(context);
     }
-    
+
+    return s;
+}
+
+void PingPongDelay::step(float input, const Settings &s, float &delayed_sample_1, float &delayed_sample_2) {
     // Calculate delay in samples at the current sample rate
-    int delay_samples_1 = static_cast<int>(delay_time * sample_rate);
-    if (delay_samples_1 >= delay_buffer_1.size()) {
+    int delay_samples_1 = static_cast<int>(s.delay_time * sample_rate);
+    if (delay_samples_1 >= (int)delay_buffer_1.size()) {
         delay_samples_1 = delay_buffer_1.size() - 1;
     }
-    
+
     // Calculate second delay with offset
-    int delay_samples_2 = static_cast<int>(delay_time * (1.0f + offset * 0.5f) * sample_rate);
-    if (delay_samples_2 >= delay_buffer_2.size()) {
+    int delay_samples_2 = static_cast<int>(s.delay_time * (1.0f + s.offset * 0.5f) * sample_rate);
+    if (delay_samples_2 >= (int)delay_buffer_2.size()) {
         delay_samples_2 = delay_buffer_2.size() - 1;
     }
-    
-    float input = sample;
-    
+
     // Calculate read positions with wraparound
     int read_pos_1 = buffer_position_1 - delay_samples_1;
     if (read_pos_1 < 0) {
         read_pos_1 += delay_buffer_1.size();
     }
-    
+
     int read_pos_2 = buffer_position_2 - delay_samples_2;
     if (read_pos_2 < 0) {
         read_pos_2 += delay_buffer_2.size();
     }
-    
+
     // Read delayed samples
-    float delayed_sample_1 = delay_buffer_1[read_pos_1];
-    float delayed_sample_2 = delay_buffer_2[read_pos_2];
-    
+    delayed_sample_1 = delay_buffer_1[read_pos_1];
+    delayed_sample_2 = delay_buffer_2[read_pos_2];
+
     // Write to delay buffers with cross-feedback
-    delay_buffer_1[buffer_position_1] = input + delayed_sample_2 * feedback * cross_feedback;
-    delay_buffer_2[buffer_position_2] = delayed_sample_1 * feedback;
-    
+    delay_buffer_1[buffer_position_1] = input + delayed_sample_2 * s.feedback * s.cross_feedback;
+    delay_buffer_2[buffer_position_2] = delayed_sample_1 * s.feedback;
+
     // Increment and wrap buffer positions
     buffer_position_1 = (buffer_position_1 + 1) % delay_buffer_1.size();
     buffer_position_2 = (buffer_position_2 + 1) % delay_buffer_2.size();
-    
-    // Mix dry and wet signals
-    // For ping-pong effect, we combine both delay lines
+}
+
+float PingPongDelay::process_sample(float sample, const Ref<SynthNoteContext> &context) {
+    if (!context.is_valid())
+        return sample; // Return original sample if context is invalid
+
+    const Settings s = read_settings(context);
+    float delayed_sample_1;
+    float delayed_sample_2;
+    step(sample, s, delayed_sample_1, delayed_sample_2);
+
+    // Mono: combine both delay lines
     float wet_signal = (delayed_sample_1 + delayed_sample_2) * 0.5f;
-    return input * (1.0f - mix) + wet_signal * mix;
+    return sample * (1.0f - s.mix) + wet_signal * s.mix;
+}
+
+bool PingPongDelay::is_stereo() const {
+    return true;
+}
+
+void PingPongDelay::process_stereo(float &left, float &right, const Ref<SynthNoteContext> &context) {
+    if (!context.is_valid()) {
+        return;
+    }
+
+    const Settings s = read_settings(context);
+    float delayed_sample_1;
+    float delayed_sample_2;
+    step(0.5f * (left + right), s, delayed_sample_1, delayed_sample_2);
+
+    // Line 1 (the first echo) on the left, line 2 (its bounce) on the right.
+    left = left * (1.0f - s.mix) + delayed_sample_1 * s.mix;
+    right = right * (1.0f - s.mix) + delayed_sample_2 * s.mix;
 }
 
 void PingPongDelay::reset() {

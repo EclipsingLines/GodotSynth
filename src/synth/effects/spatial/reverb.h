@@ -30,6 +30,19 @@ private:
 	// Allocates, so main thread only (constructor / set_sample_rate)
 	void allocate_delay_lines();
 
+	struct Settings {
+		float room_size = 0.5f;
+		float damping = 0.5f;
+		float width = 0.7f;
+		float mix = 0.3f;
+		float pre_delay = 0.02f;
+		float diffusion = 0.6f;
+	};
+	Settings read_settings(const Ref<SynthNoteContext> &context) const;
+	// Runs the network for one input sample and returns the wet stereo pair
+	// (before width and mix).
+	void process_wet(float input, const Settings &s, float &wet_left, float &wet_right);
+
 public:
 	// Parameter names
 	static const char *PARAM_ROOM_SIZE;
@@ -48,6 +61,11 @@ public:
 
 	float process_sample(float sample, const Ref<SynthNoteContext> &context) override;
 	void reset() override;
+
+	// Stereo output (master chain): `width` spreads the two halves of the
+	// network across left and right.
+	bool is_stereo() const override;
+	void process_stereo(float &left, float &right, const Ref<SynthNoteContext> &context) override;
 
 	// Resizes the delay lines for the new rate (main thread, before playback)
 	void set_sample_rate(float p_sample_rate) override;

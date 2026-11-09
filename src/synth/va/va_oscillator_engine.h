@@ -19,6 +19,18 @@ private:
 	float super_phases[WaveHelper::SUPER_SAW_VOICES];
 	Dictionary parameters;
 
+	// Raw pointers to the four parameters the render loop reads, so it never
+	// looks them up in `parameters` (a Variant-keyed Dictionary). `parameters`
+	// owns them; set_parameter() keeps these in sync. Engines are configured
+	// on the main thread before the audio thread uses them.
+	ModulatedParameter *param_waveform = nullptr;
+	ModulatedParameter *param_amplitude = nullptr;
+	ModulatedParameter *param_pitch = nullptr;
+	ModulatedParameter *param_pulse_width = nullptr;
+
+	// Phase increment of the current block, for PolyBLEP.
+	float phase_dt = 0.0f;
+
 	// Cache for frequently used values
 	float cached_morph_position;
 	float cached_amplitude;
@@ -69,6 +81,7 @@ public:
 
 	// Override base methods
 	virtual PackedFloat32Array process_block(int buffer_size, const Ref<SynthNoteContext> &context, const bool &use_fast_pitch = true) override;
+	virtual void render(float *out, int frames, const Ref<SynthNoteContext> &context, bool use_fast_pitch) override;
 	virtual void reset() override;
 
 	// Create a duplicate of this engine

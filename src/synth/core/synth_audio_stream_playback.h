@@ -1,7 +1,9 @@
 #ifndef SYNTH_AUDIO_STREAM_PLAYBACK_H
 #define SYNTH_AUDIO_STREAM_PLAYBACK_H
 
+#include "../effects/effect_chain.h"
 #include "modulated_parameter.h"
+#include "synth_master_bus.h"
 #include "synth_note_context.h"
 #include "synth_voice.h"
 #include <godot_cpp/classes/audio_stream_generator.hpp>
@@ -33,6 +35,7 @@ struct SynthNoteEvent {
 		NOTE_OFF, ///< Call context->note_off(context->get_absolute_time()).
 		RELEASE_ALL, ///< Call note_off on the context of every voice in the mix.
 		SET_PARAMETER, ///< Call parameter->set_base_value(value).
+		SET_MASTER_CHAIN, ///< Install `chain` as the master chain (`value` = its tail in seconds).
 	};
 
 	Type type = START_VOICE;
@@ -40,6 +43,10 @@ struct SynthNoteEvent {
 	Ref<SynthVoice> voice;
 	Ref<SynthNoteContext> context;
 	Ref<ModulatedParameter> parameter;
+	// SET_MASTER_CHAIN: the new chain going in. The audio thread leaves the
+	// previous chain in this slot, so it's released by the next push into the
+	// slot (on a producer thread), not on the audio thread.
+	Ref<EffectChain> chain;
 	float note = 0.0f;
 	float velocity = 0.0f;
 	float value = 0.0f;
@@ -51,6 +58,9 @@ class SynthAudioStreamPlayback : public AudioStreamPlayback {
 public:
 	static const int MAX_ACTIVE_VOICES = 64;
 	static const int EVENT_QUEUE_SIZE = 1024; // Must be a power of two.
+	// _mix renders in chunks of at most this many frames into fixed buffers,
+	// so it never allocates whatever block size the mixer asks for.
+	static const int MIX_CHUNK = 512;
 
 private:
 	Ref<AudioStreamGenerator> generator;
@@ -70,9 +80,20 @@ private:
 	std::mutex producer_mutex;
 
 	std::atomic<double> current_time{ 0.0 };
-	PackedFloat32Array mix_buffer;
 	float sample_rate = 44100.0f;
 	bool active = false;
+
+	// Audio thread scratch buffers (see MIX_CHUNK).
+	float voice_buffer[MIX_CHUNK];
+	float mono_mix[MIX_CHUNK];
+	float out_left[MIX_CHUNK];
+	float out_right[MIX_CHUNK];
+
+	// Master effect chain on the mix (audio thread; installed by events).
+	SynthMasterBus master_bus;
+
+	// Renders one chunk (frames <= MIX_CHUNK) into p_buffer.
+	void mix_chunk(AudioFrame *p_buffer, int p_frames);
 
 	// Helper function to check if a voice has active delay tails
 	bool has_active_tail(const Ref<SynthVoice> &voice) const;
@@ -112,6 +133,9 @@ public:
 	// Queues a note_off for every voice in the mix (they ring out through their
 	// release). Returns false if the queue is full.
 	bool release_all_voices();
+	// Main thread: queues a new master effect chain (a private copy of
+	// p_source; null or empty removes it). Returns false if the queue is full.
+	bool set_master_effect_chain(const Ref<EffectChain> &p_source);
 	int get_active_voice_count() const;
 };
 

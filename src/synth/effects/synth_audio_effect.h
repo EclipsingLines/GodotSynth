@@ -20,6 +20,18 @@ protected:
 	// playback (main thread); effects use it for every time-to-samples conversion.
 	float sample_rate = 44100.0f;
 
+	// Lookup cache for get_parameter(const char *), keyed by the name pointer.
+	// Effects look their parameters up by static name constants (PARAM_*) on
+	// every sample, and the String/Dictionary lookup allocates. With this
+	// cache, only the first lookup of each name after a set_parameter() does.
+	static const int PARAM_CACHE_SIZE = 16;
+	struct ParamCacheEntry {
+		const char *key;
+		ModulatedParameter *param;
+	};
+	mutable ParamCacheEntry param_cache[PARAM_CACHE_SIZE];
+	mutable int param_cache_count = 0;
+
 public:
 	// Add this declaration:
 	void add_parameter(const String &p_name, const Ref<ModulatedParameter> &p_param);
@@ -31,6 +43,13 @@ public:
 
 	virtual float process_sample(float sample, const Ref<SynthNoteContext> &context);
 	virtual void reset();
+
+	// Stereo processing, used by the master effect chain. Effects that return
+	// true from is_stereo() implement process_stereo() themselves (ping-pong
+	// delay, reverb). For every other effect the chain runs a second copy of
+	// the effect on the right channel, so this default is never used for them.
+	virtual bool is_stereo() const;
+	virtual void process_stereo(float &left, float &right, const Ref<SynthNoteContext> &context);
 
 	// Returns the tail length in seconds (how long the effect continues after input stops)
 	virtual float get_tail_length() const;
@@ -46,6 +65,10 @@ public:
 
 	void set_parameter(const String &name, const Ref<ModulatedParameter> &param);
 	Ref<ModulatedParameter> get_parameter(const String &name) const;
+	// Audio-thread lookup by a name with static storage (a PARAM_* constant or
+	// a string literal); see param_cache. Calls with a literal or a const
+	// char * pick this overload automatically.
+	Ref<ModulatedParameter> get_parameter(const char *name) const;
 	Dictionary get_parameters() const;
 };
 

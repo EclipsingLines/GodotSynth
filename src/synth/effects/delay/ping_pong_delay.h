@@ -37,6 +37,25 @@ public:
 	float process_sample(float sample, const Ref<SynthNoteContext> &context) override;
 	void reset() override;
 
+	// True stereo in the master chain: the first delay line feeds the left
+	// output, the second the right, so the echoes bounce between the sides.
+	bool is_stereo() const override;
+	void process_stereo(float &left, float &right, const Ref<SynthNoteContext> &context) override;
+
+private:
+	struct Settings {
+		float delay_time = 0.4f;
+		float feedback = 0.4f;
+		float mix = 0.5f;
+		float cross_feedback = 0.7f;
+		float offset = 0.5f;
+	};
+	Settings read_settings(const Ref<SynthNoteContext> &context) const;
+	// Advances both delay lines by one sample and returns their outputs.
+	void step(float input, const Settings &s, float &delayed_1, float &delayed_2);
+
+public:
+
 	// Resizes the delay buffers for the new rate (main thread, before playback)
 	void set_sample_rate(float p_sample_rate) override;
 

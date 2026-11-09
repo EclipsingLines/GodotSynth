@@ -2,7 +2,8 @@
 #include "audio_stream_generator_engine.h"
 #include "engine_factory.h"
 #include "modulated_parameter.h"
-#include "synth_audio_stream_playback.h" // Add this include
+#include "../effects/effect_chain.h"
+#include "synth_audio_stream_playback.h"
 #include "synth_configuration.h"
 #include "synth_voice.h"
 #include <godot_cpp/classes/audio_server.hpp>
@@ -72,10 +73,31 @@ void AudioSynthPlayer::_ready() {
 void AudioSynthPlayer::_process(double delta) {
 	// Try to get the playback interface if it's not already set
 	if (!playback.is_valid() && is_playing()) {
-		Ref<AudioStreamPlayback> stream_playback = get_stream_playback();
-		if (stream_playback.is_valid()) {
-			playback = Ref<SynthAudioStreamPlayback>(Object::cast_to<SynthAudioStreamPlayback>(stream_playback.ptr()));
+		acquire_playback();
+	}
+}
+
+void AudioSynthPlayer::acquire_playback() {
+	Ref<AudioStreamPlayback> stream_playback = get_stream_playback();
+	if (stream_playback.is_valid()) {
+		playback = Ref<SynthAudioStreamPlayback>(Object::cast_to<SynthAudioStreamPlayback>(stream_playback.ptr()));
+		if (playback.is_valid()) {
+			// A new playback starts without a master chain.
+			sync_master_chain();
 		}
+	}
+}
+
+void AudioSynthPlayer::sync_master_chain() {
+	if (!playback.is_valid()) {
+		return;
+	}
+	Ref<EffectChain> chain;
+	if (configuration.is_valid()) {
+		chain = configuration->get_master_effect_chain();
+	}
+	if (!playback->set_master_effect_chain(chain)) {
+		UtilityFunctions::push_warning("AudioSynthPlayer: note event queue is full, master effect chain not updated.");
 	}
 }
 
@@ -99,6 +121,8 @@ void AudioSynthPlayer::set_configuration(const Ref<SynthConfiguration> &p_config
 		// If bus not found, default to "Master"
 		set_bus(bus_found ? bus_name : "Master");
 	}
+
+	sync_master_chain();
 
 	// Reinitialize the voice pool with the new configuration
 	initialize_voice_pool();
@@ -184,10 +208,7 @@ bool AudioSynthPlayer::ensure_playback() {
 	}
 
 	if (!playback.is_valid()) {
-		Ref<AudioStreamPlayback> stream_playback = get_stream_playback();
-		if (stream_playback.is_valid()) {
-			playback = Ref<SynthAudioStreamPlayback>(Object::cast_to<SynthAudioStreamPlayback>(stream_playback.ptr()));
-		}
+		acquire_playback();
 	}
 
 	return playback.is_valid();

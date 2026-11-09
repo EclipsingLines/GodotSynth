@@ -227,6 +227,68 @@ public:
 		}
 		return result / std::sqrt(static_cast<float>(num_saws));
 	}
+
+	// --- Band-limited (PolyBLEP) versions -----------------------------------
+	//
+	// A naive saw or square jumps from one sample to the next, and every
+	// harmonic above Nyquist folds back as an inharmonic alias. PolyBLEP
+	// replaces the two samples around each jump with a polynomial step, which
+	// removes most of that aliasing at almost no cost. `dt` is the phase
+	// increment per sample (frequency / sample rate).
+
+	// Correction for a unit-height (-1 to +1) step at phase 0. Add it for a
+	// rising step, subtract it for a falling one.
+	static inline float poly_blep(float t, float dt) {
+		if (dt <= 0.0f) {
+			return 0.0f;
+		}
+		if (t < dt) {
+			t /= dt;
+			return t + t - t * t - 1.0f;
+		}
+		if (t > 1.0f - dt) {
+			t = (t - 1.0f) / dt;
+			return t * t + t + t + 1.0f;
+		}
+		return 0.0f;
+	}
+
+	// Bipolar sample with PolyBLEP on the waveforms that have hard steps (saw,
+	// square, pulse, sub square). Every other waveform is the plain
+	// get_wave_sample(). For SUB_SQUARE, pass the sub-oscillator's own phase
+	// and its own (half) increment.
+	static float get_wave_sample_bl(float phase, WaveType wave_type, float pulse_width, float dt) {
+		switch (wave_type) {
+			case SAW: {
+				// The pulse-width warp only bends the ramp; the only step is
+				// the 1 -> -1 drop at the end of the cycle.
+				float value = get_wave_sample(phase, SAW, pulse_width);
+				phase = Math::fposmod(phase, 1.0f);
+				return value - poly_blep(phase, dt);
+			}
+			case SQUARE:
+			case PULSE:
+			case SUB_SQUARE: {
+				phase = Math::fposmod(phase, 1.0f);
+				pulse_width = Math::clamp(pulse_width, 0.01f, 0.99f);
+				float value = (phase < pulse_width) ? 1.0f : -1.0f;
+				value += poly_blep(phase, dt); // Rising step at 0
+				value -= poly_blep(Math::fposmod(phase - pulse_width, 1.0f), dt); // Falling step at pulse_width
+				return value;
+			}
+			default:
+				return get_wave_sample(phase, wave_type, pulse_width);
+		}
+	}
+
+	static float get_super_saw_sample_bl(const float *phases, float pulse_width, float dt) {
+		int num_saws = get_super_saw_count(pulse_width);
+		float result = 0.0f;
+		for (int i = 0; i < num_saws; i++) {
+			result += 2.0f * phases[i] - 1.0f - poly_blep(phases[i], dt * get_super_saw_ratio(i));
+		}
+		return result / std::sqrt(static_cast<float>(num_saws));
+	}
 };
 
 } // namespace godot

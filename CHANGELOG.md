@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `SynthOfflineRenderer.render_note(config, note, velocity, duration, release_at, sample_rate, block_size)` renders one note to a `PackedFloat32Array` without an audio device, and `tests/offline_render.gd` uses it as a headless regression test
 - `SynthAudioEffect.set_sample_rate()` / `EffectChain.set_sample_rate()`
+- `SynthConfiguration.master_effect_chain`: an optional effect chain processed once on the stereo mix of all voices, after the per-voice `effect_chain`. It's off (empty) by default, so existing presets sound the same. `PingPongDelay` and `Reverb` run in true stereo there; other effects run on left and right separately.
+- `Reverb` is registered again, meant for `master_effect_chain` (one instance for the whole mix instead of one per voice)
+- `SynthOfflineRenderer.render_note_stereo(...)` renders a note through the master chain to a `PackedVector2Array` (x = left, y = right)
+
+### Changed
+
+- Saw, square, pulse, sub square and super saw are band-limited (PolyBLEP), so high notes no longer alias. Aliasing at A7 dropped from about −26 dB to below −80 dB. High notes sound slightly cleaner than before.
+- Faster audio path. The mixer no longer allocates per block, voices render straight into a fixed buffer, engines and effects cache their parameter pointers instead of looking them up by name every sample, and effect chains dispatch through raw pointers. In a debug build, a C4 saw renders at about 309× realtime instead of 84×, and with a low-pass filter and ping-pong delay at about 26× instead of 6×.
 
 ### Fixed
 
@@ -26,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The formant filter's per-voice copy kept the default vowel's coefficients instead of the configured vowel
 - Reverse and tape delays could read outside their buffers at very short or rounded delay times
 - `VAOscillatorEngine.duplicate()` dropped the modulation update rate, and a rate of 0 crashed
+- `Reverb` could build up instead of decaying (its feedback loop gain was above 1 at the default settings), and its `reset()` printed to the console
 
 Planned:
 

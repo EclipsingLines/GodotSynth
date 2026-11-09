@@ -3,6 +3,7 @@
 
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/variant/packed_float32_array.hpp>
+#include <godot_cpp/variant/packed_vector2_array.hpp>
 
 namespace godot {
 
@@ -34,6 +35,13 @@ public:
 	 * @param p_block_size Samples per processing block (note_off lands on a block boundary).
 	 */
 	static PackedFloat32Array render_note(const Ref<SynthConfiguration> &p_config, float p_note, float p_velocity, double p_duration, double p_release_at = -1.0, float p_sample_rate = 44100.0f, int p_block_size = 512);
+
+	/**
+	 * @brief Renders one note as stereo frames (x = left, y = right), through
+	 * the configuration's master_effect_chain like AudioSynthPlayer does.
+	 * Same parameters as render_note(). render_note() leaves the master chain out.
+	 */
+	static PackedVector2Array render_note_stereo(const Ref<SynthConfiguration> &p_config, float p_note, float p_velocity, double p_duration, double p_release_at = -1.0, float p_sample_rate = 44100.0f, int p_block_size = 512);
 };
 
 } // namespace godot

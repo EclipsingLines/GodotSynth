@@ -72,31 +72,31 @@ bool SynthVoice::has_active_tail() const {
 
 PackedFloat32Array SynthVoice::process_block(int buffer_size, double p_time) {
 	PackedFloat32Array output_buffer;
-	if (!active || !engine.is_valid() || !context.is_valid()) {
-		// Return empty buffer if voice is not active
-		output_buffer.resize(buffer_size);
-		for (int i = 0; i < buffer_size; i++) {
-			output_buffer[i] = 0.0f;
-		}
+	if (buffer_size <= 0) {
 		return output_buffer;
+	}
+	output_buffer.resize(buffer_size);
+	render(output_buffer.ptrw(), buffer_size, p_time);
+	return output_buffer;
+}
+
+void SynthVoice::render(float *out, int frames, double p_time) {
+	if (!active || !engine.is_valid() || !context.is_valid()) {
+		for (int i = 0; i < frames; i++) {
+			out[i] = 0.0f;
+		}
+		return;
 	}
 
 	// Check for active tails and update context
-	bool has_tail = false;
-	if (engine.is_valid()) {
-		has_tail = engine->has_active_tail(context);
-	}
-	context->set_has_active_tail(has_tail);
+	context->set_has_active_tail(engine->has_active_tail(context));
 
-	// Process audio through the engine and get the output buffer
-	output_buffer = engine->process_block(buffer_size, context, fast);
+	engine->render(out, frames, context, fast);
 
 	// Check if we should deactivate the voice
 	if (context->is_note_finished()) {
 		active = false;
 	}
-
-	return output_buffer;
 }
 
 } // namespace godot
