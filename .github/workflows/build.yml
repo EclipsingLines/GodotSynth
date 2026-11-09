@@ -29,7 +29,8 @@ jobs:
           - identifier: windows
             platform: windows
             name: 🪟 Windows
-            runner: ubuntu-22.04
+            # Native MSVC build, like godot-cpp-template. SCons finds MSVC on its own.
+            runner: windows-latest
             flags: arch=x86_64
 
           - identifier: macos
@@ -84,26 +85,72 @@ jobs:
             TARGET: 'template_${{ matrix.target }}'
         shell: sh
         run: |
-            scons target=$TARGET platform='${{ matrix.platform }}' ${{ matrix.flags }} debug_symbols=no -j2
+            python -m SCons target=$TARGET platform='${{ matrix.platform }}' ${{ matrix.flags }} debug_symbols=no -j2
 
-      - name: Strip Libraries (Windows/Linux)
-        if: ${{ matrix.platform == 'windows' || matrix.platform == 'linux' }}
+      # MSVC output isn't stripped: debug_symbols=no already leaves out the PDB.
+      - name: Strip Libraries (Linux)
+        if: ${{ matrix.platform == 'linux' }}
         shell: sh
         run: |
           ls -l project/addons/godot_synth/bin/
           strip project/addons/godot_synth/bin/libgodot_synth.*
           ls -l project/addons/godot_synth/bin/
 
+      # Like godot-cpp-template: drop MSVC link by-products so only the DLL ships.
+      - name: Delete Compilation Files (Windows)
+        if: ${{ matrix.platform == 'windows' }}
+        shell: sh
+        run: |
+          rm -f project/addons/godot_synth/bin/*.exp project/addons/godot_synth/bin/*.lib project/addons/godot_synth/bin/*.pdb
+          ls -l project/addons/godot_synth/bin/
+
+      # Guard against stub libraries (#20): fail if the library for this job is
+      # missing, suspiciously small, or doesn't contain the GDExtension entry
+      # symbol (a library built from zero sources has neither).
+      - name: Verify Library
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          MIN_BYTES: 204800
+        run: |
+          # Portable to macOS's bash 3.2 (no mapfile).
+          set -eu
+          libs=$(find project/addons/godot_synth/bin -type f -name "libgodot_synth.*.${TARGET}*")
+          if [ -z "$libs" ]; then
+            echo "::error::No ${TARGET} library found in project/addons/godot_synth/bin"
+            exit 1
+          fi
+          status=0
+          while IFS= read -r lib; do
+            size=$(wc -c < "$lib" | tr -d ' ')
+            hits=$(LC_ALL=C grep -c -a synth_library_init "$lib" || true)
+            echo "$lib: $size bytes, synth_library_init matches: $hits"
+            if [ "$size" -lt "$MIN_BYTES" ]; then
+              echo "::error file=$lib::Library is only $size bytes (< $MIN_BYTES). Looks like a stub built without sources (#20)."
+              status=1
+            fi
+            if [ "$hits" -eq 0 ]; then
+              echo "::error file=$lib::Library does not contain synth_library_init (#20)."
+              status=1
+            fi
+            if command -v nm >/dev/null && file "$lib" | grep -q 'ELF.*x86-64'; then
+              nm -D --defined-only "$lib" | grep -w synth_library_init || { echo "::error file=$lib::synth_library_init is not an exported dynamic symbol"; status=1; }
+            fi
+          done <<EOF
+          $libs
+          EOF
+          exit $status
+
       - name: Include Files
         shell: sh
         run: |
-          cp '${{ github.workspace }}/README.md' '${{ github.workspace }}/LICENSE' ${{ github.workspace }}/project/addons/godot_synth/
+          cp README.md LICENSE project/addons/godot_synth/
 
       - name: Upload Package
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: godot-extension-${{ matrix.identifier }}-${{ matrix.target }}
+          name: godot-synth-${{ matrix.identifier }}-${{ matrix.target }}
           path: |
             ${{ github.workspace }}/project/
 
@@ -116,7 +163,7 @@ jobs:
         with:
           include-hidden-files: true
           name: ${{ github.event.repository.name }}
-          pattern: godot-extension-*
+          pattern: godot-synth-*
           delete-merged: true
 
   release:

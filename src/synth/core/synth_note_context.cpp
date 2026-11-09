@@ -1,4 +1,6 @@
 #include "synth_note_context.h"
+#include "audio_synth_player.h"
+#include <godot_cpp/core/object.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -48,6 +50,8 @@ void SynthNoteContext::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("note_on", "note", "velocity"), &SynthNoteContext::note_on);
 	ClassDB::bind_method(D_METHOD("note_off", "note_off_time"), &SynthNoteContext::note_off);
+	ClassDB::bind_method(D_METHOD("note_on_deferred", "note", "velocity"), &SynthNoteContext::note_on_deferred);
+	ClassDB::bind_method(D_METHOD("note_off_deferred"), &SynthNoteContext::note_off_deferred);
 	ClassDB::bind_method(D_METHOD("update_time", "absolute_time"), &SynthNoteContext::update_time);
 
 	// New release state methods
@@ -176,6 +180,25 @@ void SynthNoteContext::note_on(float p_note, float p_velocity) {
 
 	// Set state to ACTIVE
 	set_note_state(NOTE_STATE_ACTIVE);
+}
+
+void SynthNoteContext::note_on_deferred(float p_note, float p_velocity) {
+	AudioSynthPlayer *player = Object::cast_to<AudioSynthPlayer>(ObjectDB::get_instance(player_id));
+	if (player == nullptr) {
+		// Not owned by a player: nothing to queue on, apply immediately.
+		note_on(p_note, p_velocity);
+		return;
+	}
+	player->play_note_on_context(Ref<SynthNoteContext>(this), p_note, p_velocity);
+}
+
+void SynthNoteContext::note_off_deferred() {
+	AudioSynthPlayer *player = Object::cast_to<AudioSynthPlayer>(ObjectDB::get_instance(player_id));
+	if (player == nullptr) {
+		note_off(absolute_time);
+		return;
+	}
+	player->play_note_off_context(Ref<SynthNoteContext>(this));
 }
 
 void SynthNoteContext::note_off(float p_time) {

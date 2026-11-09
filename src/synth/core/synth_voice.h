@@ -2,6 +2,7 @@
 #include "synth_note_context.h" // Include the full definition instead of forward declaration
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/variant/packed_float32_array.hpp>
+#include <atomic>
 
 namespace godot {
 
@@ -11,8 +12,9 @@ class SynthVoice : public Resource {
 	GDCLASS(SynthVoice, Resource);
 
 private:
-	bool active;
-	bool fast;
+	// Written by the main thread (reserve) and the audio thread (start/finish).
+	std::atomic<bool> active{ false };
+	bool fast = false;
 	Ref<AudioStreamGeneratorEngine> engine;
 	Ref<SynthNoteContext> context;
 
@@ -51,6 +53,23 @@ public:
 	// Clear the context reference
 	void clear_context() {
 		context.unref();
+	}
+
+	// Main thread: mark the voice as taken so the allocator skips it until the
+	// audio thread starts it (see SynthAudioStreamPlayback::start_voice).
+	void reserve() {
+		active = true;
+	}
+
+	// Audio thread: attach a new note context and make the voice audible.
+	void start(const Ref<SynthNoteContext> &p_context) {
+		// If the voice was stolen, its previous note is cut off: mark it
+		// finished so callers waiting on is_note_finished() are not stuck.
+		if (context.is_valid() && context != p_context) {
+			context->set_note_state(SynthNoteContext::NOTE_STATE_FINISHED);
+		}
+		context = p_context;
+		active = true;
 	}
 
 	void reset() {

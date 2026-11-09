@@ -38,8 +38,8 @@ public:
 			case SINE: {
 				// Apply pulse width by stretching/compressing the sine wave
 				float adjusted_phase = phase < pulse_width ? (phase / pulse_width) * 0.5f : 0.5f + ((phase - pulse_width) / (1.0f - pulse_width)) * 0.5f;
-				return unipolar ? 0.5f * (1.0f + std::sin(2.0f * Math_PI * adjusted_phase))
-								: std::sin(2.0f * Math_PI * adjusted_phase);
+				return unipolar ? 0.5f * (1.0f + std::sin(2.0f * Math::PI * adjusted_phase))
+								: std::sin(2.0f * Math::PI * adjusted_phase);
 			}
 
 			case SQUARE:
@@ -126,7 +126,7 @@ public:
 				// Sine fold - sine wave that folds back when exceeding threshold
 				// pulse_width controls folding threshold (lower = more folding)
 				float threshold = 0.1f + 0.8f * pulse_width; // Maps 0.01-0.99 to 0.108-0.892
-				float sine_val = std::sin(2.0f * Math_PI * phase);
+				float sine_val = std::sin(2.0f * Math::PI * phase);
 
 				// Apply folding
 				while (std::abs(sine_val) > threshold) {
@@ -153,7 +153,7 @@ public:
 				for (int i = 1; i <= num_harmonics; i++) {
 					// Amplitude decreases for higher harmonics
 					float harmonic_amp = 1.0f / i;
-					result += harmonic_amp * std::sin(2.0f * Math_PI * phase * i);
+					result += harmonic_amp * std::sin(2.0f * Math::PI * phase * i);
 					amp_sum += harmonic_amp;
 				}
 

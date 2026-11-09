@@ -153,13 +153,13 @@ float TapeDelay::process_sample(float sample, const Ref<SynthNoteContext> &conte
 	last_delay_time = delay_time;
 
 	// Calculate filter coefficients
-	float lp_coeff = std::exp(-2.0f * Math_PI * (1000.0f + 7000.0f * (1.0f - filtering)) / sample_rate);
-	float hp_coeff = std::exp(-2.0f * Math_PI * (20.0f + 300.0f * filtering) / sample_rate);
+	float lp_coeff = std::exp(-2.0f * Math::PI * (1000.0f + 7000.0f * (1.0f - filtering)) / sample_rate);
+	float hp_coeff = std::exp(-2.0f * Math::PI * (20.0f + 300.0f * filtering) / sample_rate);
 
 	// Update wow and flutter
-	wow_phase += 2.0f * Math_PI * 0.5f / sample_rate; // 0.5 Hz LFO
-	if (wow_phase > 2.0f * Math_PI) {
-		wow_phase -= 2.0f * Math_PI;
+	wow_phase += 2.0f * Math::PI * 0.5f / sample_rate; // 0.5 Hz LFO
+	if (wow_phase > 2.0f * Math::PI) {
+		wow_phase -= 2.0f * Math::PI;
 	}
 
 	float wow_mod = wow_amount * 0.005f * std::sin(wow_phase); // +/- 0.5% variation

@@ -5,7 +5,6 @@
 #include "../core/wave_helper_cache.h"
 #include "va_synth_configuration.h"
 #include <cmath>
-#include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/templates/pair.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -97,7 +96,6 @@ Dictionary VAOscillatorEngine::get_parameters() const {
 
 PackedFloat32Array VAOscillatorEngine::process_block(int buffer_size, const Ref<SynthNoteContext> &context, const bool &use_fast_pitch) {
 	// Create output buffer
-	uint64_t begin = Time::get_singleton()->get_ticks_usec();
 
 	PackedFloat32Array output_buffer;
 	output_buffer.resize(buffer_size);
@@ -221,9 +219,6 @@ PackedFloat32Array VAOscillatorEngine::process_block(int buffer_size, const Ref<
 		current_time += time_increment;
 	}
 
-	uint64_t end = Time::get_singleton()->get_ticks_usec();
-	print_line(use_fast_pitch ? "Fast Pitch" : "Regular Exp");
-	print_line(vformat("Virtual Analog took %d microseconds for ", end - begin));
 	return output_buffer;
 }
 

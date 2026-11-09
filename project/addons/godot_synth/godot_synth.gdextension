@@ -1,27 +1,32 @@
 [configuration]
 
 entry_symbol = "synth_library_init"
-compatibility_minimum = "4.4"
+compatibility_minimum = "4.7"
 
 [libraries]
+
+; Every entry below matches a file that SConstruct installs into
+; addons/godot_synth/bin/ for a platform/arch that CI (.github/workflows/build.yml) builds.
 
 windows.debug.x86_64 = "res://addons/godot_synth/bin/libgodot_synth.windows.debug.x86_64.dll"
 windows.release.x86_64 = "res://addons/godot_synth/bin/libgodot_synth.windows.release.x86_64.dll"
 
-macos.debug = "res://addons/godot_synth/bin/libgodot_synth.macos.debug.framework/libgodot_synth.macos.debug"
-macos.release = "res://addons/godot_synth/bin/libgodot_synth.macos.release.framework/libgodot_synth.macos.release"
+linux.debug.x86_64 = "res://addons/godot_synth/bin/libgodot_synth.linux.debug.x86_64.so"
+linux.release.x86_64 = "res://addons/godot_synth/bin/libgodot_synth.linux.release.x86_64.so"
+
+; arch=universal; SConstruct installs into bin/macos.framework/ and bin/ios.framework/.
+macos.debug = "res://addons/godot_synth/bin/macos.framework/libgodot_synth.macos.debug"
+macos.release = "res://addons/godot_synth/bin/macos.framework/libgodot_synth.macos.release"
 
 ios.debug = "res://addons/godot_synth/bin/ios.framework/libgodot_synth.ios.debug"
 ios.release = "res://addons/godot_synth/bin/ios.framework/libgodot_synth.ios.release"
 
-linux.debug.x86_64 = "res://addons/godot_synth/bin/libgodot_synth.linux.debug.x86_64.so"
-linux.release.x86_64 = "res://addons/godot_synth/bin/libgodot_synth.linux.release.x86_64.so"
-linux.debug.arm64 = "res://addons/godot_synth/bin/libgodot_synth.linux.debug.arm64.so"
-linux.release.arm64 = "res://addons/godot_synth/bin/libgodot_synth.linux.release.arm64.so"
-linux.debug.rv64 = "res://addons/godot_synth/bin/libgodot_synth.linux.debug.rv64.so"
-linux.release.rv64 = "res://addons/godot_synth/bin/libgodot_synth.linux.release.rv64.so"
-
-android.debug.x86_64 = "res://addons/godot_synth/bin/libgodot_synth.android.debug.x86_64.so"
-android.release.x86_64 = "res://addons/godot_synth/bin/libgodot_synth.android.release.x86_64.so"
+android.debug.arm32 = "res://addons/godot_synth/bin/libgodot_synth.android.debug.arm32.so"
+android.release.arm32 = "res://addons/godot_synth/bin/libgodot_synth.android.release.arm32.so"
 android.debug.arm64 = "res://addons/godot_synth/bin/libgodot_synth.android.debug.arm64.so"
 android.release.arm64 = "res://addons/godot_synth/bin/libgodot_synth.android.release.arm64.so"
+
+; Only the no-threads web build (threads=no) is built, so a web export must have
+; "Thread Support" disabled. SConstruct drops godot-cpp's ".nothreads" suffix.
+web.debug.wasm32.nothreads = "res://addons/godot_synth/bin/libgodot_synth.web.debug.wasm32.wasm"
+web.release.wasm32.nothreads = "res://addons/godot_synth/bin/libgodot_synth.web.release.wasm32.wasm"

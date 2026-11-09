@@ -6,6 +6,10 @@
 
 A powerful and flexible synthesizer engine for Godot 4, providing virtual analog synthesis with extensive modulation capabilities and audio effects.
 
+## Requirements
+
+- **Godot 4.7 or later.** Earlier Godot versions are not supported (v0.95 and older targeted Godot 4.4).
+
 ## Features
 
 - **Virtual Analog Synthesis**: High-quality oscillators with multiple waveform types
@@ -41,6 +45,16 @@ context = null                   # Release the context object from memory
 ```
 
 Always use a new context for each note, this allows you to do "articulation" on the played notes, you can use tweens, lerps and curves to drive the values in the context.
+
+To start several notes together (for example a chord), queue them so they all start on the same audio block:
+
+```gdscript
+var context = synth.get_context()
+synth.play_note_on_context(context, note, velocity)  # or context.note_on_deferred(note, velocity)
+synth.play_note_off_context(context)                 # or context.note_off_deferred()
+```
+
+See [Playing Multiple Notes in the Same Frame](docs/multiple_notes.md).
 
 > [!TIP]
 > Use curves to drive the velocity for a more natural sounding voice.
@@ -168,6 +182,18 @@ Check the synth_player node for more information on a how to play notes.
 
 - [ ] Gold braided cable end simulation
 - [ ] Warmer tone slider
+
+## Building from source
+
+GodotSynth is built with SCons. CI and local builds use the same pinned version, **SCons 4.11.1**:
+
+```sh
+git submodule update --init
+python -m pip install scons==4.11.1
+python -m SCons target=template_debug   # or target=template_release
+```
+
+On Windows, SCons finds MSVC (Visual Studio 2022 or its Build Tools) on its own; run it from PowerShell or cmd, not Git Bash. CI builds Windows with MSVC on `windows-latest`. The library is installed into `project/addons/godot_synth/bin/`.
 
 ## Contributing
 

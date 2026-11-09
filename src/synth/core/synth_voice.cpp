@@ -26,8 +26,7 @@ void SynthVoice::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "engine", PROPERTY_HINT_RESOURCE_TYPE, "AudioStreamGeneratorEngine"), "set_engine", "get_engine");
 }
 
-SynthVoice::SynthVoice() :
-		active(false) {
+SynthVoice::SynthVoice() {
 	context.instantiate();
 }
 
