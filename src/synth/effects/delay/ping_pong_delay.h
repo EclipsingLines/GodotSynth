@@ -12,7 +12,8 @@ class PingPongDelay : public SynthAudioEffect {
 	GDCLASS(PingPongDelay, SynthAudioEffect)
 
 private:
-	// Two delay buffers for ping-pong effect
+	// Two delay buffers for ping-pong effect, sized to MAX_DELAY_SECONDS at the current sample rate
+	static constexpr float MAX_DELAY_SECONDS = 2.0f;
 	std::vector<float> delay_buffer_1;
 	std::vector<float> delay_buffer_2;
 	int buffer_position_1 = 0;
@@ -35,6 +36,9 @@ public:
 
 	float process_sample(float sample, const Ref<SynthNoteContext> &context) override;
 	void reset() override;
+
+	// Resizes the delay buffers for the new rate (main thread, before playback)
+	void set_sample_rate(float p_sample_rate) override;
 
 	// Returns the tail length based on delay time and feedback
 	float get_tail_length() const override;

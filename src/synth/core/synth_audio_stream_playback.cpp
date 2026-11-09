@@ -71,11 +71,27 @@ void SynthAudioStreamPlayback::process_events() {
 					event.context->note_off(event.context->get_absolute_time());
 				}
 				break;
+			case SynthNoteEvent::RELEASE_ALL:
+				for (int i = 0; i < active_voice_count; i++) {
+					if (active_voices[i].is_valid()) {
+						Ref<SynthNoteContext> voice_context = active_voices[i]->get_context();
+						if (voice_context.is_valid()) {
+							voice_context->note_off(voice_context->get_absolute_time());
+						}
+					}
+				}
+				break;
+			case SynthNoteEvent::SET_PARAMETER:
+				if (event.parameter.is_valid()) {
+					event.parameter->set_base_value(event.value);
+				}
+				break;
 		}
 
 		// Drop the slot's references so the slot holds nothing between uses.
 		event.voice.unref();
 		event.context.unref();
+		event.parameter.unref();
 
 		read++;
 		event_read_index.store(read, std::memory_order_release);
@@ -218,8 +234,10 @@ bool SynthAudioStreamPlayback::add_voice(const Ref<SynthVoice> &p_voice, const R
 	return push_event(event);
 }
 
-void SynthAudioStreamPlayback::release_all_voices() {
-	// Not implemented yet (unchanged behaviour): voices finish on their own.
+bool SynthAudioStreamPlayback::release_all_voices() {
+	SynthNoteEvent event;
+	event.type = SynthNoteEvent::RELEASE_ALL;
+	return push_event(event);
 }
 
 int SynthAudioStreamPlayback::get_active_voice_count() const {

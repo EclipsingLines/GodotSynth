@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `SynthOfflineRenderer.render_note(config, note, velocity, duration, release_at, sample_rate, block_size)` renders one note to a `PackedFloat32Array` without an audio device, and `tests/offline_render.gd` uses it as a headless regression test
+- `SynthAudioEffect.set_sample_rate()` / `EffectChain.set_sample_rate()`
+
+### Fixed
+
+- Engines are created through the configuration's own `create_engine()`, so a custom `SynthConfiguration` gets its own engine instead of the built-in one picked by type (#3)
+- Notes played at the wrong pitch when the mix rate was not 44100 Hz (48 kHz played about 1.5 semitones sharp). Oscillators, LFOs and every delay, filter and distortion effect now use the real mix rate.
+- The fast pitch path (`PitchHelper.fast_pitch`, `midi_to_freq`) was badly out of tune (a fifth came out as 1.034 instead of 1.498), and `SynthVoice` switched between fast and exact pitch on every block. Fast pitch is now accurate to a fraction of a cent and stays on.
+- `AudioSynthPlayer.stop_all_notes()` (and stopping the player) did nothing; it now releases every playing voice
+- `AudioSynthPlayer.set_parameter()` only changed notes started afterwards; it now also reaches voices that are already playing, applied on the audio thread
+- `SUB_SQUARE` output a constant DC level instead of a square an octave below the note
+- `SUPER_SAW` did not detune: its saws now run at 0, ±8, ±16 and ±24 cents, which gives the usual moving, chorused sound. Presets using it sound different (as intended).
+- The `NOISE` waveform repeated a cached 4096-sample cycle instead of being random
+- The per-voice copies of the filtered, multi-tap, ping-pong and tape delays and of the bitcrush, clip, foldback, overdrive and wave-shaper distortions lost each parameter's modulation amount, type and invert setting, so modulation set on those effects was not heard. They now copy parameters in full.
+- The formant filter's per-voice copy kept the default vowel's coefficients instead of the configured vowel
+- Reverse and tape delays could read outside their buffers at very short or rounded delay times
+- `VAOscillatorEngine.duplicate()` dropped the modulation update rate, and a rate of 0 crashed
+
 Planned:
 
 - Chord Engine Implementation

@@ -9,7 +9,8 @@ class ReverseDelay : public DelayEffect {
 	GDCLASS(ReverseDelay, DelayEffect)
 
 private:
-	// Delay buffer for reverse playback
+	// Delay buffer for reverse playback, sized to MAX_DELAY_SECONDS at the current sample rate
+	static constexpr float MAX_DELAY_SECONDS = 2.0f;
 	std::vector<float> reverse_buffer;
 	int write_position;
 	int read_position;
@@ -32,6 +33,9 @@ public:
 
 	float process_sample(float sample, const Ref<SynthNoteContext> &context) override;
 	void reset() override;
+
+	// Resizes the reverse buffer for the new rate (main thread, before playback)
+	void set_sample_rate(float p_sample_rate) override;
 
 	// Create a duplicate of this effect
 	Ref<SynthAudioEffect> duplicate() const override;

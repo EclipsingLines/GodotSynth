@@ -35,8 +35,8 @@ private:
 	static const float formant_freqs[VOWEL_COUNT][3];
 	static const float formant_bandwidths[VOWEL_COUNT][3];
 
-	// Update coefficients based on vowel position
-	void update_coefficients(float sample_rate);
+	// Update coefficients based on vowel position and the current sample_rate
+	void update_coefficients();
 
 protected:
 	static void _bind_methods();
@@ -47,6 +47,9 @@ public:
 
 	float process_sample(float sample, const Ref<SynthNoteContext> &context) override;
 	void reset() override;
+
+	// Recomputes the band coefficients for the new rate (main thread, before playback)
+	void set_sample_rate(float p_sample_rate) override;
 
 	// Vowel position parameter accessors
 	void set_vowel_position_parameter(const Ref<ModulatedParameter> &param);

@@ -13,6 +13,10 @@ private:
 	WaveHelper::WaveType middle_waveform;
 	WaveHelper::WaveType top_waveform;
 	float phase;
+	// Half-rate phase for SUB_SQUARE (an octave below the note).
+	float sub_phase;
+	// One phase per detuned saw for SUPER_SAW.
+	float super_phases[WaveHelper::SUPER_SAW_VOICES];
 	Dictionary parameters;
 
 	// Cache for frequently used values
@@ -31,8 +35,16 @@ protected:
 	// Helper method to get the frequency for a MIDI note
 	float get_frequency_for_note(float note) const;
 
+	// Sample of one waveform slot at the oscillator's current phases.
+	float get_wave_sample(WaveHelper::WaveType type, float pulse_width) const;
+
 	// Helper method to get a sample from the morphed waveform
-	float get_morphed_sample(float phase, float morph_position, float pulse_width) const;
+	float get_morphed_sample(float morph_position, float pulse_width) const;
+
+	// Advance all phase accumulators by one sample.
+	void advance_phases(float phase_increment);
+
+	void reset_phases();
 
 public:
 	VAOscillatorEngine();

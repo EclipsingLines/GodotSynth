@@ -20,27 +20,24 @@ PitchHelper::~PitchHelper() {
 	// Destructor
 }
 
-// Minimax polynomial approximation for 2^(x/12) over x ∈ [-1,1] (where x is semitones/12)
-// Max error: 0.02%
+// Polynomial approximation of 2^(semitones/12), i.e. exp(a * x) with
+// a = ln(2)/12 and x in semitones (5th-order Taylor series, Horner form).
+// Relative error: < 3e-6 for |x| <= 6, < 1.5e-4 (0.3 cents) for |x| <= 12.
 float PitchHelper::fast_pitch(float semitones) {
-	// Normalize to [-1,1] range
-	float x = semitones / 12.0f;
-
-	const float c0 = 1.00000000f;
-	const float c1 = 0.05776226f;
-	const float c2 = 0.00166096f;
-	const float c3 = 0.00003198f;
-	const float c4 = 0.00000042f;
-
-	float x2 = x * x;
-	float x4 = x2 * x2;
-	return c0 + c1 * x + c2 * x2 + c3 * x2 * x + c4 * x4;
+	const float x = semitones;
+	const float c1 = 5.7762265047e-02f;
+	const float c2 = 1.6682396317e-03f;
+	const float c3 = 3.2120433255e-05f;
+	const float c4 = 4.6383724477e-07f;
+	const float c5 = 5.3584579742e-09f;
+	return 1.0f + x * (c1 + x * (c2 + x * (c3 + x * (c4 + x * c5))));
 }
 
 // Version with octave handling for extended range
 float PitchHelper::fast_pitch_extended(float semitones) {
-	// Handle octaves
-	float octaves = floor(semitones / 12.0f);
+	// Split into whole octaves and a remainder in [-6, 6) semitones, where
+	// fast_pitch is most accurate.
+	float octaves = floorf(semitones / 12.0f + 0.5f);
 	float remainder = semitones - 12.0f * octaves;
 
 	// Calculate base frequency multiplier

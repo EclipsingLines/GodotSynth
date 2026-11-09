@@ -73,8 +73,8 @@ void FilteredDelay::_bind_methods() {
 }
 
 FilteredDelay::FilteredDelay() {
-	// Initialize delay buffer (2 seconds at 44.1kHz)
-	delay_buffer.resize(88200, 0.0f);
+	// Initialize delay buffer (MAX_DELAY_SECONDS at the current sample rate)
+	delay_buffer.resize(static_cast<size_t>(MAX_DELAY_SECONDS * sample_rate), 0.0f);
 	buffer_position = 0;
 
 	// Initialize filter states
@@ -165,10 +165,7 @@ float FilteredDelay::process_sample(float sample, const Ref<SynthNoteContext> &c
 		resonance = res_param->get_value(context);
 	}
 
-	// Calculate sample rate (assuming 44.1kHz)
-	const float sample_rate = 44100.0f;
-
-	// Calculate delay in samples
+	// Calculate delay in samples at the current sample rate
 	int delay_samples = static_cast<int>(delay_time * sample_rate);
 	if (delay_samples >= delay_buffer.size()) {
 		delay_samples = delay_buffer.size() - 1;
@@ -232,6 +229,16 @@ void FilteredDelay::reset() {
 	hp_state = 0.0f;
 }
 
+void FilteredDelay::set_sample_rate(float p_sample_rate) {
+	SynthAudioEffect::set_sample_rate(p_sample_rate);
+
+	// Main thread only, before playback: reallocating here is allowed
+	delay_buffer.assign(static_cast<size_t>(MAX_DELAY_SECONDS * sample_rate), 0.0f);
+	buffer_position = 0;
+	lp_state = 0.0f;
+	hp_state = 0.0f;
+}
+
 float FilteredDelay::get_tail_length() const {
 	// Get the delay time and feedback parameters
 	float delay_time = 0.5f; // Default: 500ms
@@ -272,20 +279,12 @@ Ref<SynthAudioEffect> FilteredDelay::duplicate() const {
 		String name = param_names[i];
 		Ref<ModulatedParameter> param = params[name];
 		if (param.is_valid()) {
-			Ref<ModulatedParameter> new_param = memnew(ModulatedParameter);
-			new_param->set_base_value(param->get_base_value());
-			new_param->set_mod_min(param->get_mod_min());
-			new_param->set_mod_max(param->get_mod_max());
-
-			// Copy modulation source if available
-			Ref<ModulationSource> mod_source = param->get_mod_source();
-			if (mod_source.is_valid()) {
-				new_param->set_mod_source(mod_source);
-			}
-
+			Ref<ModulatedParameter> new_param = param->duplicate();
 			new_delay->set_parameter(name, new_param);
 		}
 	}
+
+	new_delay->set_sample_rate(sample_rate);
 
 	return new_delay;
 }

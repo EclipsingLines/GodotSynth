@@ -15,8 +15,15 @@ Ref<AudioStreamGeneratorEngine> EngineFactory::create_engine_from_config(const R
 		return nullptr;
 	}
 
-	// Create the appropriate engine type based on configuration
-	Ref<AudioStreamGeneratorEngine> engine;
+	// Let the configuration build its own engine: it knows its waveforms,
+	// mod update rate and any engine-specific settings (issue #3).
+	Ref<AudioStreamGeneratorEngine> engine = config->create_engine();
+	if (engine.is_valid()) {
+		return engine;
+	}
+
+	// Fallback for configurations without a create_engine() implementation:
+	// create the engine by type and copy the generic settings.
 
 	// Check the configuration type and create the appropriate engine
 	if (static_cast<Ref<VASynthConfiguration>>(config) != nullptr) {

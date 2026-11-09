@@ -1,7 +1,8 @@
 #ifndef SYNTH_AUDIO_STREAM_PLAYBACK_H
 #define SYNTH_AUDIO_STREAM_PLAYBACK_H
 
-#include "synth_note_context.h" // Add this include
+#include "modulated_parameter.h"
+#include "synth_note_context.h"
 #include "synth_voice.h"
 #include <godot_cpp/classes/audio_stream_generator.hpp>
 #include <godot_cpp/classes/audio_stream_playback.hpp>
@@ -30,14 +31,18 @@ struct SynthNoteEvent {
 		START_VOICE, ///< Attach `context` to `voice` and add the voice to the mix.
 		NOTE_ON, ///< Call context->note_on(note, velocity).
 		NOTE_OFF, ///< Call context->note_off(context->get_absolute_time()).
+		RELEASE_ALL, ///< Call note_off on the context of every voice in the mix.
+		SET_PARAMETER, ///< Call parameter->set_base_value(value).
 	};
 
 	Type type = START_VOICE;
 	int64_t frame = -1;
 	Ref<SynthVoice> voice;
 	Ref<SynthNoteContext> context;
+	Ref<ModulatedParameter> parameter;
 	float note = 0.0f;
 	float velocity = 0.0f;
+	float value = 0.0f;
 };
 
 class SynthAudioStreamPlayback : public AudioStreamPlayback {
@@ -104,7 +109,9 @@ public:
 
 	// Voice management (main thread side, queued)
 	bool add_voice(const Ref<SynthVoice> &p_voice, const Ref<SynthNoteContext> &p_context);
-	void release_all_voices();
+	// Queues a note_off for every voice in the mix (they ring out through their
+	// release). Returns false if the queue is full.
+	bool release_all_voices();
 	int get_active_voice_count() const;
 };
 

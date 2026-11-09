@@ -12,7 +12,8 @@ class TapeDelay : public SynthAudioEffect {
 	GDCLASS(TapeDelay, SynthAudioEffect)
 
 private:
-	// Delay buffer
+	// Delay buffer, sized to MAX_DELAY_SECONDS at the current sample rate
+	static constexpr float MAX_DELAY_SECONDS = 2.0f;
 	std::vector<float> delay_buffer;
 	float read_position = 0.0f; // Fractional read position for smooth time changes
 	int write_position = 0;
@@ -43,6 +44,9 @@ public:
 
 	float process_sample(float sample, const Ref<SynthNoteContext> &context) override;
 	void reset() override;
+
+	// Resizes the delay buffer for the new rate (main thread, before playback)
+	void set_sample_rate(float p_sample_rate) override;
 
 	// Returns the tail length based on delay time and feedback
 	float get_tail_length() const override;

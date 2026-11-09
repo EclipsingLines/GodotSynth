@@ -43,26 +43,12 @@ float LFO::get_value(const Ref<SynthNoteContext> &context) const {
 
 	double time = context->get_note_time();
 	double calculated_phase = fmod(time * rate + phase_offset, 1.0);
-	
-	// Use cached waveform if available
-	WaveHelperCache *cache = WaveHelperCache::get_singleton();
-	if (cache) {
-		return amplitude * cache->get_sample(static_cast<float>(calculated_phase), wave_type, pulse_width);
-	} else {
-		return amplitude * WaveHelper::get_wave_sample(static_cast<float>(calculated_phase), wave_type, pulse_width);
-	}
+	return amplitude * WaveHelper::get_wave_sample(static_cast<float>(calculated_phase), wave_type, pulse_width);
 }
 
 float LFO::process(float time) {
 	phase = fmod(time * rate + phase_offset, 1.0);
-	
-	// Use cached waveform if available
-	WaveHelperCache *cache = WaveHelperCache::get_singleton();
-	if (cache) {
-		return amplitude * cache->get_sample(static_cast<float>(phase), wave_type, pulse_width);
-	} else {
-		return amplitude * WaveHelper::get_wave_sample(static_cast<float>(phase), wave_type, pulse_width);
-	}
+	return amplitude * WaveHelper::get_wave_sample(static_cast<float>(phase), wave_type, pulse_width);
 }
 
 void LFO::reset() {

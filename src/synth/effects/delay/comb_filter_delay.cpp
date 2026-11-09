@@ -34,9 +34,9 @@ void CombFilterDelay::_bind_methods() {
 }
 
 CombFilterDelay::CombFilterDelay() {
-	// Initialize with a default buffer size (1 second at 44.1kHz)
+	// Initialize with a default buffer size (MAX_COMB_SECONDS at the current sample rate)
 	buffer_position = 0;
-	comb_buffer.resize(44100, 0.0f);
+	comb_buffer.resize(static_cast<size_t>(MAX_COMB_SECONDS * sample_rate), 0.0f);
 
 	// Create default parameters
 	Ref<ModulatedParameter> delay_time_param = memnew(ModulatedParameter);
@@ -110,8 +110,8 @@ float CombFilterDelay::process_sample(float sample, const Ref<SynthNoteContext> 
 		polarity = polarity_param->get_value(context);
 	}
 
-	// Calculate delay in samples (assuming 44.1kHz sample rate)
-	int delay_samples = static_cast<int>(delay_time * 44100.0f);
+	// Calculate delay in samples at the current sample rate
+	int delay_samples = static_cast<int>(delay_time * sample_rate);
 	if (delay_samples < 1)
 		delay_samples = 1;
 	if (delay_samples >= comb_buffer.size()) {
@@ -156,6 +156,14 @@ void CombFilterDelay::reset() {
 	buffer_position = 0;
 }
 
+void CombFilterDelay::set_sample_rate(float p_sample_rate) {
+	DelayEffect::set_sample_rate(p_sample_rate);
+
+	// Main thread only, before playback: reallocating here is allowed
+	comb_buffer.assign(static_cast<size_t>(MAX_COMB_SECONDS * sample_rate), 0.0f);
+	buffer_position = 0;
+}
+
 Ref<SynthAudioEffect> CombFilterDelay::duplicate() const {
 	Ref<CombFilterDelay> new_filter = memnew(CombFilterDelay);
 
@@ -170,6 +178,8 @@ Ref<SynthAudioEffect> CombFilterDelay::duplicate() const {
 			new_filter->set_parameter(name, new_param);
 		}
 	}
+
+	new_filter->set_sample_rate(sample_rate);
 
 	return new_filter;
 }

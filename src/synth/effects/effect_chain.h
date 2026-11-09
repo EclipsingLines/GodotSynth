@@ -14,6 +14,7 @@ class EffectChain : public Resource {
 
 private:
 	TypedArray<SynthAudioEffect> effects;
+	float sample_rate = 44100.0f;
 
 protected:
 	static void _bind_methods();
@@ -35,6 +36,10 @@ public:
 
 	// Create a duplicate of this effect chain with new effect instances
 	Ref<EffectChain> duplicate() const;
+
+	// Main thread only: passes the sample rate to every effect in the chain.
+	void set_sample_rate(float p_sample_rate);
+	float get_sample_rate() const;
 
 	float process_sample(const float &sample, const Ref<SynthNoteContext> &context);
 	void reset();

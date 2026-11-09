@@ -13,6 +13,18 @@ void SynthAudioEffect::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_parameter", "name"), &SynthAudioEffect::get_parameter);
 	ClassDB::bind_method(D_METHOD("get_parameters"), &SynthAudioEffect::get_parameters);
 	ClassDB::bind_method(D_METHOD("add_parameter", "name", "param"), &SynthAudioEffect::add_parameter);
+	ClassDB::bind_method(D_METHOD("set_sample_rate", "sample_rate"), &SynthAudioEffect::set_sample_rate);
+	ClassDB::bind_method(D_METHOD("get_sample_rate"), &SynthAudioEffect::get_sample_rate);
+}
+
+void SynthAudioEffect::set_sample_rate(float p_sample_rate) {
+	if (p_sample_rate > 0.0f) {
+		sample_rate = p_sample_rate;
+	}
+}
+
+float SynthAudioEffect::get_sample_rate() const {
+	return sample_rate;
 }
 
 void SynthAudioEffect::add_parameter(const String &p_name, const Ref<ModulatedParameter> &p_param) {

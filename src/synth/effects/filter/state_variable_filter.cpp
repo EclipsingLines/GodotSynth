@@ -36,9 +36,6 @@ float StateVariableFilter::process_sample(float sample, const Ref<SynthNoteConte
 		q = res_param->get_value(context) * 10.0f + 0.707f; // Map 0-1 to Q range
 	}
 
-	// Get sample rate from context or use default
-	float sample_rate = 44100.0f; // TODO: Get from context
-
 	// Calculate filter coefficients (State Variable Filter)
 	float f = 2.0f * Math::sin(Math::PI * cutoff_freq / sample_rate);
 	float q_factor = 1.0f / q;
@@ -96,6 +93,8 @@ Ref<SynthAudioEffect> StateVariableFilter::duplicate() const {
         }
     }
     
+    new_filter->set_sample_rate(sample_rate);
+
     return new_filter;
 }
 

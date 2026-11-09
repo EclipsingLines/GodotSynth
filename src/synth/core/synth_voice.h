@@ -14,7 +14,9 @@ class SynthVoice : public Resource {
 private:
 	// Written by the main thread (reserve) and the audio thread (start/finish).
 	std::atomic<bool> active{ false };
-	bool fast = false;
+	// Use PitchHelper's polynomial 2^(x/12) instead of std::pow for note pitch.
+	// Constant per voice so the pitch path never changes between blocks.
+	bool fast = true;
 	Ref<AudioStreamGeneratorEngine> engine;
 	Ref<SynthNoteContext> context;
 

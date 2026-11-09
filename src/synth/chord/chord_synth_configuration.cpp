@@ -85,33 +85,21 @@ ChordSynthConfiguration::~ChordSynthConfiguration() {
 
 Ref<AudioStreamGeneratorEngine> ChordSynthConfiguration::create_engine() const {
 	// Create a Chord engine instance
+	// The caller sets the real sample rate (AudioServer mix rate) afterwards.
 	Ref<ChordOscillatorEngine> engine = memnew(ChordOscillatorEngine);
-
-	// Set the sample rate
-	engine->set_sample_rate(44100.0f); // Use a default sample rate
 
 	// Configure the engine with our parameters
 	engine->set_waveform(waveform);
 
-	// Debug output
-	UtilityFunctions::print("Creating chord engine with waveform: " + String::num_int64((int64_t)waveform));
-
 	// Transfer all parameters to the engine
 	Dictionary params = get_parameters();
 	Array param_names = params.keys();
-	// Debug parameters
-	UtilityFunctions::print("Parameters being set on engine:");
 	for (int i = 0; i < param_names.size(); i++) {
 		String name = param_names[i];
 		Ref<ModulatedParameter> param = params[name];
 		if (param.is_valid()) {
 			// Create a proper duplicate to avoid reference issues
-			Ref<ModulatedParameter> param_copy = param->duplicate();
-			engine->set_parameter(name, param_copy);
-
-			// Debug output for parameter values
-			UtilityFunctions::print("Setting parameter on engine: " + name +
-					" with value: " + String::num(param_copy->get_base_value()));
+			engine->set_parameter(name, param->duplicate());
 		}
 	}
 

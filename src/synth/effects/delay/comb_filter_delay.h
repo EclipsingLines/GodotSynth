@@ -9,7 +9,8 @@ class CombFilterDelay : public DelayEffect {
 	GDCLASS(CombFilterDelay, DelayEffect)
 
 private:
-	// Delay buffer for comb filtering
+	// Delay buffer for comb filtering, sized to MAX_COMB_SECONDS at the current sample rate
+	static constexpr float MAX_COMB_SECONDS = 1.0f;
 	std::vector<float> comb_buffer;
 	int buffer_position;
 
@@ -30,6 +31,9 @@ public:
 
 	float process_sample(float sample, const Ref<SynthNoteContext> &context) override;
 	void reset() override;
+
+	// Resizes the comb buffer for the new rate (main thread, before playback)
+	void set_sample_rate(float p_sample_rate) override;
 
 	// Create a duplicate of this effect
 	Ref<SynthAudioEffect> duplicate() const override;

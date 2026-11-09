@@ -68,9 +68,6 @@ float MoogFilter::process_sample(float sample, const Ref<SynthNoteContext> &cont
 		oversampling = Math::clamp(oversampling, 1, 4);
 	}
 
-	// Get sample rate from context or use default
-	float sample_rate = 44100.0f; // TODO: Get from context
-
 	// Apply oversampling to sample rate for internal processing
 	float internal_sample_rate = sample_rate * oversampling;
 
@@ -181,6 +178,8 @@ Ref<SynthAudioEffect> MoogFilter::duplicate() const {
 			new_filter->set_parameter(name, param->duplicate());
 		}
 	}
+
+	new_filter->set_sample_rate(sample_rate);
 
 	return new_filter;
 }

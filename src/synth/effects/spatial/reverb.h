@@ -22,6 +22,14 @@ private:
 	std::vector<float> lp_states;
 	std::vector<float> hp_states;
 
+	// The delay line lengths are prime sample counts tuned at this rate; other
+	// rates scale them so the reflection times in seconds stay the same
+	static constexpr float DELAY_TUNING_RATE = 44100.0f;
+
+	// (Re)allocates all delay lines for the current sample_rate and clears state.
+	// Allocates, so main thread only (constructor / set_sample_rate)
+	void allocate_delay_lines();
+
 public:
 	// Parameter names
 	static const char *PARAM_ROOM_SIZE;
@@ -40,6 +48,10 @@ public:
 
 	float process_sample(float sample, const Ref<SynthNoteContext> &context) override;
 	void reset() override;
+
+	// Resizes the delay lines for the new rate (main thread, before playback)
+	void set_sample_rate(float p_sample_rate) override;
+
 	float get_tail_length() const override;
 	Ref<SynthAudioEffect> duplicate() const override;
 

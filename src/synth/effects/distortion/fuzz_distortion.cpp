@@ -250,6 +250,8 @@ Ref<SynthAudioEffect> FuzzDistortion::duplicate() const {
 		}
 	}
 
+	new_effect->set_sample_rate(sample_rate);
+
 	return new_effect;
 }
 

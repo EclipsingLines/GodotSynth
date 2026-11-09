@@ -276,8 +276,10 @@ void AudioSynthPlayer::stop_all_notes() {
 		return;
 	}
 
-	// Release all active voices
-	playback->release_all_voices();
+	// Every voice in the mix releases (applied on the audio thread).
+	if (!playback->release_all_voices()) {
+		UtilityFunctions::push_warning("AudioSynthPlayer: note event queue is full, stop_all_notes dropped.");
+	}
 }
 
 void AudioSynthPlayer::set_parameter(const String &p_name, float p_value) {
@@ -285,9 +287,37 @@ void AudioSynthPlayer::set_parameter(const String &p_name, float p_value) {
 		return;
 	}
 
+	// The configuration's copy is what engines created from now on start from.
 	Ref<ModulatedParameter> param = configuration->get_parameter(p_name);
 	if (param.is_valid()) {
 		param->set_base_value(p_value);
+	}
+
+	// Engines already in the pool own duplicates of the parameter. The audio
+	// thread may be reading them, so the change is queued and applied there.
+	for (int i = 0; i < voice_pool.size(); i++) {
+		const Ref<SynthVoice> &voice = voice_pool[i];
+		if (!voice.is_valid() || !voice->get_engine().is_valid()) {
+			continue;
+		}
+		Ref<ModulatedParameter> engine_param = voice->get_engine()->get_parameter(p_name);
+		if (!engine_param.is_valid()) {
+			continue;
+		}
+		if (!playback.is_valid() || !is_playing()) {
+			// Nothing is mixing (and a stopped playback is replaced on the next
+			// play(), losing its queue), so set it directly.
+			engine_param->set_base_value(p_value);
+			continue;
+		}
+		SynthNoteEvent event;
+		event.type = SynthNoteEvent::SET_PARAMETER;
+		event.parameter = engine_param;
+		event.value = p_value;
+		if (!playback->push_event(event)) {
+			UtilityFunctions::push_warning("AudioSynthPlayer: note event queue is full, set_parameter dropped.");
+			return;
+		}
 	}
 }
 

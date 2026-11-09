@@ -13,6 +13,8 @@ void EffectChain::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_effects"), &EffectChain::get_effects);
 	ClassDB::bind_method(D_METHOD("add_effect", "effect"), &EffectChain::add_effect);
 	ClassDB::bind_method(D_METHOD("get_max_tail_length"), &EffectChain::get_max_tail_length);
+	ClassDB::bind_method(D_METHOD("set_sample_rate", "sample_rate"), &EffectChain::set_sample_rate);
+	ClassDB::bind_method(D_METHOD("get_sample_rate"), &EffectChain::get_sample_rate);
 
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "effects", PROPERTY_HINT_TYPE_STRING, String::num(Variant::OBJECT) + "/" + String::num(PROPERTY_HINT_RESOURCE_TYPE) + ":SynthAudioEffect"),
 			"set_effects", "get_effects");
@@ -28,6 +30,23 @@ EffectChain::~EffectChain() {
 
 void EffectChain::set_effects(const TypedArray<SynthAudioEffect> &p_effects) {
 	effects = p_effects;
+}
+
+void EffectChain::set_sample_rate(float p_sample_rate) {
+	if (p_sample_rate <= 0.0f) {
+		return;
+	}
+	sample_rate = p_sample_rate;
+	for (int i = 0; i < effects.size(); i++) {
+		Ref<SynthAudioEffect> effect = effects[i];
+		if (effect.is_valid()) {
+			effect->set_sample_rate(sample_rate);
+		}
+	}
+}
+
+float EffectChain::get_sample_rate() const {
+	return sample_rate;
 }
 
 TypedArray<SynthAudioEffect> EffectChain::get_effects() const {
@@ -68,6 +87,7 @@ Ref<EffectChain> EffectChain::duplicate() const {
 		}
 	}
 
+	new_chain->set_sample_rate(sample_rate);
 	return new_chain;
 }
 

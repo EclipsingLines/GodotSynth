@@ -46,35 +46,39 @@ void Reverb::_bind_methods() {
             "set_diffusion_parameter", "get_diffusion_parameter");
 }
 
-Reverb::Reverb() {
+void Reverb::allocate_delay_lines() {
+    // Prime numbers for early reflection delays (in samples at DELAY_TUNING_RATE)
+    const int early_delays[8] = {607, 743, 821, 941, 1061, 1151, 1223, 1327};
+
+    // Prime numbers for late reverb delays (in samples at DELAY_TUNING_RATE)
+    const int late_delays[4] = {1453, 1597, 1747, 1867};
+
+    const float scale = sample_rate / DELAY_TUNING_RATE;
+
     // Initialize delay lines for early reflections (8 delay lines)
     early_delay_lines.resize(8);
-    early_positions.resize(8, 0);
-    
-    // Prime numbers for early reflection delays (in samples)
-    const int early_delays[8] = {607, 743, 821, 941, 1061, 1151, 1223, 1327};
-    
-    // Initialize early reflection delay lines
+    early_positions.assign(8, 0);
     for (int i = 0; i < 8; i++) {
-        early_delay_lines[i].resize(early_delays[i], 0.0f);
+        int length = static_cast<int>(Math::round(early_delays[i] * scale));
+        early_delay_lines[i].assign(length < 1 ? 1 : length, 0.0f);
     }
-    
+
     // Initialize delay lines for late reverb (4 delay lines)
     late_delay_lines.resize(4);
-    late_positions.resize(4, 0);
-    
-    // Prime numbers for late reverb delays (in samples)
-    const int late_delays[4] = {1453, 1597, 1747, 1867};
-    
-    // Initialize late reverb delay lines
+    late_positions.assign(4, 0);
     for (int i = 0; i < 4; i++) {
-        late_delay_lines[i].resize(late_delays[i], 0.0f);
+        int length = static_cast<int>(Math::round(late_delays[i] * scale));
+        late_delay_lines[i].assign(length < 1 ? 1 : length, 0.0f);
     }
-    
+
     // Initialize filter states
-    lp_states.resize(4, 0.0f);
-    hp_states.resize(4, 0.0f);
-    
+    lp_states.assign(4, 0.0f);
+    hp_states.assign(4, 0.0f);
+}
+
+Reverb::Reverb() {
+    allocate_delay_lines();
+
     // Create default parameters
     Ref<ModulatedParameter> room_size_param = memnew(ModulatedParameter);
     room_size_param->set_base_value(0.5f); // Medium room
@@ -159,8 +163,12 @@ float Reverb::process_sample(float sample, const Ref<SynthNoteContext> &context)
         diffusion = diffusion_param->get_value(context);
     }
     
-    // Calculate pre-delay in samples (assuming 44.1kHz sample rate)
-    int pre_delay_samples = static_cast<int>(pre_delay * 44100.0f);
+    // Calculate pre-delay in samples at the current sample rate. It is only used
+    // as a read offset taken modulo each late line's size, so it just must not be negative
+    int pre_delay_samples = static_cast<int>(pre_delay * sample_rate);
+    if (pre_delay_samples < 0) {
+        pre_delay_samples = 0;
+    }
     
     // Calculate feedback amount based on room size
     float feedback = 0.7f + room_size * 0.25f;
@@ -274,6 +282,13 @@ void Reverb::reset() {
     UtilityFunctions::print("Reverb: Reset called - all buffers cleared");
 }
 
+void Reverb::set_sample_rate(float p_sample_rate) {
+    SynthAudioEffect::set_sample_rate(p_sample_rate);
+
+    // Main thread only, before playback: reallocating here is allowed
+    allocate_delay_lines();
+}
+
 float Reverb::get_tail_length() const {
     // Return a tail length based on room size (up to 3 seconds)
     float room_size = 0.5f; // Default value
@@ -300,7 +315,9 @@ Ref<SynthAudioEffect> Reverb::duplicate() const {
             new_reverb->set_parameter(name, new_param);
         }
     }
-    
+
+    new_reverb->set_sample_rate(sample_rate);
+
     return new_reverb;
 }
 

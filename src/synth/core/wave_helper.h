@@ -105,11 +105,13 @@ public:
 			}
 
 			case SUB_SQUARE: {
-				// Sub square - plays an octave lower
-				// Use half the frequency (double the period) for octave down
-				float sub_phase = Math::fposmod(phase * 0.5f, 1.0f);
-				return (sub_phase < pulse_width) ? (unipolar ? 1.0f : 1.0f)
-												 : (unipolar ? 0.0f : -1.0f);
+				// Sub square: a square an octave below the note. A stateless
+				// phase can't run at half rate (phase * 0.5 only covers the first
+				// half of the sub cycle, which is a DC offset), so the caller
+				// passes the sub-oscillator's own phase here. The VA engine keeps
+				// a separate half-rate accumulator for it.
+				return (phase < pulse_width) ? 1.0f
+											 : (unipolar ? 0.0f : -1.0f);
 			}
 
 			case PULSE_TRAIN: {
@@ -184,6 +186,46 @@ public:
 			default:
 				return 0.0f;
 		}
+	}
+
+	// Super saw with real detune: each saw runs its own phase accumulator at
+	// get_super_saw_ratio(i) times the note frequency. pulse_width picks how
+	// many saws sound (1-7), as in the stateless version above.
+	static const int SUPER_SAW_VOICES = 7;
+
+	static int get_super_saw_count(float pulse_width) {
+		pulse_width = Math::clamp(pulse_width, 0.01f, 0.99f);
+		return 1 + static_cast<int>(6.0f * pulse_width);
+	}
+
+	// Frequency ratio of saw i: centre saw first, then pairs spreading out by
+	// 8 cents per step (0, -8, +8, -16, +16, -24, +24 cents).
+	static float get_super_saw_ratio(int i) {
+		static const float ratios[SUPER_SAW_VOICES] = {
+			1.0f,
+			0.99538968f, // -8 cents
+			1.00463167f, // +8 cents
+			0.99080061f, // -16 cents
+			1.00928480f, // +16 cents
+			0.98623270f, // -24 cents
+			1.01395948f, // +24 cents
+		};
+		return ratios[i];
+	}
+
+	// Fixed, spread start phases so the saws don't start perfectly aligned.
+	static float get_super_saw_start_phase(int i) {
+		static const float phases[SUPER_SAW_VOICES] = { 0.0f, 0.618f, 0.236f, 0.854f, 0.472f, 0.090f, 0.708f };
+		return phases[i];
+	}
+
+	static float get_super_saw_sample(const float *phases, float pulse_width, bool unipolar = false) {
+		int num_saws = get_super_saw_count(pulse_width);
+		float result = 0.0f;
+		for (int i = 0; i < num_saws; i++) {
+			result += unipolar ? phases[i] : 2.0f * phases[i] - 1.0f;
+		}
+		return result / std::sqrt(static_cast<float>(num_saws));
 	}
 };
 

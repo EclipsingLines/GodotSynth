@@ -144,8 +144,7 @@ float OverdriveDistortion::process_sample(float sample, const Ref<SynthNoteConte
 	// Scale drive to get more extreme effect at higher values
 	float scaled_drive = 1.0f + drive * 9.0f; // Range 1-10
 
-	// Calculate filter coefficients for tone control
-	float sample_rate = 44100.0f; // Assuming 44.1kHz
+	// Calculate filter coefficients for tone control (uses the effect's sample_rate member)
 
 	// Map tone to filter frequencies
 	float lp_freq = 1000.0f + tone * 15000.0f; // 1kHz to 16kHz
@@ -219,20 +218,12 @@ Ref<SynthAudioEffect> OverdriveDistortion::duplicate() const {
 		String name = param_names[i];
 		Ref<ModulatedParameter> param = params[name];
 		if (param.is_valid()) {
-			Ref<ModulatedParameter> new_param = memnew(ModulatedParameter);
-			new_param->set_base_value(param->get_base_value());
-			new_param->set_mod_min(param->get_mod_min());
-			new_param->set_mod_max(param->get_mod_max());
-
-			// Copy modulation source if available
-			Ref<ModulationSource> mod_source = param->get_mod_source();
-			if (mod_source.is_valid()) {
-				new_param->set_mod_source(mod_source);
-			}
-
+			Ref<ModulatedParameter> new_param = param->duplicate();
 			new_effect->set_parameter(name, new_param);
 		}
 	}
+
+	new_effect->set_sample_rate(sample_rate);
 
 	return new_effect;
 }
