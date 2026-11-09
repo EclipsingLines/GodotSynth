@@ -141,6 +141,34 @@ jobs:
           EOF
           exit $status
 
+      # Headless regression test: render notes offline with the freshly built
+      # library and check pitch, levels and waveforms (tests/offline_render.gd).
+      - name: Offline Render Test (Linux debug)
+        if: ${{ matrix.identifier == 'linux' && matrix.target == 'debug' }}
+        shell: bash
+        env:
+          GODOT_VERSION: 4.7-stable
+        run: |
+          set -euo pipefail
+          GODOT_DIR="$RUNNER_TEMP/godot"
+          mkdir -p "$GODOT_DIR"
+          cd "$GODOT_DIR"
+          base="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}"
+          zip="Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          curl -fsSL -o "$zip" "$base/$zip"
+          curl -fsSL -o SHA512-SUMS.txt "$base/SHA512-SUMS.txt"
+          grep " $zip\$" SHA512-SUMS.txt | sha512sum -c -
+          unzip -q "$zip"
+          GODOT="$GODOT_DIR/Godot_v${GODOT_VERSION}_linux.x86_64"
+          chmod +x "$GODOT"
+          cd "$GITHUB_WORKSPACE"
+          # A fresh checkout has no .godot/ yet, and Godot only loads
+          # GDExtensions listed in .godot/extension_list.cfg, so import first.
+          timeout 300 "$GODOT" --headless --path project --import || true
+          timeout 300 "$GODOT" --headless --path project -s ../tests/offline_render.gd
+          # Don't ship the import cache in the artifact.
+          rm -rf project/.godot
+
       - name: Include Files
         shell: sh
         run: |

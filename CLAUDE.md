@@ -23,7 +23,7 @@ A GDExtension (C++, godot-cpp) that adds a modular synthesizer to Godot 4.7+ (bu
   ```
   C:\Godot\4.7\Godot_v4.7-stable_win64_console.exe --headless --path project -s ../tests/offline_render.gd
   ```
-  It prints `PASS`/`FAIL` per check and exits 0 only if every check passes. Add a check there for every audio bug you fix.
+  It prints `PASS`/`FAIL` per check and exits 0 only if every check passes. Add a check there for every audio bug you fix. CI runs it in the Linux debug job ("Offline Render Test"): it downloads Godot 4.7 from `godotengine/godot-builds`, checks its SHA-512, runs `--import` once (a fresh checkout has no `.godot/extension_list.cfg`, so the extension wouldn't load) and then the script. When you raise the Godot version, update `GODOT_VERSION` there too.
 - `-s` scripts only run in a build with the script runner, so they work with the editor/debug binaries but not in an exported release build. Test from the editor binary.
 - For a hands-on check, open `project/` in Godot and play `addons/godot_synth/keyboard/piano_keyboard.tscn`. `project/issue_1.gd` is a repro scene script.
 - Godot 4.7 is installed at `C:\Godot\4.7\` (`Godot_v4.7-stable_win64.exe`, plus `Godot_v4.7-stable_win64_console.exe` for headless runs). For scripted checks, use `C:\Godot\4.7\Godot_v4.7-stable_win64_console.exe --headless --path project --editor --quit`. Close Godot before building, because it locks the DLL.
