@@ -1078,9 +1078,9 @@ public:
 		amp_param->set_mod_amount(1.0f);
 		va_config->amplitude = amp_param;
 
-		// Low pitch for bass
+		// Pitch offset for bass (the register comes from the catalog's default_note)
 		Ref<ModulatedParameter> pitch_param = memnew(ModulatedParameter);
-		pitch_param->set_base_value(36.0f); // C2
+		pitch_param->set_base_value(0.0f); // semitone offset; the register is the catalog's default_note
 		pitch_param->set_mod_min(-24.0f);
 		pitch_param->set_mod_max(24.0f);
 		va_config->pitch = pitch_param;
@@ -1088,7 +1088,9 @@ public:
 		// Add filter for bass shape
 		Ref<LowPassFilter> filter = memnew(LowPassFilter);
 		Ref<ModulatedParameter> cutoff = memnew(ModulatedParameter);
-		cutoff->set_base_value(0.3f);
+		cutoff->set_base_value(300.0f); // Hz; the filter reads cutoff in Hz (20..20000)
+		cutoff->set_mod_min(20.0f);
+		cutoff->set_mod_max(20000.0f);
 
 		// Filter envelope
 		Ref<ADSR> filter_env = memnew(ADSR);
@@ -1097,7 +1099,7 @@ public:
 		filter_env->set_sustain(0.3f);
 		filter_env->set_release(0.3f);
 		cutoff->set_mod_source(filter_env);
-		cutoff->set_mod_amount(0.4f);
+		cutoff->set_mod_amount(500.0f);
 
 		filter->set_parameter("cutoff", cutoff);
 
@@ -1168,9 +1170,9 @@ public:
 		amp_param->set_mod_amount(1.0f);
 		va_config->amplitude = amp_param;
 
-		// Mid-high pitch for lead
+		// Pitch offset for lead (the register comes from the catalog's default_note)
 		Ref<ModulatedParameter> pitch_param = memnew(ModulatedParameter);
-		pitch_param->set_base_value(72.0f); // C5
+		pitch_param->set_base_value(0.0f); // semitone offset; the register is the catalog's default_note
 		pitch_param->set_mod_min(-24.0f);
 		pitch_param->set_mod_max(24.0f);
 
@@ -1186,7 +1188,9 @@ public:
 		// Add filter for tone shaping
 		Ref<BandPassFilter> filter = memnew(BandPassFilter);
 		Ref<ModulatedParameter> cutoff = memnew(ModulatedParameter);
-		cutoff->set_base_value(0.6f);
+		cutoff->set_base_value(1200.0f); // Hz; the filter reads cutoff in Hz (20..20000)
+		cutoff->set_mod_min(20.0f);
+		cutoff->set_mod_max(20000.0f);
 
 		// Filter envelope
 		Ref<ADSR> filter_env = memnew(ADSR);
@@ -1195,7 +1199,7 @@ public:
 		filter_env->set_sustain(0.6f);
 		filter_env->set_release(0.3f);
 		cutoff->set_mod_source(filter_env);
-		cutoff->set_mod_amount(0.3f);
+		cutoff->set_mod_amount(800.0f);
 
 		filter->set_parameter("cutoff", cutoff);
 
@@ -1266,9 +1270,9 @@ public:
 		amp_param->set_mod_amount(1.0f);
 		va_config->amplitude = amp_param;
 
-		// Mid pitch for pad
+		// Pitch offset for pad (the register comes from the catalog's default_note)
 		Ref<ModulatedParameter> pitch_param = memnew(ModulatedParameter);
-		pitch_param->set_base_value(60.0f); // C4
+		pitch_param->set_base_value(0.0f); // semitone offset; the register is the catalog's default_note
 		pitch_param->set_mod_min(-24.0f);
 		pitch_param->set_mod_max(24.0f);
 
@@ -1284,14 +1288,16 @@ public:
 		// Add filter for tone shaping
 		Ref<LowPassFilter> filter = memnew(LowPassFilter);
 		Ref<ModulatedParameter> cutoff = memnew(ModulatedParameter);
-		cutoff->set_base_value(0.4f);
+		cutoff->set_base_value(1500.0f); // Hz; the filter reads cutoff in Hz (20..20000)
+		cutoff->set_mod_min(20.0f);
+		cutoff->set_mod_max(20000.0f);
 
 		// Slow filter modulation
 		Ref<LFO> filter_lfo = memnew(LFO);
 		filter_lfo->set_rate(0.3f);
 		filter_lfo->set_wave_type(WaveHelper::SINE);
 		cutoff->set_mod_source(filter_lfo);
-		cutoff->set_mod_amount(0.2f);
+		cutoff->set_mod_amount(500.0f);
 
 		filter->set_parameter("cutoff", cutoff);
 
@@ -1362,9 +1368,9 @@ public:
 		amp_param->set_mod_amount(1.0f);
 		va_config->amplitude = amp_param;
 
-		// Low pitch with quick drop
+		// Pitch offset with quick drop (the register comes from the catalog's default_note)
 		Ref<ModulatedParameter> pitch_param = memnew(ModulatedParameter);
-		pitch_param->set_base_value(36.0f); // C2
+		pitch_param->set_base_value(0.0f); // semitone offset; the register is the catalog's default_note
 		pitch_param->set_mod_min(-24.0f);
 		pitch_param->set_mod_max(24.0f);
 
@@ -1380,14 +1386,16 @@ public:
 		// Add filter for kick shape
 		Ref<LowPassFilter> filter = memnew(LowPassFilter);
 		Ref<ModulatedParameter> cutoff = memnew(ModulatedParameter);
-		cutoff->set_base_value(0.4f);
+		cutoff->set_base_value(500.0f); // Hz; the filter reads cutoff in Hz (20..20000)
+		cutoff->set_mod_min(20.0f);
+		cutoff->set_mod_max(20000.0f);
 
 		// Filter envelope
 		Ref<NoteDurationModSource> filter_env = memnew(NoteDurationModSource);
 		filter_env->set_attack_time(0.001f);
 		filter_env->set_max_time(0.1f);
 		cutoff->set_mod_source(filter_env);
-		cutoff->set_mod_amount(-0.3f);
+		cutoff->set_mod_amount(-400.0f);
 
 		filter->set_parameter("cutoff", cutoff);
 
@@ -1454,9 +1462,9 @@ public:
 		amp_param->set_mod_amount(1.0f);
 		va_config->amplitude = amp_param;
 
-		// Mid-low pitch with quick drop
+		// Pitch offset with quick drop (the register comes from the catalog's default_note)
 		Ref<ModulatedParameter> pitch_param = memnew(ModulatedParameter);
-		pitch_param->set_base_value(48.0f); // C3
+		pitch_param->set_base_value(0.0f); // semitone offset; the register is the catalog's default_note
 		pitch_param->set_mod_min(-24.0f);
 		pitch_param->set_mod_max(24.0f);
 
@@ -1472,14 +1480,16 @@ public:
 		// Add high pass filter for snare crack
 		Ref<HighPassFilter> filter = memnew(HighPassFilter);
 		Ref<ModulatedParameter> cutoff = memnew(ModulatedParameter);
-		cutoff->set_base_value(0.4f);
+		cutoff->set_base_value(2000.0f); // Hz; the filter reads cutoff in Hz (20..20000)
+		cutoff->set_mod_min(20.0f);
+		cutoff->set_mod_max(20000.0f);
 
 		// Filter envelope
 		Ref<NoteDurationModSource> filter_env = memnew(NoteDurationModSource);
 		filter_env->set_attack_time(0.001f);
 		filter_env->set_max_time(0.1f);
 		cutoff->set_mod_source(filter_env);
-		cutoff->set_mod_amount(-0.2f);
+		cutoff->set_mod_amount(-1000.0f);
 
 		filter->set_parameter("cutoff", cutoff);
 
@@ -1557,9 +1567,9 @@ public:
 		amp_param->set_mod_amount(1.0f);
 		va_config->amplitude = amp_param;
 
-		// High pitch
+		// Pitch offset for hi-hat (the register comes from the catalog's default_note)
 		Ref<ModulatedParameter> pitch_param = memnew(ModulatedParameter);
-		pitch_param->set_base_value(84.0f); // C6
+		pitch_param->set_base_value(0.0f); // semitone offset; the register is the catalog's default_note
 		pitch_param->set_mod_min(-24.0f);
 		pitch_param->set_mod_max(24.0f);
 		va_config->pitch = pitch_param;
@@ -1567,7 +1577,9 @@ public:
 		// Add high pass filter for hi-hat character
 		Ref<HighPassFilter> filter = memnew(HighPassFilter);
 		Ref<ModulatedParameter> cutoff = memnew(ModulatedParameter);
-		cutoff->set_base_value(0.7f);
+		cutoff->set_base_value(5000.0f); // Hz; the filter reads cutoff in Hz (20..20000)
+		cutoff->set_mod_min(20.0f);
+		cutoff->set_mod_max(20000.0f);
 		filter->set_parameter("cutoff", cutoff);
 
 		Ref<ModulatedParameter> resonance = memnew(ModulatedParameter);
@@ -1633,9 +1645,9 @@ public:
 		amp_param->set_mod_amount(1.0f);
 		va_config->amplitude = amp_param;
 
-		// Mid-high pitch
+		// Pitch offset for the arpeggiator (the register comes from the catalog's default_note)
 		Ref<ModulatedParameter> pitch_param = memnew(ModulatedParameter);
-		pitch_param->set_base_value(72.0f); // C5
+		pitch_param->set_base_value(0.0f); // semitone offset; the register is the catalog's default_note
 		pitch_param->set_mod_min(-24.0f);
 		pitch_param->set_mod_max(24.0f);
 		va_config->pitch = pitch_param;
@@ -1643,7 +1655,9 @@ public:
 		// Add filter for tone shaping
 		Ref<BandPassFilter> filter = memnew(BandPassFilter);
 		Ref<ModulatedParameter> cutoff = memnew(ModulatedParameter);
-		cutoff->set_base_value(0.6f);
+		cutoff->set_base_value(1000.0f); // Hz; the filter reads cutoff in Hz (20..20000)
+		cutoff->set_mod_min(20.0f);
+		cutoff->set_mod_max(20000.0f);
 
 		// Filter envelope
 		Ref<ADSR> filter_env = memnew(ADSR);
@@ -1652,7 +1666,7 @@ public:
 		filter_env->set_sustain(0.0f);
 		filter_env->set_release(0.1f);
 		cutoff->set_mod_source(filter_env);
-		cutoff->set_mod_amount(0.3f);
+		cutoff->set_mod_amount(1000.0f);
 
 		filter->set_parameter("cutoff", cutoff);
 

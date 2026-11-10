@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The musical presets (`BassPreset`, `LeadSynthPreset`, `PadSynthPreset`, `KickDrumPreset`, `SnareDrumPreset`, `HiHatPreset`, `ArpeggiatorPreset`) had a filter cutoff in the old 0..1 unit, which pinned the filter at its 20 Hz floor, and a `pitch` that was an absolute MIDI number, which the engine clamped to +24 semitones. Their cutoff is now in Hz (20..20000) and their `pitch` is a 0 semitone offset, so they play at the pitch of the note you give them and sound different (as intended).
 - Engines are created through the configuration's own `create_engine()`, so a custom `SynthConfiguration` gets its own engine instead of the built-in one picked by type (#3)
 - Notes played at the wrong pitch when the mix rate was not 44100 Hz (48 kHz played about 1.5 semitones sharp). Oscillators, LFOs and every delay, filter and distortion effect now use the real mix rate.
 - The fast pitch path (`PitchHelper.fast_pitch`, `midi_to_freq`) was badly out of tune (a fifth came out as 1.034 instead of 1.498), and `SynthVoice` switched between fast and exact pitch on every block. Fast pitch is now accurate to a fraction of a cent and stays on.
