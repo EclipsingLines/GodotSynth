@@ -204,6 +204,12 @@ func _initialize() -> void:
 		"tempo\n",
 		"foo 1\n",
 		"let x = (s(\"kick\")\n",
+		"transition a -> b fa 1\n",
+		"transition a -> b f\n",
+		"stinger x o: s(\"a\")\n",
+		"tempo 120 /x\n",
+		" /x\n",
+		"state a:\n  s(\"kick\")\n  /x\n",
 	]
 	for source: String in accepted_rows:
 		var text := _normalise(source)
@@ -214,11 +220,18 @@ func _initialize() -> void:
 			"parser=%s recognizer=%s" % [str(parsed), str(recognized)])
 	for source: String in rejected_rows:
 		var text := _normalise(source)
-		var parsed: bool = ParserScript.parse(text).get("ok") == true
+		var result := ParserScript.parse(text)
+		var parsed: bool = result.get("ok") == true
 		var recognized: bool = grammar.accepts(text)
 		var label := source.replace("\n", "\\n").replace("\r", "\\r")
 		check("table reject " + label, not parsed and not recognized,
 			"parser=%s recognizer=%s" % [str(parsed), str(recognized)])
+		if not parsed:
+			var diagnostic: Dictionary = (result["diagnostics"] as Array)[0]
+			var parser_lc := Vector2i(int(diagnostic["line"]), int(diagnostic["col"]))
+			var grammar_lc := _line_col(text, grammar.error_position())
+			check("table position " + label, parser_lc == grammar_lc,
+				"parser=%s recognizer=%s" % [str(parser_lc), str(grammar_lc)])
 
 	# 6. AST spot checks on the forest corpus.
 	var forest := ParserScript.parse(_read(_corpus_dir().path_join("valid").path_join("forest.cue")))

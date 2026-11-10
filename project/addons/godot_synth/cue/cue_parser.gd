@@ -45,8 +45,11 @@ class _Parser:
 				continue
 			if c == " " or c == "\t":
 				_sp()
-				if _peek() == "/" and _peek(1) == "/":
-					_skip_comment()
+				if _peek() == "/":
+					_expect("//")
+					if not error.is_empty():
+						return null
+					_skip_comment_after_marker()
 					if not _consume_newline():
 						return null
 					continue
@@ -214,11 +217,11 @@ class _Parser:
 		var quant_node: Variant = null
 		var fade: Variant = null
 		var fill: Variant = null
-		if _try_clause("on"):
+		if _try_clause("on", ["fade", "fill"]):
 			quant_node = _parse_quant()
 			if quant_node == null:
 				return null
-		if _try_clause("fade"):
+		if _try_clause("fade", ["fill"]):
 			var fade_number := _number(true)
 			if not error.is_empty():
 				return null
@@ -247,7 +250,7 @@ class _Parser:
 			return null
 		var quant_node: Variant = null
 		var length := 1.0
-		if _try_clause("on"):
+		if _try_clause("on", ["len"]):
 			quant_node = _parse_quant()
 			if quant_node == null:
 				return null
@@ -611,24 +614,50 @@ class _Parser:
 
 	func _end_of_line() -> void:
 		_sp()
-		if _peek() == "/" and _peek(1) == "/":
-			_skip_comment()
+		if _peek() == "/":
+			_expect("//")
+			if not error.is_empty():
+				return
+			_skip_comment_after_marker()
 		if not _consume_newline():
 			return
 
-	func _try_clause(keyword: String) -> bool:
+	## Tries an optional clause. `alternatives` are the clause keywords that
+	## may still follow at this position; when none of them matches, the error
+	## is reported past the longest shared prefix, like the grammar recognizer.
+	func _try_clause(keyword: String, alternatives: Array = []) -> bool:
 		var save := pos
 		if _sp() <= 0:
 			pos = save
 			return false
-		if pos + keyword.length() > text.length() or text.substr(pos, keyword.length()) != keyword:
-			pos = save
+		if _starts_with(keyword):
+			pos += keyword.length()
+			_sp1()
+			if not error.is_empty():
+				return false
+			return true
+		var candidates: Array = [keyword]
+		candidates.append_array(alternatives)
+		for candidate: String in candidates:
+			if _starts_with(candidate):
+				pos = save
+				return false
+		var best := 0
+		for candidate: String in candidates:
+			var matched := 0
+			while matched < candidate.length() and _peek(matched) == candidate[matched]:
+				matched += 1
+			best = maxi(best, matched)
+		if best > 0:
+			_fail(pos + best, "unexpected input")
 			return false
-		pos += keyword.length()
-		_sp1()
-		if not error.is_empty():
+		pos = save
+		return false
+
+	func _starts_with(literal: String) -> bool:
+		if pos + literal.length() > text.length():
 			return false
-		return true
+		return text.substr(pos, literal.length()) == literal
 
 	func _match_word(candidates: Array) -> String:
 		var best := ""
@@ -646,11 +675,6 @@ class _Parser:
 			return ""
 		pos += best.length()
 		return best
-
-	func _skip_comment() -> void:
-		# At the "//" marker.
-		pos += 2
-		_skip_comment_after_marker()
 
 	func _skip_comment_after_marker() -> void:
 		while pos < text.length() and text.unicode_at(pos) != 10:
