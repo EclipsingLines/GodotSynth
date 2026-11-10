@@ -19,6 +19,10 @@ void AudioSynthPlayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_configuration"), &AudioSynthPlayer::get_configuration);
 
 	ClassDB::bind_method(D_METHOD("get_context"), &AudioSynthPlayer::get_context);
+	ClassDB::bind_method(D_METHOD("get_mixed_frames"), &AudioSynthPlayer::get_mixed_frames);
+	ClassDB::bind_method(D_METHOD("schedule_note", "note", "velocity", "on_frame", "off_frame", "controls"), &AudioSynthPlayer::schedule_note, DEFVAL(Dictionary()));
+	ClassDB::bind_method(D_METHOD("schedule_parameter", "name", "value", "frame"), &AudioSynthPlayer::schedule_parameter);
+	ClassDB::bind_method(D_METHOD("restart_stream"), &AudioSynthPlayer::restart_stream);
 	ClassDB::bind_method(D_METHOD("play_note_on_context", "context", "note", "velocity"), &AudioSynthPlayer::play_note_on_context);
 	ClassDB::bind_method(D_METHOD("play_note_off_context", "context"), &AudioSynthPlayer::play_note_off_context);
 	ClassDB::bind_method(D_METHOD("stop_all_notes"), &AudioSynthPlayer::stop_all_notes);
@@ -214,7 +218,7 @@ bool AudioSynthPlayer::ensure_playback() {
 	return playback.is_valid();
 }
 
-Ref<SynthNoteContext> AudioSynthPlayer::get_context() {
+Ref<SynthNoteContext> AudioSynthPlayer::prepare_note(Ref<SynthVoice> &r_voice) {
 	if (!configuration.is_valid()) {
 		return nullptr;
 	}
@@ -257,12 +261,146 @@ Ref<SynthNoteContext> AudioSynthPlayer::get_context() {
 	context->set_voice_id(next_voice_id++);
 	context->set_player_id(get_instance_id());
 
+	r_voice = voice;
+	return context;
+}
+
+Ref<SynthNoteContext> AudioSynthPlayer::get_context() {
+	Ref<SynthVoice> voice;
+	Ref<SynthNoteContext> context = prepare_note(voice);
+	if (context.is_null()) {
+		return nullptr;
+	}
+
 	if (!playback->add_voice(voice, context)) {
 		UtilityFunctions::push_warning("AudioSynthPlayer: note event queue is full, note dropped.");
 		return nullptr;
 	}
 
 	return context;
+}
+
+int64_t AudioSynthPlayer::get_mixed_frames() const {
+	return playback.is_valid() ? playback->get_mixed_frames() : 0;
+}
+
+Ref<SynthNoteContext> AudioSynthPlayer::schedule_note(int p_note, float p_velocity, int64_t p_on_frame, int64_t p_off_frame, const Dictionary &p_controls) {
+	ERR_FAIL_COND_V_MSG(p_on_frame < 0, Ref<SynthNoteContext>(), "AudioSynthPlayer: on_frame must be >= 0.");
+	ERR_FAIL_COND_V_MSG(p_off_frame >= 0 && p_off_frame < p_on_frame, Ref<SynthNoteContext>(), "AudioSynthPlayer: off_frame must be >= on_frame, or -1 for no note-off.");
+
+	Ref<SynthVoice> voice;
+	Ref<SynthNoteContext> context = prepare_note(voice);
+	if (context.is_null()) {
+		UtilityFunctions::push_warning("AudioSynthPlayer: cannot schedule a note without a configuration and a playback.");
+		return nullptr;
+	}
+
+	if (!playback->add_voice(voice, context, p_on_frame)) {
+		UtilityFunctions::push_warning("AudioSynthPlayer: note event queue is full, note dropped.");
+		return nullptr;
+	}
+
+	// Per-note controls go to this voice's own engine parameters, on the note-on frame.
+	Array keys = p_controls.keys();
+	for (int i = 0; i < keys.size(); i++) {
+		Variant key = keys[i];
+		Variant value = p_controls[key];
+		if (key.get_type() != Variant::STRING && key.get_type() != Variant::STRING_NAME) {
+			UtilityFunctions::push_warning("AudioSynthPlayer: control names must be strings, control skipped.");
+			continue;
+		}
+		if (value.get_type() != Variant::INT && value.get_type() != Variant::FLOAT) {
+			UtilityFunctions::push_warning("AudioSynthPlayer: control values must be numbers, control skipped.");
+			continue;
+		}
+
+		String name = key;
+		Ref<ModulatedParameter> engine_param = voice->get_engine()->get_parameter(name);
+		if (!engine_param.is_valid()) {
+			UtilityFunctions::push_warning("AudioSynthPlayer: unknown control '" + name + "'");
+			continue;
+		}
+
+		SynthNoteEvent event;
+		event.type = SynthNoteEvent::SET_PARAMETER;
+		event.parameter = engine_param;
+		event.value = value;
+		event.frame = p_on_frame;
+		if (!playback->push_event(event)) {
+			UtilityFunctions::push_warning("AudioSynthPlayer: note event queue is full, control '" + name + "' dropped.");
+		}
+	}
+
+	SynthNoteEvent on_event;
+	on_event.type = SynthNoteEvent::NOTE_ON;
+	on_event.context = context;
+	on_event.note = p_note;
+	on_event.velocity = p_velocity;
+	on_event.frame = p_on_frame;
+	if (!playback->push_event(on_event)) {
+		UtilityFunctions::push_warning("AudioSynthPlayer: note event queue is full, note_on dropped.");
+	}
+
+	if (p_off_frame >= 0) {
+		SynthNoteEvent off_event;
+		off_event.type = SynthNoteEvent::NOTE_OFF;
+		off_event.context = context;
+		off_event.frame = p_off_frame;
+		if (!playback->push_event(off_event)) {
+			UtilityFunctions::push_warning("AudioSynthPlayer: note event queue is full, note_off dropped.");
+		}
+	}
+
+	return context;
+}
+
+void AudioSynthPlayer::schedule_parameter(const String &p_name, float p_value, int64_t p_frame) {
+	if (!ensure_playback()) {
+		UtilityFunctions::push_warning("AudioSynthPlayer: cannot schedule a parameter without a playback.");
+		return;
+	}
+
+	// Engines in the pool own duplicates of the parameter. The audio thread may
+	// be reading them, so the change is queued at p_frame; the configuration's
+	// base value is left alone (unlike set_parameter()).
+	for (int i = 0; i < voice_pool.size(); i++) {
+		const Ref<SynthVoice> &voice = voice_pool[i];
+		if (!voice.is_valid() || !voice->get_engine().is_valid()) {
+			continue;
+		}
+		Ref<ModulatedParameter> engine_param = voice->get_engine()->get_parameter(p_name);
+		if (!engine_param.is_valid()) {
+			continue;
+		}
+		SynthNoteEvent event;
+		event.type = SynthNoteEvent::SET_PARAMETER;
+		event.parameter = engine_param;
+		event.value = p_value;
+		event.frame = p_frame;
+		if (!playback->push_event(event)) {
+			UtilityFunctions::push_warning("AudioSynthPlayer: note event queue is full, schedule_parameter dropped.");
+			return;
+		}
+	}
+}
+
+void AudioSynthPlayer::restart_stream() {
+	if (stream.is_null()) {
+		return;
+	}
+	if (is_playing()) {
+		stop();
+	}
+	set_volume_db(0.0);
+	play();
+	playback.unref();
+	// The old playback is gone, so voices it was mixing are free again.
+	for (int i = 0; i < voice_pool.size(); i++) {
+		if (voice_pool[i].is_valid()) {
+			voice_pool[i]->reset();
+		}
+	}
+	acquire_playback(); // also re-sends the master chain
 }
 
 bool AudioSynthPlayer::queue_context_event(const Ref<SynthNoteContext> &p_context, int p_type, float p_note, float p_velocity) {
