@@ -1,0 +1,11 @@
+{
+  "_comment": "Copy to cuegen.json (git-ignored), fill every field you use, delete the rest. No default provider exists.",
+  "backend": "<openai or command>",
+  "model": "<model name sent to the endpoint, or a label for the command backend>",
+  "base_url": "<your OpenAI-compatible endpoint root, for example https://host/v1>",
+  "api_key_env": "<NAME of the environment variable that holds the API key>",
+  "command": ["<program>", "<argument>", "{prompt_file}", "{system_file}", "{out_file}"],
+  "temperature": 0.8,
+  "max_tokens": 2048,
+  "timeout_sec": 120
+}
