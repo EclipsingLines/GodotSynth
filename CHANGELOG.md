@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SynthOfflineRenderer.render_note_stereo(...)` renders a note through the master chain to a `PackedVector2Array` (x = left, y = right)
 - `SynthAudioStreamPlayback.get_mixed_frames()` counts every frame a playback has mixed, silent or not, so a transport can use it as a sample-exact clock. `render_offline(frames)` mixes a playback on the calling thread without the audio server, and `queue_note()` / `queue_note_off()` feed it notes headlessly (see `tests/test_transport_clock.gd`)
 - Events in `SynthAudioStreamPlayback` now honour their `frame`: a `SynthNoteEvent` stamped mid-block takes effect on exactly that frame, `queue_note_at()` schedules note-on and note-off frames, and `get_late_event_count()` reports events that arrived after their frame (see `tests/test_transport_schedule.gd`)
+- `AudioSynthPlayer.get_mixed_frames()` reads its playback's audio clock, `schedule_note()` queues a note-on, note-off and per-voice controls at exact frames, `schedule_parameter()` queues a parameter change at a frame, and `restart_stream()` restarts the player and re-acquires its playback so several players can start together inside one `AudioServer.lock()` (see `tests/test_player_schedule.gd`)
 
 ### Changed
 

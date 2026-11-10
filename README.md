@@ -75,6 +75,30 @@ See [Playing Multiple Notes in the Same Frame](docs/multiple_notes.md).
 > [!TIP]
 > Use curves to drive the velocity for a more natural sounding voice.
 
+### Scheduling
+
+`get_mixed_frames()` returns the player's audio clock: the number of frames its playback has mixed since it started. Schedule notes and parameter changes at exact frames on that scale. A frame is one sample at `AudioServer.get_mix_rate()` (44100 frames per second at 44.1 kHz).
+
+```gdscript
+var now := synth.get_mixed_frames()
+var rate := AudioServer.get_mix_rate()
+synth.schedule_note(60, 0.8, now + int(0.1 * rate), now + int(0.2 * rate), {"pulse_width": 0.3})
+synth.schedule_parameter("pulse_width", 0.5, now + int(0.15 * rate))
+```
+
+`schedule_note(note, velocity, on_frame, off_frame, controls)` allocates a voice when you call it and queues note-on at `on_frame`, an optional note-off at `off_frame` (pass -1 for none), and each entry of `controls` on that voice at `on_frame`. `schedule_parameter(name, value, frame)` changes the parameter on every pooled voice without changing the configuration's base value.
+
+Because a voice is reserved when you schedule the note (round robin, stealing the oldest voice when all are busy), a note scheduled far ahead holds its voice from that call until it ends. A control in `controls` is written to that voice's engine, so it stays on the voice for later notes until it is overwritten: send a control with every note that needs it.
+
+`restart_stream()` stops and restarts the player and re-acquires its new playback. Call it for several players inside one `AudioServer.lock()`/`AudioServer.unlock()` pair so their clocks start together:
+
+```gdscript
+AudioServer.lock()
+player_a.restart_stream()
+player_b.restart_stream()
+AudioServer.unlock()
+```
+
 ### VASynthConfiguration
 
 Configures the virtual analog synthesizer with oscillators, parameters, and effects.
