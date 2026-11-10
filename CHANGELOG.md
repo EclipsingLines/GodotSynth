@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Reverb` is registered again, meant for `master_effect_chain` (one instance for the whole mix instead of one per voice)
 - `SynthOfflineRenderer.render_note_stereo(...)` renders a note through the master chain to a `PackedVector2Array` (x = left, y = right)
 - `SynthAudioStreamPlayback.get_mixed_frames()` counts every frame a playback has mixed, silent or not, so a transport can use it as a sample-exact clock. `render_offline(frames)` mixes a playback on the calling thread without the audio server, and `queue_note()` / `queue_note_off()` feed it notes headlessly (see `tests/test_transport_clock.gd`)
+- Events in `SynthAudioStreamPlayback` now honour their `frame`: a `SynthNoteEvent` stamped mid-block takes effect on exactly that frame, `queue_note_at()` schedules note-on and note-off frames, and `get_late_event_count()` reports events that arrived after their frame (see `tests/test_transport_schedule.gd`)
 
 ### Changed
 

@@ -22,14 +22,11 @@ class SynthConfiguration;
  * @brief A note event handed from the main thread to the audio thread.
  *
  * Events are pushed by AudioSynthPlayer (main thread) and applied by
- * SynthAudioStreamPlayback::_mix (audio thread) at the start of the next
- * mixed block, in the order they were pushed.
+ * SynthAudioStreamPlayback::_mix (audio thread), in the order they were pushed.
  *
- * `frame` is reserved for sample-accurate scheduling (issue #2). It is the
- * absolute mixer frame at which the event should take effect; a negative
- * value means "at the start of the next block". Only -1 is used today. To add
- * scheduling, the drain step would keep events whose frame lies beyond the
- * current block and split the block at the frames of the events it applies.
+ * `frame` is the absolute mixer frame (the `mixed_frames` scale) at which the
+ * event takes effect. An event stamped mid-block is applied exactly on that
+ * frame; -1 means "at the start of the next block".
  */
 struct SynthNoteEvent {
 	enum Type {
@@ -61,6 +58,7 @@ class SynthAudioStreamPlayback : public AudioStreamPlayback {
 public:
 	static const int MAX_ACTIVE_VOICES = 64;
 	static const int EVENT_QUEUE_SIZE = 1024; // Must be a power of two.
+	static const int PENDING_EVENT_CAPACITY = 2048;
 	// _mix renders in chunks of at most this many frames into fixed buffers,
 	// so it never allocates whatever block size the mixer asks for.
 	static const int MIX_CHUNK = 512;
@@ -81,6 +79,13 @@ private:
 	std::atomic<uint32_t> event_write_index{ 0 };
 	std::atomic<uint32_t> event_read_index{ 0 };
 	std::mutex producer_mutex;
+
+	// Events whose frame is still ahead, sorted by frame ascending, stable for equal frames.
+	// Audio thread only. Fixed size: nothing allocates.
+	SynthNoteEvent pending_events[PENDING_EVENT_CAPACITY];
+	int pending_count = 0;
+	std::atomic<int64_t> late_events{ 0 };
+	std::atomic<int> pending_count_published{ 0 }; // copy of pending_count for the main thread
 
 	std::atomic<double> current_time{ 0.0 };
 	// Frames mixed so far, advanced by every _mix call whether or not anything is playing.
@@ -104,7 +109,10 @@ private:
 	bool has_active_tail(const Ref<SynthVoice> &voice) const;
 
 	// Audio thread helpers
-	void process_events();
+	void process_events(int64_t p_block_start);
+	void apply_event(SynthNoteEvent &p_event);
+	void apply_pending_until(int64_t p_frame);
+	static void clear_event(SynthNoteEvent &p_event);
 	void start_voice(const Ref<SynthVoice> &p_voice, const Ref<SynthNoteContext> &p_context);
 	void remove_active_voice_at(int p_index);
 
@@ -121,6 +129,8 @@ public:
 	// Clock management
 	double get_current_time() const;
 	int64_t get_mixed_frames() const;
+	int64_t get_late_event_count() const;
+	int get_pending_event_count() const;
 	float get_sample_rate() const;
 
 	// Mixes p_frames on the calling thread. Only for a playback that is NOT registered with
@@ -129,6 +139,9 @@ public:
 	// Test/offline helper: builds a voice and context from p_config (see Context), queues
 	// START_VOICE then NOTE_ON (frame -1) and returns the context, or null on failure.
 	Ref<SynthNoteContext> queue_note(const Ref<SynthConfiguration> &p_config, float p_note, float p_velocity);
+	// Builds a voice/context like queue_note() and queues START_VOICE and NOTE_ON at p_on_frame,
+	// then NOTE_OFF at p_off_frame when p_off_frame >= 0. GS-003 builds the player API on the same events.
+	Ref<SynthNoteContext> queue_note_at(const Ref<SynthConfiguration> &p_config, float p_note, float p_velocity, int64_t p_on_frame, int64_t p_off_frame = -1);
 	// Queues NOTE_OFF (frame -1) for p_context. Returns false if the queue is full or p_context is null.
 	bool queue_note_off(const Ref<SynthNoteContext> &p_context);
 
@@ -145,10 +158,10 @@ public:
 	bool push_event(const SynthNoteEvent &p_event);
 
 	// Voice management (main thread side, queued)
-	bool add_voice(const Ref<SynthVoice> &p_voice, const Ref<SynthNoteContext> &p_context);
+	bool add_voice(const Ref<SynthVoice> &p_voice, const Ref<SynthNoteContext> &p_context, int64_t p_frame = -1);
 	// Queues a note_off for every voice in the mix (they ring out through their
 	// release). Returns false if the queue is full.
-	bool release_all_voices();
+	bool release_all_voices(int64_t p_frame = -1);
 	// Main thread: queues a new master effect chain (a private copy of
 	// p_source; null or empty removes it). Returns false if the queue is full.
 	bool set_master_effect_chain(const Ref<EffectChain> &p_source);
