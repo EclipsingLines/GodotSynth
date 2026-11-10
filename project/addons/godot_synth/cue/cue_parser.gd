@@ -364,7 +364,7 @@ class _Parser:
 					i += 1
 				pos = i + 1
 				continue
-			if i == line_pos + 2 and _can_start_expr(text.unicode_at(i)):
+			if text.substr(line_pos, 2) == "  " and _can_start_expr(text.unicode_at(i)):
 				_expect("  ")
 				if not error.is_empty():
 					return null

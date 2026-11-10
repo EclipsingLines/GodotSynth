@@ -210,6 +210,8 @@ func _initialize() -> void:
 		"tempo 120 /x\n",
 		" /x\n",
 		"state a:\n  s(\"kick\")\n  /x\n",
+		"state a:\n  s(\"a\")\n\t\ts(\"b\")\n",
+		"state a:\n  s(\"a\")\n \ts(\"b\")\n",
 	]
 	for source: String in accepted_rows:
 		var text := _normalise(source)
