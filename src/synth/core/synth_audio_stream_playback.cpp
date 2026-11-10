@@ -13,10 +13,14 @@ void SynthAudioStreamPlayback::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_sample_rate", "sample_rate"), &SynthAudioStreamPlayback::set_sample_rate);
 	ClassDB::bind_method(D_METHOD("get_sample_rate"), &SynthAudioStreamPlayback::get_sample_rate);
 	ClassDB::bind_method(D_METHOD("get_mixed_frames"), &SynthAudioStreamPlayback::get_mixed_frames);
+	ClassDB::bind_method(D_METHOD("get_late_event_count"), &SynthAudioStreamPlayback::get_late_event_count);
+	ClassDB::bind_method(D_METHOD("get_pending_event_count"), &SynthAudioStreamPlayback::get_pending_event_count);
 	ClassDB::bind_method(D_METHOD("get_active_voice_count"), &SynthAudioStreamPlayback::get_active_voice_count);
 	ClassDB::bind_method(D_METHOD("render_offline", "frames"), &SynthAudioStreamPlayback::render_offline);
 	ClassDB::bind_method(D_METHOD("queue_note", "config", "note", "velocity"), &SynthAudioStreamPlayback::queue_note);
+	ClassDB::bind_method(D_METHOD("queue_note_at", "config", "note", "velocity", "on_frame", "off_frame"), &SynthAudioStreamPlayback::queue_note_at, DEFVAL(-1));
 	ClassDB::bind_method(D_METHOD("queue_note_off", "context"), &SynthAudioStreamPlayback::queue_note_off);
+	ClassDB::bind_method(D_METHOD("release_all", "frame"), &SynthAudioStreamPlayback::release_all_voices, DEFVAL(-1));
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "sample_rate"), "set_sample_rate", "get_sample_rate");
 }
 
@@ -41,6 +45,14 @@ double SynthAudioStreamPlayback::get_current_time() const {
 
 int64_t SynthAudioStreamPlayback::get_mixed_frames() const {
 	return mixed_frames.load(std::memory_order_acquire);
+}
+
+int64_t SynthAudioStreamPlayback::get_late_event_count() const {
+	return late_events.load(std::memory_order_relaxed);
+}
+
+int SynthAudioStreamPlayback::get_pending_event_count() const {
+	return pending_count_published.load(std::memory_order_relaxed);
 }
 
 float SynthAudioStreamPlayback::get_sample_rate() const {
@@ -101,6 +113,49 @@ Ref<SynthNoteContext> SynthAudioStreamPlayback::queue_note(const Ref<SynthConfig
 	return context;
 }
 
+Ref<SynthNoteContext> SynthAudioStreamPlayback::queue_note_at(const Ref<SynthConfiguration> &p_config, float p_note, float p_velocity, int64_t p_on_frame, int64_t p_off_frame) {
+	ERR_FAIL_COND_V_MSG(p_config.is_null(), Ref<SynthNoteContext>(), "SynthAudioStreamPlayback: config is null.");
+	ERR_FAIL_COND_V_MSG(p_on_frame < 0, Ref<SynthNoteContext>(), "SynthAudioStreamPlayback: on_frame must be >= 0.");
+	ERR_FAIL_COND_V_MSG(p_off_frame >= 0 && p_off_frame < p_on_frame, Ref<SynthNoteContext>(), "SynthAudioStreamPlayback: off_frame is before on_frame.");
+
+	Ref<AudioStreamGeneratorEngine> engine = EngineFactory::create_engine_from_config(p_config);
+	ERR_FAIL_COND_V_MSG(engine.is_null(), Ref<SynthNoteContext>(), "SynthAudioStreamPlayback: the configuration produced no engine.");
+	engine->set_sample_rate(sample_rate);
+
+	Ref<SynthVoice> voice;
+	voice.instantiate();
+	voice->set_engine(engine);
+	voice->reserve();
+
+	Ref<SynthNoteContext> context;
+	context.instantiate();
+
+	if (!add_voice(voice, context, p_on_frame)) {
+		return Ref<SynthNoteContext>();
+	}
+
+	SynthNoteEvent event;
+	event.type = SynthNoteEvent::NOTE_ON;
+	event.context = context;
+	event.note = p_note;
+	event.velocity = p_velocity;
+	event.frame = p_on_frame;
+	if (!push_event(event)) {
+		return Ref<SynthNoteContext>();
+	}
+
+	if (p_off_frame >= 0) {
+		event.type = SynthNoteEvent::NOTE_OFF;
+		event.context = context;
+		event.frame = p_off_frame;
+		if (!push_event(event)) {
+			return Ref<SynthNoteContext>();
+		}
+	}
+
+	return context;
+}
+
 bool SynthAudioStreamPlayback::queue_note_off(const Ref<SynthNoteContext> &p_context) {
 	ERR_FAIL_COND_V_MSG(p_context.is_null(), false, "SynthAudioStreamPlayback: context is null.");
 
@@ -130,58 +185,132 @@ bool SynthAudioStreamPlayback::push_event(const SynthNoteEvent &p_event) {
 	return true;
 }
 
-// Audio thread. Applies every queued event in FIFO order. No allocation and no
-// locking: Ref copies only touch reference counts.
-void SynthAudioStreamPlayback::process_events() {
+// Audio thread. Applies one event's effect. Master-chain events are handled in
+// process_events so the old chain stays in the ring slot for a producer thread
+// to release.
+void SynthAudioStreamPlayback::apply_event(SynthNoteEvent &p_event) {
+	switch (p_event.type) {
+		case SynthNoteEvent::START_VOICE:
+			start_voice(p_event.voice, p_event.context);
+			break;
+		case SynthNoteEvent::NOTE_ON:
+			if (p_event.context.is_valid()) {
+				p_event.context->note_on(p_event.note, p_event.velocity);
+			}
+			break;
+		case SynthNoteEvent::NOTE_OFF:
+			if (p_event.context.is_valid()) {
+				p_event.context->note_off(p_event.context->get_absolute_time());
+			}
+			break;
+		case SynthNoteEvent::RELEASE_ALL:
+			for (int i = 0; i < active_voice_count; i++) {
+				if (active_voices[i].is_valid()) {
+					Ref<SynthNoteContext> voice_context = active_voices[i]->get_context();
+					if (voice_context.is_valid()) {
+						voice_context->note_off(voice_context->get_absolute_time());
+					}
+				}
+			}
+			break;
+		case SynthNoteEvent::SET_PARAMETER:
+			if (p_event.parameter.is_valid()) {
+				p_event.parameter->set_base_value(p_event.value);
+			}
+			break;
+		case SynthNoteEvent::SET_MASTER_CHAIN:
+			// Applied in process_events and never queued as pending.
+			break;
+	}
+}
+
+void SynthAudioStreamPlayback::clear_event(SynthNoteEvent &p_event) {
+	p_event.voice.unref();
+	p_event.context.unref();
+	p_event.parameter.unref();
+	p_event.chain.unref();
+}
+
+// Audio thread. Drains the ring buffer into the pending array, sorted by frame.
+// No allocation and no locking: Ref copies only touch reference counts.
+//
+// Late rule: frame == -1 or frame == block_start is on time, not late.
+// 0 <= frame < block_start is applied at the block start and counted. A full
+// pending array drops the event and counts it.
+void SynthAudioStreamPlayback::process_events(int64_t p_block_start) {
 	uint32_t read = event_read_index.load(std::memory_order_relaxed);
 	const uint32_t write = event_write_index.load(std::memory_order_acquire);
 
 	while (read != write) {
 		SynthNoteEvent &event = event_queue[read & (EVENT_QUEUE_SIZE - 1)];
 
-		switch (event.type) {
-			case SynthNoteEvent::START_VOICE:
-				start_voice(event.voice, event.context);
-				break;
-			case SynthNoteEvent::NOTE_ON:
-				if (event.context.is_valid()) {
-					event.context->note_on(event.note, event.velocity);
-				}
-				break;
-			case SynthNoteEvent::NOTE_OFF:
-				if (event.context.is_valid()) {
-					event.context->note_off(event.context->get_absolute_time());
-				}
-				break;
-			case SynthNoteEvent::RELEASE_ALL:
-				for (int i = 0; i < active_voice_count; i++) {
-					if (active_voices[i].is_valid()) {
-						Ref<SynthNoteContext> voice_context = active_voices[i]->get_context();
-						if (voice_context.is_valid()) {
-							voice_context->note_off(voice_context->get_absolute_time());
-						}
-					}
-				}
-				break;
-			case SynthNoteEvent::SET_PARAMETER:
-				if (event.parameter.is_valid()) {
-					event.parameter->set_base_value(event.value);
-				}
-				break;
-			case SynthNoteEvent::SET_MASTER_CHAIN:
-				// Leaves the previous chain in event.chain (see SynthNoteEvent::chain).
-				master_bus.swap_chain(event.chain, event.value, sample_rate);
-				break;
+		if (event.type == SynthNoteEvent::SET_MASTER_CHAIN) {
+			// Leaves the previous chain in event.chain (see SynthNoteEvent::chain),
+			// so it is released by the next push into this slot, not on this thread.
+			master_bus.swap_chain(event.chain, event.value, sample_rate);
+			event.voice.unref();
+			event.context.unref();
+			event.parameter.unref();
+			read++;
+			event_read_index.store(read, std::memory_order_release);
+			continue;
 		}
 
-		// Drop the slot's references so the slot holds nothing between uses.
-		event.voice.unref();
-		event.context.unref();
-		event.parameter.unref();
+		int64_t frame = event.frame;
+		if (frame >= 0 && frame < p_block_start) {
+			late_events.fetch_add(1, std::memory_order_relaxed);
+		}
+		if (frame < p_block_start) {
+			frame = p_block_start;
+		}
 
+		if (pending_count >= PENDING_EVENT_CAPACITY) {
+			late_events.fetch_add(1, std::memory_order_relaxed);
+			clear_event(event);
+			read++;
+			event_read_index.store(read, std::memory_order_release);
+			continue;
+		}
+
+		// Stable insertion: equal frames keep their push order.
+		int i = pending_count;
+		while (i > 0 && pending_events[i - 1].frame > frame) {
+			pending_events[i] = pending_events[i - 1];
+			i--;
+		}
+		pending_events[i] = event;
+		pending_events[i].frame = frame;
+		pending_count++;
+
+		clear_event(event);
 		read++;
 		event_read_index.store(read, std::memory_order_release);
 	}
+
+	pending_count_published.store(pending_count, std::memory_order_release);
+}
+
+void SynthAudioStreamPlayback::apply_pending_until(int64_t p_frame) {
+	int n = 0;
+	while (n < pending_count && pending_events[n].frame <= p_frame) {
+		n++;
+	}
+	if (n == 0) {
+		return;
+	}
+
+	for (int i = 0; i < n; i++) {
+		apply_event(pending_events[i]);
+	}
+
+	for (int i = 0; i < pending_count - n; i++) {
+		pending_events[i] = pending_events[i + n];
+	}
+	for (int i = pending_count - n; i < pending_count; i++) {
+		clear_event(pending_events[i]);
+	}
+	pending_count -= n;
+	pending_count_published.store(pending_count, std::memory_order_release);
 }
 
 void SynthAudioStreamPlayback::start_voice(const Ref<SynthVoice> &p_voice, const Ref<SynthNoteContext> &p_context) {
@@ -218,12 +347,21 @@ void SynthAudioStreamPlayback::remove_active_voice_at(int p_index) {
 }
 
 int SynthAudioStreamPlayback::_mix(AudioFrame *p_buffer, float p_rate_scale, int p_frames) {
-	// Apply note events queued by the main thread since the last block.
-	process_events();
+	const int64_t block_start = mixed_frames.load(std::memory_order_relaxed);
+	process_events(block_start);
 
 	int done = 0;
 	while (done < p_frames) {
-		const int frames = MIN(MIX_CHUNK, p_frames - done);
+		const int64_t position = block_start + done;
+		apply_pending_until(position);
+		int frames = MIN(MIX_CHUNK, p_frames - done);
+		if (pending_count > 0) {
+			// After apply_pending_until every pending frame is > position, so this is >= 1.
+			const int64_t until_next = pending_events[0].frame - position;
+			if (until_next < frames) {
+				frames = (int)until_next;
+			}
+		}
 		mix_chunk(p_buffer + done, frames);
 		done += frames;
 	}
@@ -309,7 +447,7 @@ void SynthAudioStreamPlayback::_stop() {
 	release_all_voices();
 }
 
-bool SynthAudioStreamPlayback::add_voice(const Ref<SynthVoice> &p_voice, const Ref<SynthNoteContext> &p_context) {
+bool SynthAudioStreamPlayback::add_voice(const Ref<SynthVoice> &p_voice, const Ref<SynthNoteContext> &p_context, int64_t p_frame) {
 	if (!p_voice.is_valid()) {
 		return false;
 	}
@@ -318,12 +456,14 @@ bool SynthAudioStreamPlayback::add_voice(const Ref<SynthVoice> &p_voice, const R
 	event.type = SynthNoteEvent::START_VOICE;
 	event.voice = p_voice;
 	event.context = p_context;
+	event.frame = p_frame;
 	return push_event(event);
 }
 
-bool SynthAudioStreamPlayback::release_all_voices() {
+bool SynthAudioStreamPlayback::release_all_voices(int64_t p_frame) {
 	SynthNoteEvent event;
 	event.type = SynthNoteEvent::RELEASE_ALL;
+	event.frame = p_frame;
 	return push_event(event);
 }
 
