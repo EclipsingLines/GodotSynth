@@ -208,5 +208,16 @@ func _initialize() -> void:
 	var fifth := PitchHelper.fast_pitch(7.0)
 	check("PitchHelper.fast_pitch(7)", absf(fifth - pow(2.0, 7.0 / 12.0)) < 0.001, "%.5f (want %.5f)" % [fifth, pow(2.0, 7.0 / 12.0)])
 
+	# Musical presets (GS-045): pitch is a semitone offset and the filter cutoff is in Hz.
+	var bass_cfg := VASynthConfiguration.new()
+	bass_cfg.set_preset(BassPreset.new())
+	var bass_chain: EffectChain = bass_cfg.effect_chain
+	var bass_filter: SynthAudioEffect = bass_chain.get_effects()[0]
+	var bass_cutoff: ModulatedParameter = bass_filter.get_parameter("cutoff")
+	check("preset pitch is an offset", absf(bass_cfg.pitch_modulation.base_value) < 0.001, "base %.2f" % bass_cfg.pitch_modulation.base_value)
+	check("preset cutoff is in Hz", bass_cutoff.mod_max >= 20000.0 and bass_cutoff.base_value >= 20.0, "base %.1f range %.1f..%.1f" % [bass_cutoff.base_value, bass_cutoff.mod_min, bass_cutoff.mod_max])
+	var bass_steady := steady(render(bass_cfg, 60.0, 1.0))
+	check("bass preset is audible", bass_steady.finite and bass_steady.rms > 0.01, "rms %.4f" % bass_steady.rms)
+
 	print("ALL PASS" if failures.is_empty() else "FAILED: " + ", ".join(failures))
 	quit(0 if failures.is_empty() else 1)
