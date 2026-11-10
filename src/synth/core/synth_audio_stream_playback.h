@@ -9,11 +9,14 @@
 #include <godot_cpp/classes/audio_stream_generator.hpp>
 #include <godot_cpp/classes/audio_stream_playback.hpp>
 #include <godot_cpp/variant/packed_float32_array.hpp>
+#include <godot_cpp/variant/packed_vector2_array.hpp>
 #include <godot_cpp/variant/typed_array.hpp>
 #include <atomic>
 #include <mutex>
 
 namespace godot {
+
+class SynthConfiguration;
 
 /**
  * @brief A note event handed from the main thread to the audio thread.
@@ -80,6 +83,8 @@ private:
 	std::mutex producer_mutex;
 
 	std::atomic<double> current_time{ 0.0 };
+	// Frames mixed so far, advanced by every _mix call whether or not anything is playing.
+	std::atomic<int64_t> mixed_frames{ 0 };
 	float sample_rate = 44100.0f;
 	bool active = false;
 
@@ -115,6 +120,17 @@ public:
 
 	// Clock management
 	double get_current_time() const;
+	int64_t get_mixed_frames() const;
+	float get_sample_rate() const;
+
+	// Mixes p_frames on the calling thread. Only for a playback that is NOT registered with
+	// the AudioServer (one made with SynthAudioStreamPlayback.new()): it calls _mix directly.
+	PackedVector2Array render_offline(int p_frames);
+	// Test/offline helper: builds a voice and context from p_config (see Context), queues
+	// START_VOICE then NOTE_ON (frame -1) and returns the context, or null on failure.
+	Ref<SynthNoteContext> queue_note(const Ref<SynthConfiguration> &p_config, float p_note, float p_velocity);
+	// Queues NOTE_OFF (frame -1) for p_context. Returns false if the queue is full or p_context is null.
+	bool queue_note_off(const Ref<SynthNoteContext> &p_context);
 
 	// AudioStreamPlayback implementation
 	virtual void _start(double p_from_pos = 0.0) override;

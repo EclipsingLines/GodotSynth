@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SynthConfiguration.master_effect_chain`: an optional effect chain processed once on the stereo mix of all voices, after the per-voice `effect_chain`. It's off (empty) by default, so existing presets sound the same. `PingPongDelay` and `Reverb` run in true stereo there; other effects run on left and right separately.
 - `Reverb` is registered again, meant for `master_effect_chain` (one instance for the whole mix instead of one per voice)
 - `SynthOfflineRenderer.render_note_stereo(...)` renders a note through the master chain to a `PackedVector2Array` (x = left, y = right)
+- `SynthAudioStreamPlayback.get_mixed_frames()` counts every frame a playback has mixed, silent or not, so a transport can use it as a sample-exact clock. `render_offline(frames)` mixes a playback on the calling thread without the audio server, and `queue_note()` / `queue_note_off()` feed it notes headlessly (see `tests/test_transport_clock.gd`)
 
 ### Changed
 
