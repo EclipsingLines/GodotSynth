@@ -15,6 +15,7 @@
 #include "core/synth_audio_stream.h"
 #include "core/synth_configuration.h"
 #include "core/synth_note_context.h"
+#include "core/synth_offline_mixer.h"
 #include "core/synth_offline_renderer.h"
 #include "core/synth_voice.h"
 #include "core/wave_helper_cache.h"
@@ -90,6 +91,7 @@ void register_core_classes() {
 	GDREGISTER_ABSTRACT_CLASS(AudioStreamGeneratorEngine);
 	GDREGISTER_CLASS(SynthVoice);
 	GDREGISTER_CLASS(SynthOfflineRenderer);
+	GDREGISTER_CLASS(SynthOfflineMixer);
 	GDREGISTER_ABSTRACT_CLASS(ConfigurationPrototype);
 	GDREGISTER_ABSTRACT_CLASS(SynthPreset);
 	GDREGISTER_ABSTRACT_CLASS(SynthConfiguration);
