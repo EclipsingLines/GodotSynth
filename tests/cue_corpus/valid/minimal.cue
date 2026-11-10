@@ -1,0 +1,2 @@
+state main:
+  s("kick")

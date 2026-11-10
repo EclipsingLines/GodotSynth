@@ -1,0 +1,17 @@
+// note names, numbers and scales
+state main:
+  note("c4 eb3 f#5 a bb2 cs4 c##3").s("lead")
+  n("0 -1 2.5 7").scale("C:major").s("lead")
+  n("0 2 4").scale("D4:minor").s("pad")
+  n("0 2 4").scale("F#3:dorian").s("pad")
+  n("0 2 4").scale("Bb:harmonicMinor").s("pad")
+  n("0 2 4").scale("A:majPent").s("pad")
+  n("0 2 4").scale("A:minPent").s("pad")
+  n("0 2 4").scale("E2:blues").s("bass")
+  n("0 1 2").scale("C:chromatic").s("bass")
+  n("<0 2> 4").scale("<C:major D:minor>").s("pad")
+  n("0 2").scale("C:phrygian").transpose(12).s("lead")
+  n("0 2").scale("C:lydian").add(3).s("lead")
+  n("0 2").scale("C:mixolydian").s("lead")
+  n("0 2").scale("C:locrian").s("lead")
+  n("0 2").scale("C:melodicMinor").s("lead")

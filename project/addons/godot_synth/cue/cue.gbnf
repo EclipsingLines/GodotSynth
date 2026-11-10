@@ -1,0 +1,50 @@
+root        ::= item*
+item        ::= blank | stmt-line | state-block
+blank       ::= sp comment? nl
+stmt-line   ::= stmt sp comment? nl
+stmt        ::= tempo | seed | let | param | transition | stinger | bind
+
+tempo       ::= "tempo" sp1 number (sp1 int "/" int)?
+seed        ::= "seed" sp1 int
+let         ::= "let" sp1 ident sp "=" sp expr
+param       ::= "param" sp1 ident (sp1 range)? sp "=" sp number
+transition  ::= "transition" sp1 (ident | "*") sp "->" sp ident (sp1 "on" sp1 quant)? (sp1 "fade" sp1 number)? (sp1 "fill" sp1 expr)?
+stinger     ::= "stinger" sp1 ident (sp1 "on" sp1 quant)? (sp1 "len" sp1 number)? sp ":" sp expr
+bind        ::= "bind" sp1 ident "." ident sp "<-" sp ident (sp1 range)?
+range       ::= number ".." number
+quant       ::= "now" | "beat" | "bar" | int sp1 ("bars" | "beats")
+
+state-block ::= "state" sp1 ident sp ":" sp comment? nl layer (layer | blank)*
+layer       ::= "  " expr sp comment? nl
+
+expr        ::= primary link*
+link        ::= cont? "." ident "(" args? ")"
+cont        ::= nl sp1
+primary     ::= ident "(" args? ")" | ident | string | number | "(" ws expr ws ")"
+args        ::= ws expr (ws "," ws expr)* ws
+
+string      ::= "\"" mini "\""
+mini        ::= msp mstack msp
+mstack      ::= mchoice (msp "," msp mchoice)*
+mchoice     ::= mseq (msp "|" msp mseq)*
+mseq        ::= mstep (msp1 mstep)*
+mstep       ::= mterm mmod* | "!"
+mterm       ::= matom | "~" | "[" msp mstack msp "]" | "<" msp mstack msp ">"
+matom       ::= mword (":" mword)?
+mword       ::= mnum | mname
+mname       ::= [a-zA-Z] [a-zA-Z0-9#_]*
+mnum        ::= "-"? [0-9]+ ("." [0-9]+)?
+mint        ::= [0-9]+
+mmod        ::= "*" mfactor | "/" mfactor | "!" mint? | "@" mnum | "?" mnum? | "(" msp mint msp "," msp mint msp ("," msp mint msp)? ")"
+mfactor     ::= mnum | "<" msp mseq msp ">"
+msp         ::= " "*
+msp1        ::= " "+
+
+ident       ::= [a-zA-Z_] [a-zA-Z0-9_]*
+number      ::= "-"? [0-9]+ ("." [0-9]+)?
+int         ::= [0-9]+
+comment     ::= "//" [^\n]*
+sp          ::= [ \t]*
+sp1         ::= [ \t]+
+ws          ::= [ \t\n]*
+nl          ::= "\n"
