@@ -1,0 +1,9 @@
+{
+  "bass": {"controls": ["gain", "velocity", "legato", "lpf", "hpf", "lpq", "attack", "decay", "sustain", "release", "pan", "detune"]},
+  "lead": {"controls": ["gain", "velocity", "legato", "lpf", "hpf", "lpq", "attack", "decay", "sustain", "release", "pan", "detune"]},
+  "pad": {"controls": ["gain", "velocity", "legato", "lpf", "hpf", "lpq", "attack", "decay", "sustain", "release", "pan", "detune"]},
+  "kick": {"controls": ["gain", "velocity", "legato", "lpf", "hpf", "lpq", "attack", "decay", "sustain", "release", "pan", "detune"]},
+  "snare": {"controls": ["gain", "velocity", "legato", "lpf", "hpf", "lpq", "attack", "decay", "sustain", "release", "pan", "detune"]},
+  "hat": {"controls": ["gain", "velocity", "legato", "lpf", "hpf", "lpq", "attack", "decay", "sustain", "release", "pan", "detune"]},
+  "crash": {"controls": ["gain", "velocity", "legato", "lpf", "hpf", "lpq", "attack", "decay", "sustain", "release", "pan", "detune"]}
+}
