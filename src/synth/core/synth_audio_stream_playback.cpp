@@ -1,10 +1,23 @@
 #include "synth_audio_stream_playback.h"
+#include "audio_stream_generator_engine.h"
+#include "engine_factory.h"
+#include "synth_configuration.h"
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/variant/packed_vector2_array.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <vector>
 
 namespace godot {
 
 void SynthAudioStreamPlayback::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_sample_rate", "sample_rate"), &SynthAudioStreamPlayback::set_sample_rate);
+	ClassDB::bind_method(D_METHOD("get_sample_rate"), &SynthAudioStreamPlayback::get_sample_rate);
+	ClassDB::bind_method(D_METHOD("get_mixed_frames"), &SynthAudioStreamPlayback::get_mixed_frames);
+	ClassDB::bind_method(D_METHOD("get_active_voice_count"), &SynthAudioStreamPlayback::get_active_voice_count);
+	ClassDB::bind_method(D_METHOD("render_offline", "frames"), &SynthAudioStreamPlayback::render_offline);
+	ClassDB::bind_method(D_METHOD("queue_note", "config", "note", "velocity"), &SynthAudioStreamPlayback::queue_note);
+	ClassDB::bind_method(D_METHOD("queue_note_off", "context"), &SynthAudioStreamPlayback::queue_note_off);
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "sample_rate"), "set_sample_rate", "get_sample_rate");
 }
 
 SynthAudioStreamPlayback::SynthAudioStreamPlayback() {
@@ -24,6 +37,77 @@ void SynthAudioStreamPlayback::set_sample_rate(float p_sample_rate) {
 // Clock management methods
 double SynthAudioStreamPlayback::get_current_time() const {
 	return current_time.load(std::memory_order_relaxed);
+}
+
+int64_t SynthAudioStreamPlayback::get_mixed_frames() const {
+	return mixed_frames.load(std::memory_order_acquire);
+}
+
+float SynthAudioStreamPlayback::get_sample_rate() const {
+	return sample_rate;
+}
+
+// Main thread only. Never call this on a playback the AudioServer is mixing:
+// it runs the audio thread's _mix on the calling thread.
+PackedVector2Array SynthAudioStreamPlayback::render_offline(int p_frames) {
+	PackedVector2Array output;
+	ERR_FAIL_COND_V_MSG(p_frames < 0 || p_frames > (1 << 26), output, "SynthAudioStreamPlayback: invalid frame count.");
+	if (p_frames == 0) {
+		return output;
+	}
+
+	// Main thread, so the allocation is fine (the audio thread's buffers are fixed).
+	std::vector<AudioFrame> buffer(p_frames);
+	_mix(buffer.data(), 1.0f, p_frames);
+
+	output.resize(p_frames);
+	Vector2 *dst = output.ptrw();
+	for (int i = 0; i < p_frames; i++) {
+		dst[i] = Vector2(buffer[i].left, buffer[i].right);
+	}
+	return output;
+}
+
+// Main thread. Builds the same voice/context pair SynthOfflineRenderer does, but
+// feeds it through the event queue so _mix itself plays it.
+Ref<SynthNoteContext> SynthAudioStreamPlayback::queue_note(const Ref<SynthConfiguration> &p_config, float p_note, float p_velocity) {
+	ERR_FAIL_COND_V_MSG(p_config.is_null(), Ref<SynthNoteContext>(), "SynthAudioStreamPlayback: config is null.");
+
+	Ref<AudioStreamGeneratorEngine> engine = EngineFactory::create_engine_from_config(p_config);
+	ERR_FAIL_COND_V_MSG(engine.is_null(), Ref<SynthNoteContext>(), "SynthAudioStreamPlayback: the configuration produced no engine.");
+	engine->set_sample_rate(sample_rate);
+
+	Ref<SynthVoice> voice;
+	voice.instantiate();
+	voice->set_engine(engine);
+	voice->reserve();
+
+	Ref<SynthNoteContext> context;
+	context.instantiate();
+
+	if (!add_voice(voice, context)) {
+		return Ref<SynthNoteContext>();
+	}
+
+	SynthNoteEvent event;
+	event.type = SynthNoteEvent::NOTE_ON;
+	event.context = context;
+	event.note = p_note;
+	event.velocity = p_velocity;
+	if (!push_event(event)) {
+		return Ref<SynthNoteContext>();
+	}
+
+	return context;
+}
+
+bool SynthAudioStreamPlayback::queue_note_off(const Ref<SynthNoteContext> &p_context) {
+	ERR_FAIL_COND_V_MSG(p_context.is_null(), false, "SynthAudioStreamPlayback: context is null.");
+
+	SynthNoteEvent event;
+	event.type = SynthNoteEvent::NOTE_OFF;
+	event.context = p_context;
+	return push_event(event);
 }
 
 // ---------------------------------------------------------------------------
@@ -143,6 +227,9 @@ int SynthAudioStreamPlayback::_mix(AudioFrame *p_buffer, float p_rate_scale, int
 		mix_chunk(p_buffer + done, frames);
 		done += frames;
 	}
+	// Every frame this call mixed, silent or not. Kept out of mix_chunk, which
+	// returns early on silence.
+	mixed_frames.fetch_add(p_frames, std::memory_order_release);
 	return p_frames;
 }
 
