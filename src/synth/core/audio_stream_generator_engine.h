@@ -39,6 +39,18 @@ public:
 	virtual Ref<ModulatedParameter> get_parameter(const String &name) const;
 	virtual Dictionary get_parameters() const;
 
+	// "fx<i>.<param>" -> parameter <param> of effect i of `p_chain`; invalid Ref if the name is not
+	// of that form, i is out of range or the effect has no such parameter. Main thread only.
+	static Ref<ModulatedParameter> resolve_effect_parameter(const Ref<EffectChain> &p_chain, const String &p_name);
+	// Splits "fx<i>.<param>": returns true and fills r_index/r_param when p_name has the form
+	// "fx" + 1..3 ASCII digits + "." + a non-empty parameter name. No other form matches
+	// ("fx.cutoff", "fx0", "fx0.", "fxa.x", "fx1234.x", "FX0.cutoff" all return false).
+	static bool parse_effect_name(const String &p_name, int &r_index, String &r_param);
+	// get_parameter(p_name), and when that finds nothing and p_name is "fx<i>.<param>", the
+	// effect parameter of this engine's own effect chain. THE lookup for controls and
+	// schedule_parameter; do not call get_parameter(name) directly for user-supplied names.
+	Ref<ModulatedParameter> resolve_parameter(const String &p_name) const;
+
 	// Create a duplicate of this engine
 	virtual Ref<AudioStreamGeneratorEngine> duplicate() const;
 

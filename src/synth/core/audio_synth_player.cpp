@@ -22,6 +22,7 @@ void AudioSynthPlayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_mixed_frames"), &AudioSynthPlayer::get_mixed_frames);
 	ClassDB::bind_method(D_METHOD("schedule_note", "note", "velocity", "on_frame", "off_frame", "controls"), &AudioSynthPlayer::schedule_note, DEFVAL(Dictionary()));
 	ClassDB::bind_method(D_METHOD("schedule_parameter", "name", "value", "frame"), &AudioSynthPlayer::schedule_parameter);
+	ClassDB::bind_method(D_METHOD("has_parameter", "name"), &AudioSynthPlayer::has_parameter);
 	ClassDB::bind_method(D_METHOD("restart_stream"), &AudioSynthPlayer::restart_stream);
 	ClassDB::bind_method(D_METHOD("play_note_on_context", "context", "note", "velocity"), &AudioSynthPlayer::play_note_on_context);
 	ClassDB::bind_method(D_METHOD("play_note_off_context", "context"), &AudioSynthPlayer::play_note_off_context);
@@ -315,7 +316,7 @@ Ref<SynthNoteContext> AudioSynthPlayer::schedule_note(int p_note, float p_veloci
 		}
 
 		String name = key;
-		Ref<ModulatedParameter> engine_param = voice->get_engine()->get_parameter(name);
+		Ref<ModulatedParameter> engine_param = voice->get_engine()->resolve_parameter(name);
 		if (!engine_param.is_valid()) {
 			UtilityFunctions::push_warning("AudioSynthPlayer: unknown control '" + name + "'");
 			continue;
@@ -368,7 +369,7 @@ void AudioSynthPlayer::schedule_parameter(const String &p_name, float p_value, i
 		if (!voice.is_valid() || !voice->get_engine().is_valid()) {
 			continue;
 		}
-		Ref<ModulatedParameter> engine_param = voice->get_engine()->get_parameter(p_name);
+		Ref<ModulatedParameter> engine_param = voice->get_engine()->resolve_parameter(p_name);
 		if (!engine_param.is_valid()) {
 			continue;
 		}
@@ -382,6 +383,27 @@ void AudioSynthPlayer::schedule_parameter(const String &p_name, float p_value, i
 			return;
 		}
 	}
+}
+
+bool AudioSynthPlayer::has_parameter(const String &p_name) const {
+	if (configuration.is_null()) {
+		return false;
+	}
+
+	// A pooled voice engine is what schedule_note and schedule_parameter resolve
+	// against, so prefer one; before any voice exists, ask a temporary engine.
+	for (int i = 0; i < voice_pool.size(); i++) {
+		const Ref<SynthVoice> &voice = voice_pool[i];
+		if (voice.is_valid() && voice->get_engine().is_valid()) {
+			return voice->get_engine()->resolve_parameter(p_name).is_valid();
+		}
+	}
+
+	Ref<AudioStreamGeneratorEngine> engine = EngineFactory::create_engine_from_config(configuration);
+	if (engine.is_null()) {
+		return false;
+	}
+	return engine->resolve_parameter(p_name).is_valid();
 }
 
 void AudioSynthPlayer::restart_stream() {
@@ -448,6 +470,9 @@ void AudioSynthPlayer::set_parameter(const String &p_name, float p_value) {
 
 	// The configuration's copy is what engines created from now on start from.
 	Ref<ModulatedParameter> param = configuration->get_parameter(p_name);
+	if (!param.is_valid()) {
+		param = AudioStreamGeneratorEngine::resolve_effect_parameter(configuration->get_effect_chain(), p_name);
+	}
 	if (param.is_valid()) {
 		param->set_base_value(p_value);
 	}
@@ -459,7 +484,7 @@ void AudioSynthPlayer::set_parameter(const String &p_name, float p_value) {
 		if (!voice.is_valid() || !voice->get_engine().is_valid()) {
 			continue;
 		}
-		Ref<ModulatedParameter> engine_param = voice->get_engine()->get_parameter(p_name);
+		Ref<ModulatedParameter> engine_param = voice->get_engine()->resolve_parameter(p_name);
 		if (!engine_param.is_valid()) {
 			continue;
 		}

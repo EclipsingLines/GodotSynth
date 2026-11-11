@@ -116,7 +116,7 @@ bool SynthOfflineMixer::schedule_note(int p_track, float p_note, float p_velocit
 		}
 
 		const String name = key;
-		Ref<ModulatedParameter> parameter = voice->get_engine()->get_parameter(name);
+		Ref<ModulatedParameter> parameter = voice->get_engine()->resolve_parameter(name);
 		if (parameter.is_null()) {
 			UtilityFunctions::push_warning("SynthOfflineMixer: unknown control '" + name + "'");
 			continue;
@@ -161,7 +161,7 @@ bool SynthOfflineMixer::schedule_parameter(int p_track, const String &p_name, fl
 			continue;
 		}
 
-		Ref<ModulatedParameter> parameter = voice->get_engine()->get_parameter(p_name);
+		Ref<ModulatedParameter> parameter = voice->get_engine()->resolve_parameter(p_name);
 		if (parameter.is_null()) {
 			continue;
 		}

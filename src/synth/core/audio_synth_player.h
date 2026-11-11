@@ -70,6 +70,10 @@ public:
 	// Queues a SET_PARAMETER at p_frame for the parameter p_name on every pooled voice engine.
 	// Unlike set_parameter() it does not change the configuration's base value.
 	void schedule_parameter(const String &p_name, float p_value, int64_t p_frame);
+	// True if p_name resolves to a parameter: an engine parameter ("pitch", ...) or "fx<i>.<param>".
+	// Uses a pooled voice engine when one exists, otherwise a temporary engine built from the
+	// configuration (main thread, no side effects). False with no configuration.
+	bool has_parameter(const String &p_name) const;
 	// Stops and restarts the stream and re-acquires the new playback, so a caller can restart
 	// several players inside one AudioServer.lock()/unlock() and have their counters equal.
 	void restart_stream();

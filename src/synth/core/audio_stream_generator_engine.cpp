@@ -108,6 +108,65 @@ Ref<ModulatedParameter> AudioStreamGeneratorEngine::get_parameter(const String &
 	return Ref<ModulatedParameter>();
 }
 
+Ref<ModulatedParameter> AudioStreamGeneratorEngine::resolve_parameter(const String &p_name) const {
+	Ref<ModulatedParameter> param = get_parameter(p_name);
+	if (param.is_valid()) {
+		return param;
+	}
+	return resolve_effect_parameter(effect_chain, p_name);
+}
+
+Ref<ModulatedParameter> AudioStreamGeneratorEngine::resolve_effect_parameter(const Ref<EffectChain> &p_chain, const String &p_name) {
+	if (p_chain.is_null()) {
+		return Ref<ModulatedParameter>();
+	}
+
+	int index = 0;
+	String param_name;
+	if (!parse_effect_name(p_name, index, param_name)) {
+		return Ref<ModulatedParameter>();
+	}
+	TypedArray<SynthAudioEffect> effects = p_chain->get_effects();
+	if (index < 0 || index >= effects.size()) {
+		return Ref<ModulatedParameter>();
+	}
+	Ref<SynthAudioEffect> effect = effects[index];
+	if (effect.is_null()) {
+		return Ref<ModulatedParameter>();
+	}
+	return effect->get_parameter(param_name);
+}
+
+bool AudioStreamGeneratorEngine::parse_effect_name(const String &p_name, int &r_index, String &r_param) {
+	if (!p_name.begins_with("fx")) {
+		return false;
+	}
+	const int dot = p_name.find(".");
+	if (dot < 0) {
+		return false;
+	}
+
+	const String digits = p_name.substr(2, dot - 2);
+	if (digits.length() < 1 || digits.length() > 3) {
+		return false;
+	}
+	for (int i = 0; i < digits.length(); i++) {
+		const char32_t c = digits[i];
+		if (c < '0' || c > '9') {
+			return false;
+		}
+	}
+
+	const String param = p_name.substr(dot + 1);
+	if (param.is_empty()) {
+		return false;
+	}
+
+	r_index = digits.to_int();
+	r_param = param;
+	return true;
+}
+
 Ref<AudioStreamGeneratorEngine> AudioStreamGeneratorEngine::duplicate() const {
 	// Base implementation - to be overridden by derived classes
 	return nullptr;
