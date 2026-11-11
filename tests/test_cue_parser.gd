@@ -212,7 +212,15 @@ func _initialize() -> void:
 		"state a:\n  s(\"kick\")\n  /x\n",
 		"state a:\n  s(\"a\")\n\t\ts(\"b\")\n",
 		"state a:\n  s(\"a\")\n \ts(\"b\")\n",
+		"tempo 120..\n",
+		"state a:\n  s(\"a\")\n   s(\"b\")\n",
 	]
+	# Rows whose expected diagnostic position is pinned here as well as
+	# checked against the grammar recognizer.
+	var rejected_positions := {
+		"tempo 120..\n": Vector2i(1, 11),
+		"state a:\n  s(\"a\")\n   s(\"b\")\n": Vector2i(3, 4),
+	}
 	for source: String in accepted_rows:
 		var text := _normalise(source)
 		var parsed: bool = ParserScript.parse(text).get("ok") == true
@@ -234,6 +242,10 @@ func _initialize() -> void:
 			var grammar_lc := _line_col(text, grammar.error_position())
 			check("table position " + label, parser_lc == grammar_lc,
 				"parser=%s recognizer=%s" % [str(parser_lc), str(grammar_lc)])
+			if rejected_positions.has(source):
+				check("table expected position " + label,
+					parser_lc == rejected_positions[source],
+					"expected=%s parser=%s" % [str(rejected_positions[source]), str(parser_lc)])
 
 	# 6. AST spot checks on the forest corpus.
 	var forest := ParserScript.parse(_read(_corpus_dir().path_join("valid").path_join("forest.cue")))

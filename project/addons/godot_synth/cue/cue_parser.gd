@@ -164,7 +164,7 @@ class _Parser:
 		var lo := 0.0
 		var hi := 1.0
 		if _sp() > 0 and (_is_digit(_peek()) or _peek() == "-"):
-			var first := _number(true)
+			var first := _number(true, true)
 			if not error.is_empty():
 				return null
 			_expect("..")
@@ -302,7 +302,7 @@ class _Parser:
 		var lo: Variant = null
 		var hi: Variant = null
 		if _sp() > 0 and (_is_digit(_peek()) or _peek() == "-"):
-			var first := _number(true)
+			var first := _number(true, true)
 			if not error.is_empty():
 				return null
 			_expect("..")
@@ -364,7 +364,8 @@ class _Parser:
 					i += 1
 				pos = i + 1
 				continue
-			if text.substr(line_pos, 2) == "  " and _can_start_expr(text.unicode_at(i)):
+			if text.substr(line_pos, 2) == "  " \
+					and line_pos + 2 < text.length() and _can_start_expr(text.unicode_at(line_pos + 2)):
 				_expect("  ")
 				if not error.is_empty():
 					return null
@@ -571,7 +572,7 @@ class _Parser:
 			pos += 1
 		return text.substr(start, pos - start)
 
-	func _number(strict: bool) -> Dictionary:
+	func _number(strict: bool, range_start: bool = false) -> Dictionary:
 		var start := pos
 		if _peek() == "-":
 			pos += 1
@@ -589,7 +590,10 @@ class _Parser:
 				while _is_digit(_peek()):
 					pos += 1
 			elif _peek(1) == ".":
-				pass
+				if not range_start:
+					pos += 1
+					_fail(pos, "expected a digit after '.'")
+					return {}
 			elif strict:
 				pos += 1
 				_fail(pos, "expected a digit after '.'")
