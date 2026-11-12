@@ -590,9 +590,9 @@ func _test_errors() -> void:
 	check("transform layer kind", _has_code(res, "E_KIND"), str(_codes(res)))
 
 	res = _program("s(\"a\").every(2, rev())")
-	check("random stub code", _has_code(res, "E_UNKNOWN_FUNCTION"), str(_codes(res)))
+	check("every implemented", not _has_code(res, "E_UNKNOWN_FUNCTION"), str(_codes(res)))
 	haps = _query(res, f(0), f(1))
-	check("random stub queryable", haps is Array, "query did not return an array")
+	check("every queryable", haps is Array, "query did not return an array")
 
 
 func _test_window_splitting() -> void:
