@@ -132,8 +132,9 @@ func _initialize() -> void:
 			expected["code"], expected["line"], expected["col"], str(diagnostics),
 		])
 
-	# 3. Diagnostics are sorted by line, then column, then code.
-	var sorted_source := "tempo 0\nstate a:\n  foo\nbind kick.wobble <- nope\n"
+	# 3. Diagnostics are sorted by line, then column, then code. The unused-let
+	# warning is appended after the walk, so it arrives out of order on line 1.
+	var sorted_source := "let unused = s(\"kick\")\nstate a:\n  foo\nbind kick.wobble <- nope\n"
 	var sorted_diags := _diags(sorted_source, "sorted")
 	var sorted_ok := sorted_diags.size() >= 4
 	if sorted_ok:
@@ -182,6 +183,10 @@ func _initialize() -> void:
 			"code": "W_N_WITHOUT_SCALE", "line": 2, "col": 3, "severity": "warning"},
 		{"source": "let x = s(\"kick\")\nstate a:\n  s(\"snare\")\n",
 			"code": "W_UNUSED_LET", "line": 1, "col": 5, "severity": "warning"},
+		{"source": "param p 0..1 = 0.5\nstate a:\n  note(\"c e\").lpf(800).s(\"lead\")\nbind lead.lpf <- p\n",
+			"code": "E_BIND_CONFLICT", "line": 4, "col": 1},
+		{"source": "let t = fast(2)\nstate a:\n  s(\"kick\").sine(t)\n",
+			"code": "E_KIND", "line": 3, "col": 13},
 	]
 	for row: Dictionary in inline:
 		var source := String(row["source"])
@@ -192,13 +197,19 @@ func _initialize() -> void:
 		check("inline %s %d:%d" % [row["code"], int(row["line"]), int(row["col"])],
 			ok, str(diagnostics))
 
+	# Arguments of a chain-link error still count as let uses.
+	var chain_args_diags := _diags(
+		"let t = fast(2)\nstate a:\n  s(\"kick\").sine(t)\n", "chain args")
+	check("chain link args counted", not _has(chain_args_diags, "W_UNUSED_LET", 1, 5),
+		str(chain_args_diags))
+
 	var clean_source := "let t = fast(2)\nstate a:\n  s(\"kick\").every(2, t)\n"
 	var clean_diags := _diags(clean_source, "clean")
 	check("inline clean", clean_diags.is_empty(), str(clean_diags))
 
 	if failures.is_empty():
 		print("PASS all cue validator checks (valid=%d, invalid=%d, inline=%d)" % [
-			valid.size(), semantic_count, inline.size() + 1,
+			valid.size(), semantic_count, inline.size() + 2,
 		])
 		quit(0)
 	else:

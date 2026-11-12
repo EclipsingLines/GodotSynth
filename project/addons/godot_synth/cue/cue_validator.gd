@@ -289,6 +289,8 @@ class _Run:
 		if has_receiver and not also_method \
 				and (function_kind == "constructor" or function_kind == "signal"):
 			_err("E_KIND", "'%s' cannot be used as a chain link" % name, line, col)
+			for arg: Variant in args:
+				_expr(arg)
 			return "unknown"
 
 		var min_args := int(entry.get("min_args", 0))
@@ -506,6 +508,9 @@ class _Run:
 				var call_name := String(expr.get("name", ""))
 				var args: Array = expr.get("args", [])
 				if call_name == "s":
+					var receiver: Variant = expr.get("receiver")
+					if receiver is Dictionary:
+						_merge_info(info, _info(receiver, seen_lets))
 					for arg: Variant in args:
 						if arg is Dictionary \
 								and String((arg as Dictionary).get("type", "")) == "string":
