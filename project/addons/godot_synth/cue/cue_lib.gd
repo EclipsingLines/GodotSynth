@@ -614,9 +614,118 @@ static func _apply(name: String, recv: CuePattern, argv: Array, ctx: Dictionary,
 	_error(ctx, null, "E_UNKNOWN_FUNCTION", "unsupported method '" + name + "'")
 	return recv
 
-static func _apply_random(name: String, recv: CuePattern, _argv: Array, ctx: Dictionary, _site: int) -> CuePattern:
-	_error(ctx, null, "E_UNKNOWN_FUNCTION", "not implemented: " + name)
+static func _apply_random(name: String, recv: CuePattern, argv: Array, ctx: Dictionary, site: int) -> CuePattern:
+	var seed := int(ctx["seed"])
+	match name:
+		"degrade":
+			return recv.degrade_by(0.5, seed, site)
+		"degradeBy":
+			var p: Variant = argv[0]
+			if p is CuePattern:
+				var p_pat: CuePattern = p
+				return CuePattern.patternify_inner(p_pat, func(v: Variant) -> CuePattern:
+					return recv.degrade_by(float(v), seed, site))
+			if p is float or p is int:
+				return recv.degrade_by(float(p), seed, site)
+			return _kind_error(ctx, recv, name)
+		"sometimesBy":
+			return _sometimes_apply(recv, argv, ctx, site, -1.0)
+		"sometimes":
+			return _sometimes_apply(recv, argv, ctx, site, 0.5)
+		"often":
+			return _sometimes_apply(recv, argv, ctx, site, 0.75)
+		"rarely":
+			return _sometimes_apply(recv, argv, ctx, site, 0.25)
+		"almostNever":
+			return _sometimes_apply(recv, argv, ctx, site, 0.1)
+		"almostAlways":
+			return _sometimes_apply(recv, argv, ctx, site, 0.9)
+		"someCyclesBy":
+			return _some_cycles_apply(recv, argv, ctx, site, -1.0)
+		"someCycles":
+			return _some_cycles_apply(recv, argv, ctx, site, 0.5)
+		"every":
+			return _every(recv, argv[0], argv[1])
+		"superimpose":
+			var t: Callable = argv[0]
+			return CuePattern.stack([recv, t.call(recv)])
+		"off":
+			return _off(recv, argv[0], argv[1], ctx)
+	return _kind_error(ctx, recv, name)
+
+static func _kind_error(ctx: Dictionary, recv: CuePattern, name: String) -> CuePattern:
+	_error(ctx, null, "E_KIND", "wrong argument kind for '" + name + "'")
 	return recv
+
+static func _sometimes_apply(recv: CuePattern, argv: Array, ctx: Dictionary, site: int, default_p: float) -> CuePattern:
+	var p: Variant = default_p
+	var t: Variant = argv[0]
+	if default_p < 0.0:
+		p = argv[0]
+		t = argv[1]
+	if not (p is float or p is int):
+		return _kind_error(ctx, recv, "sometimesBy")
+	if not (t is Callable):
+		return _kind_error(ctx, recv, "sometimesBy")
+	return _sometimes_by(recv, float(p), t, int(ctx["seed"]), site)
+
+static func _sometimes_by(recv: CuePattern, p: float, t: Callable, seed: int, site: int) -> CuePattern:
+	var kept := recv.degrade_by(p, seed, site, false)
+	var changed := t.call(recv.degrade_by(1.0 - p, seed, site, true))
+	return CuePattern.stack([kept, changed])
+
+static func _some_cycles_apply(recv: CuePattern, argv: Array, ctx: Dictionary, site: int, default_p: float) -> CuePattern:
+	var p: Variant = default_p
+	var t: Variant = argv[0]
+	if default_p < 0.0:
+		p = argv[0]
+		t = argv[1]
+	if not (p is float or p is int):
+		return _kind_error(ctx, recv, "someCyclesBy")
+	if not (t is Callable):
+		return _kind_error(ctx, recv, "someCyclesBy")
+	return _some_cycles_by(recv, float(p), t, int(ctx["seed"]), site)
+
+static func _some_cycles_by(recv: CuePattern, p: float, t: Callable, seed: int, site: int) -> CuePattern:
+	var changed := t.call(recv)
+	var q := func(state: Dictionary) -> Array[CueHap]:
+		var out: Array[CueHap] = []
+		var span: CueSpan = state["span"]
+		for sub: CueSpan in span.span_cycles():
+			var c := sub.begin.cycle()
+			var pick := changed if CueSignals.hash01(seed, site, CueFrac.make(c)) < p else recv
+			out.append_array(pick.query.call(CuePattern.make_state(sub, state["controls"])))
+		return out
+	return CuePattern.new(q)
+
+static func _every(recv: CuePattern, k: Variant, t: Callable) -> CuePattern:
+	if k is CuePattern:
+		var k_pat: CuePattern = k
+		return CuePattern.patternify_inner(k_pat, func(v: Variant) -> CuePattern:
+			return _every_const(recv, floori(float(v)), t))
+	if k is float or k is int:
+		return _every_const(recv, floori(float(k)), t)
+	return recv
+
+static func _every_const(recv: CuePattern, n: int, t: Callable) -> CuePattern:
+	if n <= 0:
+		return recv
+	if n == 1:
+		return t.call(recv)
+	var pats: Array[CuePattern] = [t.call(recv)]
+	for i in n - 1:
+		pats.append(recv)
+	return CuePattern.slowcat_prime(pats)
+
+static func _off(recv: CuePattern, c: Variant, t: Callable, ctx: Dictionary) -> CuePattern:
+	if c is CuePattern:
+		var c_pat: CuePattern = c
+		var shifted := CuePattern.patternify_inner(c_pat, func(v: Variant) -> CuePattern:
+			return recv.late(CuePattern.to_frac(v)))
+		return CuePattern.stack([recv, t.call(shifted)])
+	if c is float or c is int:
+		return CuePattern.stack([recv, t.call(recv.late(CueFrac.from_float(float(c))))])
+	return _kind_error(ctx, recv, "off")
 
 static func _time(recv: CuePattern, arg: Variant, build: Callable) -> CuePattern:
 	if arg is CuePattern:
