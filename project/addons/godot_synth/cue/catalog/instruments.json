@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "instruments": {
+    "bass": {
+      "preset": "BassPreset",
+      "role": "bass",
+      "tags": ["low", "warm"],
+      "description": "Low bass: square, sine and triangle layers, low-pass filter, light overdrive.",
+      "polyphony": 4,
+      "default_note": 36,
+      "controls": {
+        "lpf": {"target": "fx0.cutoff", "lo": 20, "hi": 20000, "curve": "linear", "out_lo": 20, "out_hi": 20000},
+        "lpq": {"target": "fx0.resonance", "lo": 0, "hi": 1, "curve": "linear", "out_lo": 0, "out_hi": 1}
+      }
+    },
+    "lead": {
+      "preset": "LeadSynthPreset",
+      "role": "lead",
+      "tags": ["bright", "sustained"],
+      "description": "Bright lead: pulse, sine and triangle layers, band-pass filter, vibrato, ping-pong delay.",
+      "polyphony": 6,
+      "default_note": 72,
+      "controls": {}
+    },
+    "pad": {
+      "preset": "PadSynthPreset",
+      "role": "pad",
+      "tags": ["soft", "slow", "ambient"],
+      "description": "Slow pad: 1.5 s attack, 2 s release, sine and triangle layers, low-pass filter, reverb.",
+      "polyphony": 4,
+      "default_note": 60,
+      "controls": {
+        "lpf": {"target": "fx0.cutoff", "lo": 20, "hi": 20000, "curve": "linear", "out_lo": 20, "out_hi": 20000},
+        "lpq": {"target": "fx0.resonance", "lo": 0, "hi": 1, "curve": "linear", "out_lo": 0, "out_hi": 1}
+      }
+    },
+    "kick": {
+      "preset": "KickDrumPreset",
+      "role": "drums",
+      "tags": ["punchy", "low"],
+      "description": "Kick drum: sine and square body with a noise click, fast pitch drop, low-pass filter, clip distortion.",
+      "polyphony": 2,
+      "default_note": 36,
+      "controls": {
+        "lpf": {"target": "fx0.cutoff", "lo": 20, "hi": 20000, "curve": "linear", "out_lo": 20, "out_hi": 20000},
+        "lpq": {"target": "fx0.resonance", "lo": 0, "hi": 1, "curve": "linear", "out_lo": 0, "out_hi": 1}
+      }
+    },
+    "snare": {
+      "preset": "SnareDrumPreset",
+      "role": "drums",
+      "tags": ["punchy", "noisy"],
+      "description": "Snare drum: noise and square layers, high-pass filter, clip distortion, short reverb.",
+      "polyphony": 2,
+      "default_note": 48,
+      "controls": {
+        "hpf": {"target": "fx0.cutoff", "lo": 20, "hi": 20000, "curve": "linear", "out_lo": 20, "out_hi": 20000}
+      }
+    },
+    "hat": {
+      "preset": "HiHatPreset",
+      "role": "drums",
+      "tags": ["bright", "noisy", "short"],
+      "description": "Closed hi-hat: noise and square layers, high-pass filter, bitcrush.",
+      "polyphony": 4,
+      "default_note": 84,
+      "controls": {
+        "hpf": {"target": "fx0.cutoff", "lo": 20, "hi": 20000, "curve": "linear", "out_lo": 20, "out_hi": 20000}
+      }
+    },
+    "arp": {
+      "preset": "ArpeggiatorPreset",
+      "role": "arp",
+      "tags": ["plucky", "bright"],
+      "description": "Plucky arpeggio voice: pulse, triangle and sine layers, band-pass filter, ping-pong delay.",
+      "polyphony": 6,
+      "default_note": 72,
+      "controls": {}
+    }
+  }
+}
