@@ -27,6 +27,9 @@ class SynthConfiguration;
  * `frame` is the absolute mixer frame (the `mixed_frames` scale) at which the
  * event takes effect. An event stamped mid-block is applied exactly on that
  * frame; -1 means "at the start of the next block".
+ *
+ * GAIN_RAMP ramps the playback's output gain to `value` over `ramp_frames`
+ * frames starting at `frame` (0 = a step).
  */
 struct SynthNoteEvent {
 	enum Type {
@@ -36,6 +39,7 @@ struct SynthNoteEvent {
 		RELEASE_ALL, ///< Call note_off on the context of every voice in the mix.
 		SET_PARAMETER, ///< Call parameter->set_base_value(value).
 		SET_MASTER_CHAIN, ///< Install `chain` as the master chain (`value` = its tail in seconds).
+		GAIN_RAMP, ///< Ramp the output gain to `value` over `ramp_frames` frames, starting at `frame`.
 	};
 
 	Type type = START_VOICE;
@@ -50,6 +54,7 @@ struct SynthNoteEvent {
 	float note = 0.0f;
 	float velocity = 0.0f;
 	float value = 0.0f;
+	int32_t ramp_frames = 0;
 };
 
 class SynthAudioStreamPlayback : public AudioStreamPlayback {
@@ -102,8 +107,19 @@ private:
 	// Master effect chain on the mix (audio thread; installed by events).
 	SynthMasterBus master_bus;
 
+	// Output gain (audio thread only; GAIN_RAMP events). `gain_current` is the
+	// gain at the start of the next chunk's first sample.
+	float gain_current = 1.0f;
+	float gain_start = 1.0f;
+	float gain_target = 1.0f;
+	int32_t ramp_total = 0; // 0 = no ramp running
+	int32_t ramp_pos = 0; // frames of the ramp already played
+
 	// Renders one chunk (frames <= MIX_CHUNK) into p_buffer.
 	void mix_chunk(AudioFrame *p_buffer, int p_frames);
+
+	// Applies the output gain to a chunk, advancing a running ramp.
+	void apply_gain(AudioFrame *p_buffer, int p_frames, bool p_silent);
 
 	// Helper function to check if a voice has active delay tails
 	bool has_active_tail(const Ref<SynthVoice> &voice) const;
@@ -144,6 +160,9 @@ public:
 	Ref<SynthNoteContext> queue_note_at(const Ref<SynthConfiguration> &p_config, float p_note, float p_velocity, int64_t p_on_frame, int64_t p_off_frame = -1);
 	// Queues NOTE_OFF (frame -1) for p_context. Returns false if the queue is full or p_context is null.
 	bool queue_note_off(const Ref<SynthNoteContext> &p_context);
+	// Queues a GAIN_RAMP at p_frame (absolute mixed_frames; < 0 means next block).
+	// Returns false when the queue is full.
+	bool queue_gain_ramp(float p_gain, int64_t p_frame, int p_ramp_frames);
 
 	// AudioStreamPlayback implementation
 	virtual void _start(double p_from_pos = 0.0) override;

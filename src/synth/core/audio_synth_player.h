@@ -70,6 +70,11 @@ public:
 	// Queues a SET_PARAMETER at p_frame for the parameter p_name on every pooled voice engine.
 	// Unlike set_parameter() it does not change the configuration's base value.
 	void schedule_parameter(const String &p_name, float p_value, int64_t p_frame);
+	// Queues a gain ramp on this player's playback: the player's output gain goes linearly from its
+	// current value to p_gain over p_ramp_frames frames starting at p_frame (a mixed_frames value,
+	// as for schedule_note). p_ramp_frames = 0 is a step. p_gain is clamped to [0, 4]. Initial gain 1.
+	// restart_stream() makes a new playback, so the gain is back to 1.0 afterwards.
+	void schedule_gain_ramp(float p_gain, int64_t p_frame, int p_ramp_frames);
 	// True if p_name resolves to a parameter: an engine parameter ("pitch", ...) or "fx<i>.<param>".
 	// Uses a pooled voice engine when one exists, otherwise a temporary engine built from the
 	// configuration (main thread, no side effects). False with no configuration.

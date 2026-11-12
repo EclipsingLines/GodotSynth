@@ -15,6 +15,7 @@ void SynthOfflineMixer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("add_track", "config", "polyphony"), &SynthOfflineMixer::add_track, DEFVAL(16));
 	ClassDB::bind_method(D_METHOD("schedule_note", "track", "note", "velocity", "on_frame", "off_frame", "controls"), &SynthOfflineMixer::schedule_note, DEFVAL(Dictionary()));
 	ClassDB::bind_method(D_METHOD("schedule_parameter", "track", "name", "value", "frame"), &SynthOfflineMixer::schedule_parameter);
+	ClassDB::bind_method(D_METHOD("schedule_gain_ramp", "track", "gain", "frame", "ramp_frames"), &SynthOfflineMixer::schedule_gain_ramp);
 	ClassDB::bind_method(D_METHOD("render", "frames"), &SynthOfflineMixer::render);
 	ClassDB::bind_method(D_METHOD("get_mixed_frames"), &SynthOfflineMixer::get_mixed_frames);
 	ClassDB::bind_method(D_METHOD("get_track_count"), &SynthOfflineMixer::get_track_count);
@@ -179,6 +180,19 @@ bool SynthOfflineMixer::schedule_parameter(int p_track, const String &p_name, fl
 		UtilityFunctions::push_warning("SynthOfflineMixer: unknown parameter '" + p_name + "'");
 	}
 	return found;
+}
+
+bool SynthOfflineMixer::schedule_gain_ramp(int p_track, float p_gain, int64_t p_frame, int p_ramp_frames) {
+	ERR_FAIL_INDEX_V_MSG(p_track, (int)tracks.size(), false, "SynthOfflineMixer: invalid track index.");
+	ERR_FAIL_COND_V_MSG(p_frame < 0, false, "SynthOfflineMixer: frame must be >= 0.");
+
+	SynthNoteEvent event;
+	event.type = SynthNoteEvent::GAIN_RAMP;
+	event.frame = p_frame;
+	event.value = p_gain;
+	event.ramp_frames = MAX(0, p_ramp_frames);
+	tracks[p_track].queue.push_back(event);
+	return true;
 }
 
 void SynthOfflineMixer::push_due_events(Track &r_track, int64_t p_until_frame) {

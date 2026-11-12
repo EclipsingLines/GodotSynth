@@ -165,6 +165,15 @@ bool SynthAudioStreamPlayback::queue_note_off(const Ref<SynthNoteContext> &p_con
 	return push_event(event);
 }
 
+bool SynthAudioStreamPlayback::queue_gain_ramp(float p_gain, int64_t p_frame, int p_ramp_frames) {
+	SynthNoteEvent event;
+	event.type = SynthNoteEvent::GAIN_RAMP;
+	event.frame = p_frame;
+	event.value = p_gain;
+	event.ramp_frames = MAX(0, p_ramp_frames);
+	return push_event(event);
+}
+
 // ---------------------------------------------------------------------------
 // Event queue
 // ---------------------------------------------------------------------------
@@ -221,6 +230,18 @@ void SynthAudioStreamPlayback::apply_event(SynthNoteEvent &p_event) {
 		case SynthNoteEvent::SET_MASTER_CHAIN:
 			// Applied in process_events and never queued as pending.
 			break;
+		case SynthNoteEvent::GAIN_RAMP: {
+			const float target = CLAMP(p_event.value, 0.0f, 4.0f);
+			gain_start = gain_current;
+			gain_target = target;
+			if (p_event.ramp_frames <= 0) {
+				gain_current = target;
+				ramp_total = 0;
+			} else {
+				ramp_total = p_event.ramp_frames;
+				ramp_pos = 0;
+			}
+		} break;
 	}
 }
 
@@ -377,6 +398,8 @@ void SynthAudioStreamPlayback::mix_chunk(AudioFrame *p_buffer, int p_frames) {
 		for (int i = 0; i < p_frames; i++) {
 			p_buffer[i] = AudioFrame(); // Default constructor creates a silent frame
 		}
+		// A ramp keeps advancing through silence, or a fade-out covering a gap would stall.
+		apply_gain(p_buffer, p_frames, true);
 		return;
 	}
 
@@ -417,6 +440,46 @@ void SynthAudioStreamPlayback::mix_chunk(AudioFrame *p_buffer, int p_frames) {
 	for (int j = 0; j < p_frames; j++) {
 		p_buffer[j].left = CLAMP(out_left[j], -1.0f, 1.0f);
 		p_buffer[j].right = CLAMP(out_right[j], -1.0f, 1.0f);
+	}
+
+	apply_gain(p_buffer, p_frames, false);
+}
+
+// Audio thread. Applies the output gain after the master bus, so effect tails
+// fade with it. Advances a running ramp by the chunk's frame count.
+void SynthAudioStreamPlayback::apply_gain(AudioFrame *p_buffer, int p_frames, bool p_silent) {
+	if (ramp_total == 0) {
+		if (p_silent || gain_current == 1.0f) {
+			return;
+		}
+		for (int j = 0; j < p_frames; j++) {
+			p_buffer[j].left *= gain_current;
+			p_buffer[j].right *= gain_current;
+		}
+		return;
+	}
+
+	// A ramp is running.
+	const double delta = (double)gain_target - (double)gain_start;
+	for (int j = 0; j < p_frames; j++) {
+		const int pos = ramp_pos + j;
+		float g;
+		if (pos >= ramp_total) {
+			g = gain_target;
+		} else {
+			g = (float)((double)gain_start + delta * (double)pos / (double)ramp_total);
+		}
+		if (!p_silent) {
+			p_buffer[j].left *= g;
+			p_buffer[j].right *= g;
+		}
+	}
+	ramp_pos += p_frames;
+	if (ramp_pos >= ramp_total) {
+		ramp_total = 0;
+		gain_current = gain_target;
+	} else {
+		gain_current = (float)((double)gain_start + delta * (double)ramp_pos / (double)ramp_total);
 	}
 }
 

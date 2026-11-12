@@ -22,6 +22,7 @@ void AudioSynthPlayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_mixed_frames"), &AudioSynthPlayer::get_mixed_frames);
 	ClassDB::bind_method(D_METHOD("schedule_note", "note", "velocity", "on_frame", "off_frame", "controls"), &AudioSynthPlayer::schedule_note, DEFVAL(Dictionary()));
 	ClassDB::bind_method(D_METHOD("schedule_parameter", "name", "value", "frame"), &AudioSynthPlayer::schedule_parameter);
+	ClassDB::bind_method(D_METHOD("schedule_gain_ramp", "gain", "frame", "ramp_frames"), &AudioSynthPlayer::schedule_gain_ramp);
 	ClassDB::bind_method(D_METHOD("has_parameter", "name"), &AudioSynthPlayer::has_parameter);
 	ClassDB::bind_method(D_METHOD("restart_stream"), &AudioSynthPlayer::restart_stream);
 	ClassDB::bind_method(D_METHOD("play_note_on_context", "context", "note", "velocity"), &AudioSynthPlayer::play_note_on_context);
@@ -382,6 +383,17 @@ void AudioSynthPlayer::schedule_parameter(const String &p_name, float p_value, i
 			UtilityFunctions::push_warning("AudioSynthPlayer: note event queue is full, schedule_parameter dropped.");
 			return;
 		}
+	}
+}
+
+void AudioSynthPlayer::schedule_gain_ramp(float p_gain, int64_t p_frame, int p_ramp_frames) {
+	ERR_FAIL_COND_MSG(p_frame < 0, "AudioSynthPlayer: frame must be >= 0.");
+	if (!ensure_playback()) {
+		UtilityFunctions::push_warning("AudioSynthPlayer: no playback, gain ramp dropped.");
+		return;
+	}
+	if (!playback->queue_gain_ramp(p_gain, p_frame, p_ramp_frames)) {
+		UtilityFunctions::push_warning("AudioSynthPlayer: note event queue is full, gain ramp dropped.");
 	}
 }
 
