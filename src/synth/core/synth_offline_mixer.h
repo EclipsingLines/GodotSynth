@@ -54,6 +54,7 @@ public:
 	int add_track(const Ref<SynthConfiguration> &p_config, int p_polyphony = 16);
 	bool schedule_note(int p_track, float p_note, float p_velocity, int64_t p_on_frame, int64_t p_off_frame, const Dictionary &p_controls = Dictionary());
 	bool schedule_parameter(int p_track, const String &p_name, float p_value, int64_t p_frame);
+	bool schedule_gain_ramp(int p_track, float p_gain, int64_t p_frame, int p_ramp_frames);
 	PackedVector2Array render(int p_frames);
 	int64_t get_mixed_frames() const;
 	int get_track_count() const;
