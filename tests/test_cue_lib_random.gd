@@ -184,7 +184,7 @@ func _test_determinism() -> void:
 	var two := _compile_layers([
 		"s(\"hat*4\").degrade()",
 		"s(\"hat*4\").degrade()",
-	])
+	], 5)
 	var first_res := CueLib.compile(_parse("state a:\n  s(\"hat*4\").degrade()\n"), 5)
 	var first_pat: CuePattern = first_res["states"]["a"]
 	var first := _sig(first_pat, f(0), f(10))
