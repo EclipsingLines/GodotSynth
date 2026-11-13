@@ -9,6 +9,7 @@ extends RefCounted
 
 const ParserScript = preload("res://addons/godot_synth/cue/cue_parser.gd")
 const ValidatorScript = preload("res://addons/godot_synth/cue/cue_validator.gd")
+const CatalogScript = preload("res://addons/godot_synth/cue/cue_catalog.gd")
 
 
 ## One file's result: {file: String, ok: bool, diagnostics: Array}.
@@ -63,7 +64,12 @@ static func _add_file(path: String, files: Array[String], seen: Dictionary) -> v
 	files.append(path)
 
 
-## Default catalog path (the corpus fixture), see Context.
+## The real catalog (CueCatalog.load_default().validator_catalog()). The default of run().
+static func default_catalog() -> Dictionary:
+	return CatalogScript.load_default().validator_catalog()
+
+
+## Path of the M2 corpus fixture catalog. No longer the default of run(); tests pass it with --catalog.
 static func default_catalog_path() -> String:
 	return ProjectSettings.globalize_path("res://").path_join("../tests/cue_corpus/catalog.json")
 
@@ -72,7 +78,8 @@ static func default_catalog_path() -> String:
 ## Returns {lines: Array[String], exit_code: int, error: String}.
 static func run(args: PackedStringArray) -> Dictionary:
 	var paths: Array[String] = []
-	var catalog_path := default_catalog_path()
+	var catalog_path := ""
+	var has_catalog := false
 	var i := 0
 	while i < args.size():
 		var arg := String(args[i])
@@ -80,6 +87,7 @@ static func run(args: PackedStringArray) -> Dictionary:
 			if i + 1 >= args.size():
 				return _usage_error()
 			catalog_path = String(args[i + 1])
+			has_catalog = true
 			i += 2
 		else:
 			paths.append(arg)
@@ -87,10 +95,16 @@ static func run(args: PackedStringArray) -> Dictionary:
 	if paths.is_empty():
 		return _usage_error()
 
-	var loaded: Dictionary = _load_catalog(catalog_path)
-	if String(loaded.get("error", "")) != "":
-		return {"lines": [], "exit_code": 2, "error": loaded["error"]}
-	var catalog: Dictionary = loaded["catalog"]
+	var catalog: Dictionary = {}
+	if has_catalog:
+		var loaded: Dictionary = _load_catalog(catalog_path)
+		if String(loaded.get("error", "")) != "":
+			return {"lines": [], "exit_code": 2, "error": loaded["error"]}
+		catalog = loaded["catalog"]
+	else:
+		catalog = default_catalog()
+		if catalog.is_empty():
+			return {"lines": [], "exit_code": 2, "error": "cannot load the default instrument catalog"}
 
 	var lines: Array[String] = []
 	var exit_code := 0

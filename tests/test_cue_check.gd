@@ -7,6 +7,7 @@ const CheckerScript = preload("res://addons/godot_synth/cue/cue_checker.gd")
 
 var failures: Array[String] = []
 var checks := 0
+var fixture_catalog: String = ""
 
 
 func check(name: String, ok: bool, detail: String = "") -> void:
@@ -54,6 +55,7 @@ func _parse_lines(lines: Array) -> Array[Dictionary]:
 
 func _initialize() -> void:
 	var corpus := _corpus_dir()
+	fixture_catalog = corpus.path_join("catalog.json")
 	var catalog := _load_catalog(corpus.path_join("catalog.json"))
 	var run_results: Array[Dictionary] = []
 
@@ -118,7 +120,9 @@ func _initialize() -> void:
 		str(warning["diagnostics"]))
 
 	# 3. run() on one valid file.
-	var valid_run := CheckerScript.run(PackedStringArray([corpus + "/valid/forest.cue"]))
+	var valid_run := CheckerScript.run(PackedStringArray([
+		corpus + "/valid/forest.cue", "--catalog", fixture_catalog,
+	]))
 	run_results.append(valid_run)
 	var valid_lines: Array = valid_run["lines"]
 	check("run forest exit", int(valid_run["exit_code"]) == 0, str(valid_run))
@@ -132,7 +136,9 @@ func _initialize() -> void:
 	check("run forest json", valid_dictionary, str(valid_lines))
 
 	# 4. run() on one invalid file.
-	var invalid_run := CheckerScript.run(PackedStringArray([corpus + "/invalid/js_arrow.cue"]))
+	var invalid_run := CheckerScript.run(PackedStringArray([
+		corpus + "/invalid/js_arrow.cue", "--catalog", fixture_catalog,
+	]))
 	run_results.append(invalid_run)
 	var invalid_lines: Array = invalid_run["lines"]
 	check("run js arrow exit", int(invalid_run["exit_code"]) == 1, str(invalid_run))
@@ -142,13 +148,17 @@ func _initialize() -> void:
 		and not bool(invalid_parsed[0]["ok"]), str(invalid_lines))
 
 	# 5. run() over directories and the whole corpus.
-	var valid_dir_run := CheckerScript.run(PackedStringArray([corpus + "/valid"]))
+	var valid_dir_run := CheckerScript.run(PackedStringArray([
+		corpus + "/valid", "--catalog", fixture_catalog,
+	]))
 	run_results.append(valid_dir_run)
 	check("run valid dir exit", int(valid_dir_run["exit_code"]) == 0, str(valid_dir_run))
 	check("run valid dir lines", (valid_dir_run["lines"] as Array).size() == 12,
 		str((valid_dir_run["lines"] as Array).size()))
 
-	var invalid_dir_run := CheckerScript.run(PackedStringArray([corpus + "/invalid"]))
+	var invalid_dir_run := CheckerScript.run(PackedStringArray([
+		corpus + "/invalid", "--catalog", fixture_catalog,
+	]))
 	run_results.append(invalid_dir_run)
 	var invalid_dir_lines: Array = invalid_dir_run["lines"]
 	check("run invalid dir exit", int(invalid_dir_run["exit_code"]) == 1,
@@ -164,7 +174,9 @@ func _initialize() -> void:
 				break
 	check("run invalid dir all fail", all_invalid, str(invalid_dir_lines))
 
-	var corpus_run := CheckerScript.run(PackedStringArray([corpus]))
+	var corpus_run := CheckerScript.run(PackedStringArray([
+		corpus, "--catalog", fixture_catalog,
+	]))
 	run_results.append(corpus_run)
 	var corpus_lines: Array = corpus_run["lines"]
 	check("run corpus exit", int(corpus_run["exit_code"]) == 1, str(corpus_run))
