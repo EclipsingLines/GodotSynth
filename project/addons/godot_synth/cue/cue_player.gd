@@ -116,9 +116,12 @@ func play() -> bool:
 	return true
 
 func stop() -> void:
+	var was_running := _playing or (transport != null and transport.running)
 	_playing = false
 	if transport != null:
 		transport.stop()
+	if was_running:
+		_wait_for_reaped_playbacks()
 
 func set_state(name: String) -> bool:
 	if not _loaded or not _playing or conductor == null:
@@ -237,3 +240,33 @@ func _unload() -> void:
 	_playing = false
 	_announce.clear()
 	_log_seen = 0
+
+## The audio server deletes a stopped playback on its next mix step, and nothing
+## after that: a playback still in its list when the process quits is a
+## GDExtension object that outlives this library, and the engine's leak cleanup
+## then deletes it through unloaded code. Wait (bounded) for the mix step that
+## reaps the playbacks the transport just stopped.
+func _wait_for_reaped_playbacks() -> void:
+	var before := _mixed_frames()
+	var deadline := Time.get_ticks_msec() + 250
+	while Time.get_ticks_msec() < deadline:
+		if _mixed_after(before):
+			# The reaping is the tail of the mix step that just advanced the clocks.
+			OS.delay_usec(2000)
+			return
+		OS.delay_usec(500)
+
+func _mixed_frames() -> Array[int]:
+	var out: Array[int] = []
+	if transport != null:
+		for p: AudioSynthPlayer in transport.players:
+			out.append(p.get_mixed_frames())
+	return out
+
+func _mixed_after(p_frames: Array[int]) -> bool:
+	if transport == null:
+		return true
+	for i in p_frames.size():
+		if transport.players[i].get_mixed_frames() > p_frames[i]:
+			return true
+	return p_frames.is_empty()
