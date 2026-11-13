@@ -14,7 +14,9 @@ var catalog: CueCatalog
 var sink: CueSink
 var cycle_to_frame: Callable
 
-var _pairs: Dictionary                 # {group: PackedStringArray} from CueScan; GS-028 uses it for binds
+var _pairs: Dictionary                 # {group: PackedStringArray} from CueScan; used by binds
+var _stinger_src: Dictionary = {}      # name -> id of the last instance
+var _bind_last: Dictionary = {}        # "<inst>.<control>" -> last emitted mapped value
 var _current: String = ""
 var _current_src: String = ""
 var _pending: Dictionary = {}          # {to, t_sw, rule} or empty
@@ -43,6 +45,8 @@ func start() -> void:
 	_scheduled_to = 0.0
 	_live = []
 	_ramps = []
+	_stinger_src = {}
+	_bind_last = {}
 	_log = []
 	_counter = 0
 	_started = false
@@ -119,12 +123,48 @@ func process_window(from_c: float, to_c: float) -> void:
 	if not _pending.is_empty() and float(_pending["t_sw"]) < to_c:
 		_apply_switch()
 	_emit_ramps(to_c)
-	# GS-028 inserts its bind step here.
+	_emit_binds(from_c)
 	scheduler.process_window(from_c, to_c)
 	_scheduled_to = to_c
 
 func get_log() -> Array[Dictionary]:
 	return _log
+
+## Plays `name` from its next quantized boundary, layered over the current state. A retrigger
+## ends the previous instance at the new start. False when not started or unknown.
+func stinger(name: String) -> bool:
+	if not _started or not compiled["stingers"].has(name):
+		push_warning("CueConductor: unknown stinger '%s'" % name)
+		return false
+	var st: Dictionary = compiled["stingers"][name]
+	var t0 := CueScheduler.next_boundary(_scheduled_to, st["quant"], beats_per_bar)
+	var id := _new_id("stinger", name)
+	if _stinger_src.has(name):
+		var prev: Dictionary = scheduler.get_source(_stinger_src[name])
+		if not prev.is_empty() and float(prev["end"]) > t0:
+			scheduler.set_source_end(_stinger_src[name], t0)
+	scheduler.add_source(id, "stingers", st["pattern"], t0, t0, t0 + float(st["len"]))
+	_stinger_src[name] = id
+	_log.append({"type": "stinger", "cycle": t0, "name": name, "requested": _scheduled_to})
+	return true
+
+## Sets a game param, clamped into its declared range. False when not started or unknown.
+func set_param(name: String, value: float) -> bool:
+	if not _started or not compiled["params"].has(name):
+		push_warning("CueConductor: unknown param '%s'" % name)
+		return false
+	var p: Dictionary = compiled["params"][name]
+	var v := clampf(value, float(p["lo"]), float(p["hi"]))
+	scheduler.controls["params"][name] = v
+	_log.append({"type": "param", "cycle": _scheduled_to, "name": name, "value": v})
+	return true
+
+func get_param(name: String) -> float:
+	var params: Dictionary = scheduler.controls["params"]
+	if not params.has(name):
+		push_warning("CueConductor: unknown param '%s'" % name)
+		return 0.0
+	return float(params[name])
 
 func _make_scheduler() -> void:
 	scheduler = CueScheduler.new(catalog, sink, cycle_to_frame)
@@ -199,6 +239,33 @@ func _apply_switch() -> void:
 	if rule["fill"] != null:
 		scheduler.add_source(_new_id("fill", to), "transitions", rule["fill"], t, t, t + maxf(1.0, fade))
 	_log.append({"type": "switch", "cycle": t, "from": old, "to": to, "fade": fade, "fill": rule["fill"] != null})
+
+func _emit_binds(from_c: float) -> void:
+	var params: Dictionary = scheduler.controls["params"]
+	var frame := int(cycle_to_frame.call(from_c))
+	for b: Dictionary in compiled["binds"]:
+		var inst: String = b["inst"]
+		var control: String = b["control"]
+		if not params.has(b["param"]) or not compiled["params"].has(b["param"]):
+			continue
+		var target: String = catalog.control_target(inst, control)
+		if target == "":
+			continue
+		var p: Dictionary = compiled["params"][b["param"]]
+		var pmin := float(p["lo"])
+		var pmax := float(p["hi"])
+		var t := 0.0 if pmax == pmin else (float(params[b["param"]]) - pmin) / (pmax - pmin)
+		var rng: Vector2 = catalog.control_range(inst, control)
+		var lo: float = float(b["lo"]) if b["lo"] != null else rng.x
+		var hi: float = float(b["hi"]) if b["hi"] != null else rng.y
+		var mapped: float = catalog.map_control_value(inst, control, lerpf(lo, hi, t))
+		var key := inst + "." + control
+		if _bind_last.has(key) and _bind_last[key] == mapped:
+			continue
+		_bind_last[key] = mapped
+		for group: String in _pairs:
+			if inst in _pairs[group]:
+				sink.param(group + "/" + inst, target, mapped, frame)
 
 func _emit_ramps(to_c: float) -> void:
 	var kept: Array[Dictionary] = []
