@@ -150,7 +150,9 @@ func _process(delta: float) -> bool:
 		1:
 			if wall > 0.3:
 				rate = int(AudioServer.get_mix_rate())
-				live_sink.origin_frame = player_a.get_mixed_frames() + int(0.3 * rate)
+				# A full second of headroom keeps the "not active before" observation from being
+				# skipped when a slow frame lets the audio clock jump past a shorter lookahead.
+				live_sink.origin_frame = player_a.get_mixed_frames() + int(1.0 * rate)
 				on_f = 0
 				off_f = int(0.3 * rate)
 				live_sink.note("g/bass", 69.4, 1.0, on_f, off_f, {"pulse_width": 0.3})
