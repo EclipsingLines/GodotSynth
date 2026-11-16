@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parameter and control names of the form `fx<i>.<param>` (for example `fx0.cutoff`) address parameter `<param>` of effect `i` (0-based, in chain order) in a voice's effect chain, in `AudioSynthPlayer.set_parameter()`, `schedule_parameter()`, `schedule_note()` controls and the same calls on `SynthOfflineMixer`. `AudioSynthPlayer.has_parameter(name)` reports whether a name resolves (`tests/test_fx_params.gd`)
 - An adaptive cue runtime: `CuePlayer` loads a `.cue`, creates one player per (group, instrument), and drives the conductor from the transport's audio clock (`tests/test_cue_player.gd`)
 - `tools/cue_render.gd`, a headless cue-plus-scenario to WAV renderer
+- `docs/cue-language.md`, the cue language reference, with its function table generated from `CueLib.FUNCTIONS` and its instrument table generated from the catalog. `tools/cue_reference.gd` regenerates both tables, and `--check` fails when the page is out of date
 
 ### Changed
 
