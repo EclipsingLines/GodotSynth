@@ -7,10 +7,10 @@
 class_name CueReference
 extends RefCounted
 
-const FUNCTIONS_BEGIN: String = "<!-- BEGIN GENERATED FUNCTIONS -->"
-const FUNCTIONS_END: String = "<!-- END GENERATED FUNCTIONS -->"
-const INSTRUMENTS_BEGIN: String = "<!-- BEGIN GENERATED INSTRUMENTS -->"
-const INSTRUMENTS_END: String = "<!-- END GENERATED INSTRUMENTS -->"
+const FUNCTIONS_BEGIN: String = "<!-- BEGIN GENERATED: functions -->"
+const FUNCTIONS_END: String = "<!-- END GENERATED: functions -->"
+const INSTRUMENTS_BEGIN: String = "<!-- BEGIN GENERATED: instruments -->"
+const INSTRUMENTS_END: String = "<!-- END GENERATED: instruments -->"
 
 ## Absolute path of docs/cue-language.md.
 static func default_doc_path() -> String:

@@ -110,7 +110,7 @@ A constructor called free returns a pattern (`s("kick")`, `stack(a, b)`). A meth
 
 Patterned arguments: every numeric argument of a method accepts a number, a mini string (`fast("<1 2>")`) or a pattern or signal (`gain(sine.range(0.3, 1))`, `gain(game("danger"))`). Time-shaping functions (`fast slow early late ply segment iter euclid`) use innerJoin; controls use appLeft (structure from the receiver, the argument sampled at each hap's whole begin).
 
-<!-- BEGIN GENERATED FUNCTIONS -->
+<!-- BEGIN GENERATED: functions -->
 | Name | Kind | Signature |
 |---|---|---|
 | `add` | method | `add(numeric)` |
@@ -171,7 +171,7 @@ Patterned arguments: every numeric argument of a method accepts a number, a mini
 | `transpose` | method | `transpose(numeric)` |
 | `tri` | signal | `tri` |
 | `velocity` | method | `velocity(numeric)` |
-<!-- END GENERATED FUNCTIONS -->
+<!-- END GENERATED: functions -->
 
 What the groups do:
 
@@ -232,7 +232,7 @@ Every diagnostic is `{code, message, line, col, severity}` with 1-based line and
 
 Instruments come from the catalog. The table columns are `name | role | tags | controls | description`. The controls `gain velocity legato` work on every instrument, `lpf hpf lpq` exist only where the preset has that filter, and `attack decay sustain release pan detune` are not available and are reported as `E_UNKNOWN_CONTROL`.
 
-<!-- BEGIN GENERATED INSTRUMENTS -->
+<!-- BEGIN GENERATED: instruments -->
 ```text
 arp | arp | plucky, bright | gain, velocity, legato | Plucky arpeggio voice: pulse, triangle and sine layers, band-pass filter, ping-pong delay.
 bass | bass | low, warm | gain, velocity, legato, lpf, lpq | Low bass: square, sine and triangle layers, low-pass filter, light overdrive.
@@ -242,4 +242,4 @@ lead | lead | bright, sustained | gain, velocity, legato | Bright lead: pulse, s
 pad | pad | soft, slow, ambient | gain, velocity, legato, lpf, lpq | Slow pad: 1.5 s attack, 2 s release, sine and triangle layers, low-pass filter, reverb.
 snare | drums | punchy, noisy | gain, velocity, legato, hpf | Snare drum: noise and square layers, high-pass filter, clip distortion, short reverb.
 ```
-<!-- END GENERATED INSTRUMENTS -->
+<!-- END GENERATED: instruments -->
