@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "axes": {
+    "mood": ["tense", "calm", "mysterious", "triumphant", "melancholy", "playful", "ominous"],
+    "biome": ["forest", "desert", "cave", "snow", "city", "swamp", "ocean"],
+    "intensity": ["ambient", "low", "medium", "high", "frantic"],
+    "instrumentation": [
+      "bass pad",
+      "bass lead hat",
+      "kick snare hat bass",
+      "pad arp",
+      "lead pad bass",
+      "kick hat arp bass",
+      "snare hat lead",
+      "pad lead arp kick"
+    ],
+    "form": [
+      "one looping state",
+      "two states with a quantised transition",
+      "two states and a stinger",
+      "three states with a wildcard transition back to the first",
+      "two states with a bind from a game parameter to an instrument control",
+      "two states with a fill on the transition"
+    ]
+  },
+  "templates": [
+    "Write a {mood} game music cue for a {biome} level at {intensity} intensity. Use only these instruments: {instrumentation}. Structure: {form}.",
+    "I need background music for a {biome} area. Mood: {mood}. Intensity: {intensity}. Instruments allowed: {instrumentation}. Form: {form}.",
+    "Compose a cue in the cue language. Setting: {biome}. Feel: {mood}, {intensity}. Instruments: {instrumentation}. Make it {form}."
+  ]
+}
