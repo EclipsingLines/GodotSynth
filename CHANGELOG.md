@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tools/cue_render.gd`, a headless cue-plus-scenario to WAV renderer
 - `docs/cue-language.md`, the cue language reference, with its function table generated from `CueLib.FUNCTIONS` and its instrument table generated from the catalog. `tools/cue_reference.gd` regenerates both tables, and `--check` fails when the page is out of date
 - A provider-neutral cue prompt pack under `prompts/cue/`: a system prompt, six request/cue examples and `pack.json`, assembled by `CuePrompt` and printed as one text block by `tools/cue_prompt.gd`
+- A playable adaptive cue demo: the scene `addons/godot_synth/cue/demo/cue_demo.tscn` and `forest_demo.cue` (`tests/test_cue_demo.gd`)
 
 ### Changed
 
