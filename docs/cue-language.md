@@ -41,7 +41,7 @@ bind pad.lpf <- danger 400..4000
 - The initial state is the first state declared, `explore`; `combat` replaces it when the transition fires.
 - `bass` is a `let`, so both states reuse the same pattern, and `combat` plays it faster.
 - `game("danger")` reads the numeric param `danger` at query time, so the hats follow the game.
-- Two transitions: `explore -> combat` on the next bar with a one-cycle crossfade and a hat fill, and any state back to `explore` every four bars.
+- Two transitions: `explore -> combat` on the next bar with a one-cycle crossfade and a hat fill, and a rule from any state back to `explore`, which waits for the next 4-bar boundary and crossfades over 2 cycles.
 - A stinger, `found`, plays once on the next beat, while `bind` maps `danger` onto the pad's low-pass cutoff.
 
 ## 2. Lexical rules
