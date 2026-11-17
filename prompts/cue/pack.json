@@ -1,0 +1,13 @@
+{
+	"version": 1,
+	"system_file": "system.md",
+	"catalog_table": true,
+	"examples": [
+		{"request": "A calm, minimal exploration loop in D minor: a soft pad and a sparse bass.", "cue_file": "examples/calm_exploration.cue"},
+		{"request": "Exploration and combat states. Switching to combat crossfades over one bar and brings in drums; going back takes four bars.", "cue_file": "examples/explore_to_combat.cue"},
+		{"request": "Tension that rises with a danger parameter: the hi-hats get busier and the pad filter opens.", "cue_file": "examples/danger_param_bind.cue"},
+		{"request": "A treasure-found stinger that lands on the next beat over a quiet ambient bed, in three-four time.", "cue_file": "examples/pickup_stinger.cue"},
+		{"request": "A driving groove with euclidean drums and a bass line that varies.", "cue_file": "examples/euclid_groove.cue"},
+		{"request": "A menu theme with three states (menu, loading, credits) and quick transitions between them.", "cue_file": "examples/three_states_menu.cue"}
+	]
+}
