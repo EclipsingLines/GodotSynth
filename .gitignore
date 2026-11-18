@@ -52,3 +52,4 @@ src/gen/
 # Legacy cline notes (migrated to design/)
 .cline_brain/
 __pycache__/
+tools/cuegen/cuegen.json
