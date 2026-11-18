@@ -18,6 +18,8 @@ const OfflineSinkScript = preload("res://addons/godot_synth/cue/cue_offline_sink
 const RecordingSinkScript = preload("res://addons/godot_synth/cue/cue_recording_sink.gd")
 const ConductorScript = preload("res://addons/godot_synth/cue/cue_conductor.gd")
 const FanoutScript = preload("res://addons/godot_synth/cue/cue_fanout_sink.gd")
+const AnalysisReportScript = preload("res://addons/godot_synth/cue/cue_analysis_report.gd")
+const EventAnalysisScript = preload("res://addons/godot_synth/cue/cue_event_analysis.gd")
 
 ## {duration_cycles: 8.0, sample_rate: 44100, tail_sec: 2.0, events: []}
 static func default_scenario() -> Dictionary:
@@ -317,11 +319,12 @@ static func run(args: PackedStringArray) -> Dictionary:
 	var cue_path := ""
 	var out_path := ""
 	var scenario_path := ""
+	var analysis_path := ""
 	var catalog_path := ""
 	var i := 0
 	while i < args.size():
 		var arg := String(args[i])
-		if arg == "--scenario" or arg == "--out" or arg == "--catalog":
+		if arg == "--scenario" or arg == "--out" or arg == "--analysis" or arg == "--catalog":
 			if i + 1 >= args.size() or String(args[i + 1]).begins_with("--"):
 				return _usage_error()
 			match arg:
@@ -329,6 +332,8 @@ static func run(args: PackedStringArray) -> Dictionary:
 					scenario_path = String(args[i + 1])
 				"--out":
 					out_path = String(args[i + 1])
+				"--analysis":
+					analysis_path = String(args[i + 1])
 				"--catalog":
 					catalog_path = String(args[i + 1])
 			i += 2
@@ -392,15 +397,30 @@ static func run(args: PackedStringArray) -> Dictionary:
 	var save_error: int = save_wav(frames, sample_rate, out_path)
 	if save_error != OK:
 		return _cli_error("cannot write " + out_path)
+	if not analysis_path.is_empty():
+		var roles_path := catalog_path if not catalog_path.is_empty() else AnalysisReportScript.DEFAULT_CATALOG_PATH
+		var roles: Dictionary = EventAnalysisScript.roles_from_catalog_file(roles_path)
+		var report: Dictionary = AnalysisReportScript.build(result, roles, cue_path)
+		var analysis_file := FileAccess.open(analysis_path, FileAccess.WRITE)
+		if analysis_file == null:
+			return _cli_error("cannot write " + analysis_path)
+		analysis_file.store_string(JSON.stringify(report, "\t", false))
+		var write_error := analysis_file.get_error()
+		analysis_file.close()
+		if write_error != OK:
+			return _cli_error("cannot write " + analysis_path)
 	var frame_count := frames.size()
-	var lines: Array[String] = [JSON.stringify({
+	var output := {
 		"ok": true,
 		"out": out_path,
 		"sample_rate": sample_rate,
 		"frames": frame_count,
 		"seconds": float(frame_count) / float(sample_rate),
 		"diagnostics": result["diagnostics"],
-	}, "", false)]
+	}
+	if not analysis_path.is_empty():
+		output["analysis"] = analysis_path
+	var lines: Array[String] = [JSON.stringify(output, "", false)]
 	return {"lines": lines, "exit_code": 0, "error": ""}
 
 static func _build_sections(compiled: Dictionary, log: Array[Dictionary], duration: float, total_frames: int, transport: SynthTransport) -> Array:
@@ -479,7 +499,7 @@ static func _usage_error() -> Dictionary:
 	return {
 		"lines": [],
 		"exit_code": 2,
-		"error": "usage: cue_render <cue-file> --out <wav> [--scenario <json>] [--catalog <instruments.json>]",
+		"error": "usage: cue_render <cue-file> --out <wav> [--scenario <json>] [--analysis <json>] [--catalog <instruments.json>]",
 	}
 
 static func _cli_error(message: String) -> Dictionary:
